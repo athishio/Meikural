@@ -1,11 +1,12 @@
 """
-test_backend_pair.py - Unit tests for database.py and alerts.py
-==============================================================
+test_backend_pair.py - Unit tests for database.py, alerts.py, and incident reporting
+==================================================================================
 Verifies:
 1. Zero-trust salted SHA-256 caller ID hashing.
 2. 90-day retention auto-purge calculations.
 3. Database functions: log_call_start, log_event, log_call_end, get_call_summary, get_recent_calls.
 4. Alerts functions: send_sms_alert, send_email_alert, dispatch_step_up_alerts.
+5. Incident report export endpoint: GET /calls/{session_id}/report.
 """
 
 import hashlib
@@ -13,8 +14,11 @@ import os
 import time
 import unittest
 
+from starlette.testclient import TestClient
+
 import alerts
 import database
+from app import app
 
 
 class TestMeikuralAuditDatabase(unittest.TestCase):
@@ -163,6 +167,59 @@ class TestMeikuralAlerts(unittest.TestCase):
         self.assertIn("sms", res)
         self.assertIn("email", res)
         self.assertEqual(res["risk_score"], 0.78)
+
+
+class TestIncidentReportEndpoint(unittest.TestCase):
+    def setUp(self):
+        import uuid
+        self.client = TestClient(app)
+        self.session_id = f"call_rep_{uuid.uuid4().hex[:8]}"
+        database.log_call_start(
+            session_id=self.session_id,
+            caller_id="+14155552671",
+            start_time=1700000000.0,
+        )
+        database.log_event(
+            session_id=self.session_id,
+            score=0.92,
+            smoothed_score=0.89,
+            verdict="STEP_UP_VERIFICATION",
+            challenge_id="ch_rep_1",
+            timestamp=1700000001.0,
+        )
+        database.log_call_end(
+            session_id=self.session_id,
+            final_risk_score=0.92,
+            final_verdict="STEP_UP_VERIFICATION",
+            challenge_fired=True,
+            end_time=1700000010.0,
+        )
+
+    def test_download_incident_report_success(self):
+        response = self.client.get(f"/calls/{self.session_id}/report")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/plain", response.headers.get("content-type", ""))
+        self.assertIn(
+            f"attachment; filename=incident_report_{self.session_id}.txt",
+            response.headers.get("content-disposition", ""),
+        )
+
+        text = response.text
+        self.assertIn("Organization: Meikural Voice Security Operations Center", text)
+        self.assertIn(f"Session ID: {self.session_id}", text)
+        self.assertIn("Salted Caller ID Hash:", text)
+        self.assertIn("Call Start Time:", text)
+        self.assertIn("Call End Time:", text)
+        self.assertIn("Final Risk Score: 0.9200", text)
+        self.assertIn("Final Verdict: STEP_UP_VERIFICATION", text)
+        self.assertIn("Challenge State: TRIGGERED / FIRED", text)
+        self.assertIn("Total Events Processed: 1", text)
+        self.assertIn("Zero Audio on Disk · 90-Day Retention Auto-Purge", text)
+
+    def test_download_incident_report_not_found(self):
+        response = self.client.get("/calls/non_existent_session_999/report")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Call session not found")
 
 
 if __name__ == "__main__":

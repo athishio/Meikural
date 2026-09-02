@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 import database
 from alerts import dispatch_step_up_alerts, RISK_THRESHOLD_STEP_UP
@@ -69,6 +70,7 @@ def root():
             "create_call": "/calls (POST)",
             "get_call": "/calls/{session_id} (GET)",
             "get_events": "/calls/{session_id}/events (GET)",
+            "download_report": "/calls/{session_id}/report (GET)",
             "trigger_alerts": "/alerts/trigger (POST)",
             "purge_expired": "/purge-expired (POST)",
         },
@@ -152,6 +154,76 @@ def get_call_events_endpoint(session_id: str):
     """
     events = database.get_events(session_id)
     return [EventRecord(**e) for e in events]
+
+
+@app.get("/calls/{session_id}/report", response_class=PlainTextResponse)
+def download_incident_report_endpoint(session_id: str):
+    """
+    Downloads a structured forensic incident report for a call session.
+    """
+    call = database.get_call(session_id)
+    if not call:
+        raise HTTPException(status_code=404, detail="Call session not found")
+
+    events = database.get_events_for_call(session_id)
+
+    st_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["start_time"])) if call.get("start_time") else "N/A"
+    et_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["end_time"])) if call.get("end_time") else "In Progress / Active"
+    challenge_status = "TRIGGERED / FIRED" if call.get("challenge_fired") else "NOT TRIGGERED"
+
+    final_score_str = f"{call['final_risk_score']:.4f}" if call.get("final_risk_score") is not None else "N/A"
+    retention_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["retention_expiry"])) if call.get("retention_expiry") else "N/A"
+
+    report_lines = [
+        "=" * 70,
+        "MEIKURAL VOICE SECURITY OPERATIONS CENTER (SOC)",
+        "INCIDENT & CALL AUDIT FORENSIC REPORT",
+        "=" * 70,
+        "",
+        "--- [1] SESSION & CALLER IDENTIFICATION ---",
+        "Organization: Meikural Voice Security Operations Center",
+        f"Session ID: {call['session_id']}",
+        f"Salted Caller ID Hash: {call['caller_id_hash']}",
+        f"Regulatory Retention Expiry: {retention_str}",
+        "",
+        "--- [2] CALL TIMESTAMPS & DURATION ---",
+        f"Call Start Time: {st_str}",
+        f"Call End Time: {et_str}",
+        "",
+        "--- [3] RISK ASSESSMENT & VERDICT ---",
+        f"Final Risk Score: {final_score_str}",
+        f"Final Verdict: {call.get('final_verdict', 'UNKNOWN')}",
+        f"Challenge State: {challenge_status}",
+        f"Total Events Processed: {len(events)}",
+        "",
+        "--- [4] EVENT TELEMETRY STREAM ---",
+    ]
+
+    if events:
+        for idx, ev in enumerate(events, 1):
+            ch_str = f" | Challenge ID: {ev['challenge_id']}" if ev.get("challenge_id") else ""
+            report_lines.append(
+                f"  Event #{idx:02d} | Timestamp: {ev['timestamp']:.3f} | Score: {ev['score']:.4f} | "
+                f"Smoothed: {ev['smoothed_score']:.4f} | Verdict: {ev['verdict']}{ch_str}"
+            )
+    else:
+        report_lines.append("  No granular audio chunk events recorded.")
+
+    report_lines.extend([
+        "",
+        "--- [5] PRIVACY & COMPLIANCE NOTICE ---",
+        "Zero Audio on Disk · 90-Day Retention Auto-Purge",
+        "Raw audio streams are processed in-memory ephemeral buffers only.",
+        "Zero raw caller phone numbers or PII are persisted.",
+        "=" * 70,
+    ])
+
+    report_content = "\n".join(report_lines)
+    return PlainTextResponse(
+        content=report_content,
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename=incident_report_{session_id}.txt"},
+    )
 
 
 @app.post("/alerts/trigger", response_model=AlertResponse)

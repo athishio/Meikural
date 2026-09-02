@@ -246,6 +246,7 @@ create_call = log_call_start
 record_event = log_event
 finalize_call = log_call_end
 get_call = get_call_summary
+get_events_for_call = get_events
 
 # Self-initialization on import
 init_db()

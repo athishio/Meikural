@@ -44,14 +44,14 @@
         "description": "Creates a new call record with salted SHA-256 caller ID hashing for zero-trust privacy.",
         "operationId": "create_call_endpoint_calls_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CallCreateRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -60,6 +60,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CallResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Recent Calls Endpoint",
+        "description": "Retrieves recent call records.",
+        "operationId": "get_recent_calls_endpoint_calls_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CallResponse"
+                  },
+                  "title": "Response Get Recent Calls Endpoint Calls Get"
                 }
               }
             }
@@ -144,6 +189,46 @@
                     "$ref": "#/components/schemas/EventRecord"
                   },
                   "title": "Response Get Call Events Endpoint Calls  Session Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{session_id}/report": {
+      "get": {
+        "summary": "Download Incident Report Endpoint",
+        "description": "Downloads a structured forensic incident report for a call session.",
+        "operationId": "download_incident_report_endpoint_calls__session_id__report_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
