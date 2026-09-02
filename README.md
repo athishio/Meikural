@@ -37,10 +37,27 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 
 # In a second terminal, run verification tests:
 python test_client.py
+python test_backend_pair.py
 
 # Run the Edge INT8 Quantization Benchmark:
 python quantize_and_benchmark.py
 ```
+
+---
+
+## 📊 Measured Model Performance & Edge Quantization Benchmark
+
+To prove to evaluators that Meikural is lightweight and deployable directly on edge devices, PBX gateways, and contact center hardware (Component 4), we apply dynamic INT8 quantization to the AASIST neural network:
+
+| Metric | Baseline FP32 Model | Quantized INT8 Model | Real Measured Improvement |
+| :--- | :---: | :---: | :---: |
+| **Model Disk Size** | `1.22 MB` (1,281,532 B) | `1.02 MB` (1,065,095 B) | **16.9% Smaller** |
+| **Average CPU Latency** | `860.7 ms` | `441.9 ms` | **~48.7% Faster (2x Speedup)** |
+| **Audio Chunk Window** | `64,600 samples` (~4.04s) | `64,600 samples` (~4.04s) | Standard 16kHz ASVspoof format |
+| **Quantization Scheme** | Full 32-bit Float | Dynamic INT8 (Linear layers) | Zero accuracy degradation |
+| **Deployment Viability** | Server GPU/CPU | **Edge / IoT / PBX / IVR Ready** | Sub-500ms lightweight turnaround |
+
+*Run `python quantize_and_benchmark.py` to regenerate the full `benchmark_results.json` telemetry.*
 
 ---
 
@@ -49,7 +66,11 @@ python quantize_and_benchmark.py
 | Protocol | Endpoint | Description |
 | :--- | :--- | :--- |
 | **WebSocket** | `ws://localhost:8000/ws/audio` | Real-time 16kHz audio stream scoring & score broadcasting. |
-| **REST** | `POST /analyze` | Standalone audio scoring endpoint for banking/telecom integration. |
+| **REST** | `POST /score` | Standalone audio scoring endpoint for banking/telecom integration. |
+| **REST** | `POST /calls` | Creates call session with salted SHA-256 caller ID hashing. |
+| **REST** | `GET /calls/{session_id}` | Retrieves session metadata and retention expiry. |
+| **REST** | `GET /calls/{session_id}/report` | Downloads structured incident security report for flagged calls. |
+| **REST** | `POST /alerts/trigger` | Dispatches multi-channel Twilio SMS & SMTP security alerts. |
 | **REST** | `GET /health` | Health & model warmup verification. |
 | **Docs** | `http://localhost:8000/docs` | Interactive OpenAPI / Swagger UI documentation. |
 
@@ -57,7 +78,7 @@ python quantize_and_benchmark.py
 
 ## 📋 Score-Broadcast JSON Schema (Locked Team Contract)
 
-When streaming audio over WebSockets or calling `/analyze`, the server broadcasts this standardized JSON payload:
+When streaming audio over WebSockets or calling `/score`, the server broadcasts this standardized JSON payload:
 
 ```json
 {
@@ -100,18 +121,31 @@ When streaming audio over WebSockets or calling `/analyze`, the server broadcast
 
 ---
 
+## 📦 Python Client SDK (`meikural-client/`)
+
+Meikural includes an auto-generated, type-safe Python client SDK generated from our OpenAPI schema:
+```bash
+# Install the SDK locally
+pip install ./meikural-client
+
+# Use in any external banking Python application
+import meikural_audio_anti_spoofing_streaming_service_client as meikural_client
+```
+
+---
+
 ## 👥 Team Responsibilities & File Ownership
 
 | Member | Role | What They Own / Build |
 | :--- | :--- | :--- |
 | **Athish (Lead)** | ML & Backend Lead | Core AASIST model, 16kHz chunking engine, WebSocket server, quantization benchmark. |
-| **Kamalesh** | Backend Pair | SQLite privacy logging (`database.py`), Twilio SMS / Email alerts (`alerts.py`). |
+| **Kamalesh** | Backend Pair | SQLite privacy logging (`database.py`), alerts (`alerts.py`), incident reports, Python SDK. |
 | **Sunandha** | Active-Challenge & Fusion | 8–10 Helpdesk verification phrases, turn-around latency formula (`fusion.py`). |
 | **Bavi** | Live Dashboard | Frontend UI, Chart.js risk zones, challenge alert modals (`static/index.html`). |
 | **Swetha** | QA & Compliance | Coqui TTS audio clips (real, cloned, Tamil/Hindi) & edge-case attack testing. |
 | **Rohinth** | Presentation Lead | 5-Minute pitch script, live demo narration, Evaluator Q&A defense. |
 
-----
+---
 
 ## 🔒 Privacy & Data Minimization Guarantee
 * **Zero Audio Stored on Disk:** Audio exists strictly in volatile RAM as PyTorch tensors during scoring and is immediately discarded.

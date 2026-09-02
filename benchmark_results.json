@@ -1,0 +1,18 @@
+{
+  "timestamp": 1788358628.0788035,
+  "device": "CPU",
+  "input_samples": 64600,
+  "sample_rate_hz": 16000,
+  "fp32_model": {
+    "size_mb": 1.22,
+    "size_bytes": 1281532,
+    "avg_latency_ms": 860.7
+  },
+  "int8_quantized_model": {
+    "size_mb": 1.02,
+    "size_bytes": 1065095,
+    "avg_latency_ms": 441.9,
+    "size_reduction_percent": 16.9,
+    "latency_improvement_percent": 48.7
+  }
+}
