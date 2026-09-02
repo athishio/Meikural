@@ -111,7 +111,7 @@ When streaming audio over WebSockets or calling `/analyze`, the server broadcast
 | **Swetha** | QA & Compliance | Coqui TTS audio clips (real, cloned, Tamil/Hindi) & edge-case attack testing. |
 | **Rohinth** | Presentation Lead | 5-Minute pitch script, live demo narration, Evaluator Q&A defense. |
 
----
+----
 
 ## 🔒 Privacy & Data Minimization Guarantee
 * **Zero Audio Stored on Disk:** Audio exists strictly in volatile RAM as PyTorch tensors during scoring and is immediately discarded.
