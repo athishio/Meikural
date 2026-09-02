@@ -1,0 +1,832 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Meikural Audio Anti-Spoofing Streaming Service",
+    "description": "Real-time AASIST inference service with WebSocket streaming, VAD, zero-trust privacy SQLite database, and multi-channel security alerting.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls": {
+      "post": {
+        "summary": "Create Call Endpoint",
+        "description": "Creates a new call record with salted SHA-256 caller ID hashing for zero-trust privacy.",
+        "operationId": "create_call_endpoint_calls_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{session_id}": {
+      "get": {
+        "summary": "Get Call Endpoint",
+        "description": "Retrieves a call record and privacy compliance status.",
+        "operationId": "get_call_endpoint_calls__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{session_id}/events": {
+      "get": {
+        "summary": "Get Call Events Endpoint",
+        "description": "Retrieves chronological telemetry events for a call session.",
+        "operationId": "get_call_events_endpoint_calls__session_id__events_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventRecord"
+                  },
+                  "title": "Response Get Call Events Endpoint Calls  Session Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts/trigger": {
+      "post": {
+        "summary": "Trigger Alert Endpoint",
+        "description": "Explicitly triggers multi-channel security alert (Twilio SMS + SMTP Email).",
+        "operationId": "trigger_alert_endpoint_alerts_trigger_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertTriggerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purge-expired": {
+      "post": {
+        "summary": "Purge Expired Endpoint",
+        "description": "Executes 90-day auto-purge compliance check to delete expired call metadata.",
+        "operationId": "purge_expired_endpoint_purge_expired_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/score": {
+      "post": {
+        "summary": "Score Audio File",
+        "description": "HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry.",
+        "operationId": "score_audio_file_score_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_score_audio_file_score_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreBroadcast"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlertResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "risk_score": {
+            "type": "number",
+            "title": "Risk Score"
+          },
+          "sms": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Sms"
+          },
+          "email": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "risk_score",
+          "sms",
+          "email"
+        ],
+        "title": "AlertResponse"
+      },
+      "AlertTriggerRequest": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "risk_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Risk Score"
+          },
+          "to_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Phone"
+          },
+          "to_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "risk_score"
+        ],
+        "title": "AlertTriggerRequest"
+      },
+      "AntiSpoofingResult": {
+        "properties": {
+          "passive_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Passive Score",
+            "description": "Passive spoof probability [0.0 - 1.0]",
+            "example": 0.73
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/VerdictType",
+            "description": "Categorical classification verdict",
+            "example": "spoof"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ConfidenceLevel",
+            "description": "Confidence level of classification",
+            "example": "high"
+          },
+          "threshold_used": {
+            "type": "number",
+            "title": "Threshold Used",
+            "description": "Decision threshold applied",
+            "default": 0.5,
+            "example": 0.5
+          },
+          "raw_logits": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Logits",
+            "description": "[spoof_logit, bonafide_logit]",
+            "example": [
+              3.45,
+              -2.1
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "passive_score",
+          "verdict",
+          "confidence"
+        ],
+        "title": "AntiSpoofingResult"
+      },
+      "AudioHealth": {
+        "properties": {
+          "is_speech": {
+            "type": "boolean",
+            "title": "Is Speech",
+            "description": "Voice Activity Detection (VAD) flag",
+            "example": true
+          },
+          "rms_db": {
+            "type": "number",
+            "title": "Rms Db",
+            "description": "Audio signal root mean square energy in dB",
+            "example": -24.5
+          },
+          "duration_ms": {
+            "type": "number",
+            "title": "Duration Ms",
+            "description": "Audio chunk duration in milliseconds",
+            "example": 4037.5
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_speech",
+          "rms_db",
+          "duration_ms"
+        ],
+        "title": "AudioHealth"
+      },
+      "Body_score_audio_file_score_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_score_audio_file_score_post"
+      },
+      "CallCreateRequest": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Unique session ID or auto-generated"
+          },
+          "raw_phone_number": {
+            "type": "string",
+            "title": "Raw Phone Number",
+            "description": "Raw caller phone number to be hashed via Salted SHA-256"
+          },
+          "retention_days": {
+            "type": "integer",
+            "title": "Retention Days",
+            "description": "Retention duration in days before auto-purge",
+            "default": 90
+          }
+        },
+        "type": "object",
+        "required": [
+          "raw_phone_number"
+        ],
+        "title": "CallCreateRequest"
+      },
+      "CallResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "description": "Unique call UUID"
+          },
+          "caller_id_hash": {
+            "type": "string",
+            "title": "Caller Id Hash",
+            "description": "Salted SHA-256 hash of caller ID"
+          },
+          "start_time": {
+            "type": "number",
+            "title": "Start Time",
+            "description": "Call start unix timestamp"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time",
+            "description": "Call termination unix timestamp"
+          },
+          "final_risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Risk Score",
+            "description": "Aggregate final risk score"
+          },
+          "final_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Verdict",
+            "description": "ALLOW, WARN, or STEP_UP_VERIFICATION"
+          },
+          "challenge_fired": {
+            "type": "boolean",
+            "title": "Challenge Fired",
+            "description": "Whether active challenge protocol was invoked",
+            "default": false
+          },
+          "retention_expiry": {
+            "type": "number",
+            "title": "Retention Expiry",
+            "description": "Auto-purge timestamp (start_time + 90 days)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "caller_id_hash",
+          "start_time",
+          "retention_expiry"
+        ],
+        "title": "CallResponse"
+      },
+      "ChallengeState": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventType",
+            "description": "Event protocol state",
+            "default": "normal",
+            "example": "normal"
+          },
+          "challenge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Challenge Id",
+            "description": "Unique challenge prompt ID",
+            "example": "ch_987"
+          },
+          "challenge_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Challenge Type",
+            "description": "Type: phrase_repeat, digit_repeat, etc.",
+            "example": "digit_repeat"
+          },
+          "prompt_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Text",
+            "description": "Prompt text to display to user",
+            "example": "Please repeat: 8 - 4 - 2"
+          },
+          "liveness_passed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liveness Passed",
+            "description": "Active liveness challenge outcome",
+            "example": true
+          }
+        },
+        "type": "object",
+        "title": "ChallengeState"
+      },
+      "ConfidenceLevel": {
+        "type": "string",
+        "enum": [
+          "high",
+          "medium",
+          "low"
+        ],
+        "title": "ConfidenceLevel"
+      },
+      "EventRecord": {
+        "properties": {
+          "event_id": {
+            "type": "integer",
+            "title": "Event Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "smoothed_score": {
+            "type": "number",
+            "title": "Smoothed Score"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "challenge_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Challenge Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "session_id",
+          "timestamp",
+          "score",
+          "smoothed_score",
+          "verdict"
+        ],
+        "title": "EventRecord"
+      },
+      "EventType": {
+        "type": "string",
+        "enum": [
+          "normal",
+          "challenge_fired",
+          "challenge_response"
+        ],
+        "title": "EventType"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MetadataInfo": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "description": "Unique call/stream session ID",
+            "example": "session_abc123"
+          },
+          "chunk_id": {
+            "type": "integer",
+            "title": "Chunk Id",
+            "description": "Monotonically increasing chunk index",
+            "example": 1
+          },
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp",
+            "description": "Unix timestamp in seconds",
+            "example": 1693612345.234
+          },
+          "inference_latency_ms": {
+            "type": "number",
+            "title": "Inference Latency Ms",
+            "description": "Model inference duration in milliseconds",
+            "example": 48.2
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "chunk_id",
+          "inference_latency_ms"
+        ],
+        "title": "MetadataInfo"
+      },
+      "PurgeResponse": {
+        "properties": {
+          "purged_count": {
+            "type": "integer",
+            "title": "Purged Count"
+          },
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purged_count",
+          "timestamp"
+        ],
+        "title": "PurgeResponse"
+      },
+      "ScoreBroadcast": {
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp",
+            "description": "Unix epoch timestamp"
+          },
+          "score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "description": "Passive spoof score [0.0 - 1.0]"
+          },
+          "event": {
+            "$ref": "#/components/schemas/EventType",
+            "description": "Event tag",
+            "default": "normal"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/MetadataInfo"
+          },
+          "audio_health": {
+            "$ref": "#/components/schemas/AudioHealth"
+          },
+          "anti_spoofing": {
+            "$ref": "#/components/schemas/AntiSpoofingResult"
+          },
+          "challenge_state": {
+            "$ref": "#/components/schemas/ChallengeState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "metadata",
+          "audio_health",
+          "anti_spoofing",
+          "challenge_state"
+        ],
+        "title": "ScoreBroadcast",
+        "description": "Production-grade score broadcast schema.\nIncludes root-level backward compatibility fields + structured sub-models."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerdictType": {
+        "type": "string",
+        "enum": [
+          "bonafide",
+          "spoof",
+          "uncertain",
+          "silence"
+        ],
+        "title": "VerdictType"
+      }
+    }
+  }
+}

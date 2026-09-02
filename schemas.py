@@ -1,6 +1,6 @@
-﻿import time
+import time
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -15,6 +15,12 @@ class VerdictType(str, Enum):
     SPOOF = "spoof"
     UNCERTAIN = "uncertain"
     SILENCE = "silence"
+
+
+class RiskVerdict(str, Enum):
+    ALLOW = "ALLOW"
+    WARN = "WARN"
+    STEP_UP_VERIFICATION = "STEP_UP_VERIFICATION"
 
 
 class ConfidenceLevel(str, Enum):
@@ -57,7 +63,6 @@ class ScoreBroadcast(BaseModel):
     Production-grade score broadcast schema.
     Includes root-level backward compatibility fields + structured sub-models.
     """
-    # Top-level backward compatibility fields
     timestamp: float = Field(default_factory=time.time, description="Unix epoch timestamp")
     score: float = Field(..., ge=0.0, le=1.0, description="Passive spoof score [0.0 - 1.0]")
     event: EventType = Field(default=EventType.NORMAL, description="Event tag")
@@ -67,3 +72,50 @@ class ScoreBroadcast(BaseModel):
     audio_health: AudioHealth
     anti_spoofing: AntiSpoofingResult
     challenge_state: ChallengeState
+
+
+# Zero-Trust Database & API Models
+class CallCreateRequest(BaseModel):
+    session_id: Optional[str] = Field(default=None, description="Unique session ID or auto-generated")
+    raw_phone_number: str = Field(..., description="Raw caller phone number to be hashed via Salted SHA-256")
+    retention_days: int = Field(default=90, description="Retention duration in days before auto-purge")
+
+
+class CallResponse(BaseModel):
+    session_id: str = Field(..., description="Unique call UUID")
+    caller_id_hash: str = Field(..., description="Salted SHA-256 hash of caller ID")
+    start_time: float = Field(..., description="Call start unix timestamp")
+    end_time: Optional[float] = Field(default=None, description="Call termination unix timestamp")
+    final_risk_score: Optional[float] = Field(default=None, description="Aggregate final risk score")
+    final_verdict: Optional[str] = Field(default=None, description="ALLOW, WARN, or STEP_UP_VERIFICATION")
+    challenge_fired: bool = Field(default=False, description="Whether active challenge protocol was invoked")
+    retention_expiry: float = Field(..., description="Auto-purge timestamp (start_time + 90 days)")
+
+
+class EventRecord(BaseModel):
+    event_id: int
+    session_id: str
+    timestamp: float
+    score: float
+    smoothed_score: float
+    verdict: str
+    challenge_id: Optional[str] = None
+
+
+class AlertTriggerRequest(BaseModel):
+    session_id: str
+    risk_score: float = Field(..., ge=0.0, le=1.0)
+    to_phone: Optional[str] = None
+    to_email: Optional[str] = None
+
+
+class AlertResponse(BaseModel):
+    session_id: str
+    risk_score: float
+    sms: Dict[str, Any]
+    email: Dict[str, Any]
+
+
+class PurgeResponse(BaseModel):
+    purged_count: int
+    timestamp: float

@@ -1,4 +1,4 @@
-﻿# Virtual Environment
+# Virtual Environment
 .venv/
 venv/
 ENV/
@@ -22,3 +22,7 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Database files
+*.db
+*.sqlite3
