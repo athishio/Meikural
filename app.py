@@ -4,9 +4,11 @@ import time
 import uuid
 from typing import List, Optional
 
+import os
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 import database
 from alerts import dispatch_step_up_alerts, RISK_THRESHOLD_STEP_UP
@@ -49,6 +51,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Mount static asset folders for Bavi's dashboard
+if os.path.exists(os.path.join(BASE_DIR, "css")):
+    app.mount("/css", StaticFiles(directory=os.path.join(BASE_DIR, "css")), name="css")
+if os.path.exists(os.path.join(BASE_DIR, "js")):
+    app.mount("/js", StaticFiles(directory=os.path.join(BASE_DIR, "js")), name="js")
+if os.path.exists(os.path.join(BASE_DIR, "static")):
+    app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
 
 @app.on_event("startup")
 def startup_event():
@@ -56,6 +68,11 @@ def startup_event():
     database.init_db()
     AASISTWrapper.get_instance()
     logger.info("AASIST model and Meikural privacy database ready.")
+
+
+@app.get("/dashboard")
+async def get_dashboard():
+    return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
 
 
 @app.get("/")
