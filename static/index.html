@@ -1371,6 +1371,24 @@
       }
     };
 
+    function getChartGradient(ctx, score) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+      if (score >= 0.65) {
+        gradient.addColorStop(0, 'rgba(244, 63, 94, 0.38)');
+        gradient.addColorStop(0.5, 'rgba(244, 63, 94, 0.12)');
+        gradient.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+      } else if (score >= 0.35) {
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.32)');
+        gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.10)');
+        gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+      } else {
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+        gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.10)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+      }
+      return gradient;
+    }
+
     // Initialize Chart.js Line Chart
     function initLiveChart() {
       const ctx = document.getElementById('riskScoreChart').getContext('2d');
@@ -1393,58 +1411,76 @@
             label: 'Audio Trust / Risk Score',
             data: initialData,
             borderColor: '#10B981',
-            backgroundColor: 'rgba(16, 185, 129, 0.08)',
-            borderWidth: 2.2,
+            backgroundColor: getChartGradient(ctx, 0.12),
+            borderWidth: 3.2,
             pointBackgroundColor: (context) => {
               const val = context.raw;
               if (val >= 0.65) return '#F43F5E';
               if (val >= 0.35) return '#F59E0B';
               return '#10B981';
             },
-            pointBorderColor: '#0F172A',
-            pointBorderWidth: 1.5,
-            pointRadius: 2.5,
-            pointHoverRadius: 6,
-            tension: 0.35,
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 1.8,
+            pointRadius: 3.5,
+            pointHoverRadius: 8,
+            tension: 0.38,
             fill: true
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              left: 20,
+              right: 25,
+              top: 18,
+              bottom: 12
+            }
+          },
           animation: { duration: 250 },
           plugins: {
             legend: { display: false },
             tooltip: {
               backgroundColor: '#0F172A',
-              titleColor: '#94A3B8',
-              bodyColor: '#F8FAFC',
-              borderColor: '#334155',
-              borderWidth: 1,
+              titleColor: '#CBD5E1',
+              bodyColor: '#FFFFFF',
+              borderColor: '#38BDF8',
+              borderWidth: 1.5,
+              padding: 12,
+              cornerRadius: 8,
+              titleFont: { family: 'JetBrains Mono', size: 11, weight: '700' },
+              bodyFont: { family: 'Inter', size: 12, weight: '600' },
               callbacks: {
                 label: (context) => {
                   const val = context.parsed.y;
                   let zone = '🟢 Safe / Bonafide';
                   if (val >= 0.65) zone = '🔴 Deepfake Alert';
                   else if (val >= 0.35) zone = '🟡 Caution / Suspicion';
-                  return `Risk Score: ${val.toFixed(3)} (${zone})`;
+                  return ` Spoof Risk: ${val.toFixed(3)} (${zone})`;
                 }
               }
             }
           },
           scales: {
             x: {
-              grid: { color: 'rgba(51, 65, 85, 0.2)' },
-              ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 8 }
+              grid: { color: 'rgba(51, 65, 85, 0.25)', drawBorder: false },
+              ticks: { 
+                color: '#E2E8F0', 
+                font: { family: 'JetBrains Mono', size: 11, weight: '700' }, 
+                maxTicksLimit: 7,
+                padding: 8
+              }
             },
             y: {
               min: 0.0,
               max: 1.0,
-              grid: { color: 'rgba(51, 65, 85, 0.2)' },
+              grid: { color: 'rgba(51, 65, 85, 0.35)', drawBorder: false },
               ticks: {
-                color: '#94A3B8',
+                color: '#E2E8F0',
                 stepSize: 0.2,
-                font: { family: 'JetBrains Mono', size: 10 },
+                padding: 12,
+                font: { family: 'JetBrains Mono', size: 11, weight: '800' },
                 callback: (v) => v.toFixed(2)
               }
             }
@@ -1539,16 +1575,17 @@
         dataset.data.shift();
       }
 
-      // Dynamic line color shift on risk spike > 0.65
+      const chartCtx = state.chart.ctx;
+      // Dynamic line color & rich vertical gradient shift on risk score changes
       if (passiveScore >= 0.65) {
         dataset.borderColor = '#F43F5E';
-        dataset.backgroundColor = 'rgba(244, 63, 94, 0.2)';
+        dataset.backgroundColor = getChartGradient(chartCtx, passiveScore);
       } else if (passiveScore >= 0.35) {
         dataset.borderColor = '#F59E0B';
-        dataset.backgroundColor = 'rgba(245, 158, 11, 0.15)';
+        dataset.backgroundColor = getChartGradient(chartCtx, passiveScore);
       } else {
         dataset.borderColor = '#10B981';
-        dataset.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        dataset.backgroundColor = getChartGradient(chartCtx, passiveScore);
       }
 
       state.chart.update('none');

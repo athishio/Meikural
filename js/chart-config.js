@@ -130,17 +130,28 @@ function initRealtimeChart(canvasId = 'riskScoreChart') {
         mode: 'index',
         intersect: false,
       },
+      layout: {
+        padding: {
+          left: 20,
+          right: 25,
+          top: 18,
+          bottom: 12
+        }
+      },
       plugins: {
         legend: {
           display: false
         },
         tooltip: {
           backgroundColor: '#0F172A',
-          titleColor: '#94A3B8',
-          bodyColor: '#F8FAFC',
-          borderColor: '#334155',
-          borderWidth: 1,
-          padding: 10,
+          titleColor: '#CBD5E1',
+          bodyColor: '#FFFFFF',
+          borderColor: '#38BDF8',
+          borderWidth: 1.5,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { family: 'JetBrains Mono', size: 11, weight: '700' },
+          bodyFont: { family: 'Inter', size: 12, weight: '600' },
           displayColors: true,
           callbacks: {
             label: function(context) {
@@ -156,27 +167,29 @@ function initRealtimeChart(canvasId = 'riskScoreChart') {
       scales: {
         x: {
           grid: {
-            color: 'rgba(51, 65, 85, 0.4)',
+            color: 'rgba(51, 65, 85, 0.25)',
             drawTicks: false
           },
           ticks: {
-            color: '#94A3B8',
-            font: { family: 'JetBrains Mono', size: 10 },
+            color: '#E2E8F0',
+            font: { family: 'JetBrains Mono', size: 11, weight: '700' },
             maxRotation: 0,
             autoSkip: true,
-            maxTicksLimit: 8
+            maxTicksLimit: 7,
+            padding: 8
           }
         },
         y: {
           min: 0.0,
           max: 1.0,
           grid: {
-            color: 'rgba(51, 65, 85, 0.3)',
+            color: 'rgba(51, 65, 85, 0.35)',
           },
           ticks: {
-            color: '#94A3B8',
+            color: '#E2E8F0',
             stepSize: 0.2,
-            font: { family: 'JetBrains Mono', size: 10 },
+            padding: 12,
+            font: { family: 'JetBrains Mono', size: 11, weight: '800' },
             callback: function(value) {
               return value.toFixed(2);
             }
