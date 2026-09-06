@@ -25,47 +25,44 @@ const riskBandsPlugin = {
     const width = chartArea.right - chartArea.left;
 
     // 🟢 Safe Zone (0.00 – 0.35)
-    ctx.fillStyle = 'rgba(16, 185, 129, 0.13)';
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.04)';
     ctx.fillRect(left, y0_35, width, y0_00 - y0_35);
 
     // 🟡 Caution Zone (0.35 – 0.65)
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.13)';
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.04)';
     ctx.fillRect(left, y0_65, width, y0_35 - y0_65);
 
     // 🔴 High Risk / Deepfake Zone (0.65 – 1.00)
-    ctx.fillStyle = 'rgba(244, 63, 94, 0.16)';
+    ctx.fillStyle = 'rgba(244, 63, 94, 0.06)';
     ctx.fillRect(left, y1_00, width, y0_65 - y1_00);
 
     // Subtle divider lines between zones
     ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([5, 5]);
 
     // Caution threshold line (0.35)
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
     ctx.beginPath();
     ctx.moveTo(left, y0_35);
     ctx.lineTo(chartArea.right, y0_35);
     ctx.stroke();
 
     // High risk threshold line (0.65)
-    ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
+    ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
     ctx.beginPath();
     ctx.moveTo(left, y0_65);
     ctx.lineTo(chartArea.right, y0_65);
     ctx.stroke();
 
     // Zone text labels on right edge
-    ctx.font = '600 10px Inter, sans-serif';
+    ctx.font = '600 9px JetBrains Mono, monospace';
     ctx.textAlign = 'right';
 
     ctx.fillStyle = 'rgba(244, 63, 94, 0.7)';
-    ctx.fillText('🔴 HIGH RISK / DEEPFAKE (0.65 - 1.00)', chartArea.right - 8, y1_00 + 14);
+    ctx.fillText('0.65 (Deepfake)', chartArea.right - 6, y0_65 - 6);
 
     ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
-    ctx.fillText('🟡 CAUTION (0.35 - 0.65)', chartArea.right - 8, y0_65 + 14);
-
-    ctx.fillStyle = 'rgba(16, 185, 129, 0.7)';
-    ctx.fillText('🟢 SAFE ZONE (0.00 - 0.35)', chartArea.right - 8, y0_35 + 14);
+    ctx.fillText('0.35 (Caution)', chartArea.right - 6, y0_35 - 6);
 
     ctx.restore();
   }

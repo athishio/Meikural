@@ -1329,46 +1329,43 @@
         const left = chartArea.left;
         const width = chartArea.right - chartArea.left;
 
-        // 🟢 Green Zone (0.00 to 0.35): Safe / Bonafide
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
+        // 🟢 Green Zone (0.00 to 0.35): Subtle Safe tint
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.04)';
         ctx.fillRect(left, y0_35, width, y0_00 - y0_35);
 
-        // 🟡 Yellow Zone (0.35 to 0.65): Caution / Elevated Suspicion
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+        // 🟡 Yellow Zone (0.35 to 0.65): Subtle Caution tint
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.04)';
         ctx.fillRect(left, y0_65, width, y0_35 - y0_65);
 
-        // 🔴 Red Zone (0.65 to 1.00): Deepfake Alert
-        ctx.fillStyle = 'rgba(244, 63, 94, 0.18)';
+        // 🔴 Red Zone (0.65 to 1.00): Subtle Deepfake Alert tint
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.06)';
         ctx.fillRect(left, y1_00, width, y0_65 - y1_00);
 
-        // Threshold separator lines
+        // Clean subtle threshold separator lines
         ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([5, 5]);
 
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
         ctx.beginPath();
         ctx.moveTo(left, y0_35);
         ctx.lineTo(chartArea.right, y0_35);
         ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(244, 63, 94, 0.6)';
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
         ctx.beginPath();
         ctx.moveTo(left, y0_65);
         ctx.lineTo(chartArea.right, y0_65);
         ctx.stroke();
 
-        // Zone labels
-        ctx.font = '700 10px Inter, sans-serif';
+        // Elegant, minimal threshold indicators on right margin
+        ctx.font = '600 9px JetBrains Mono, monospace';
         ctx.textAlign = 'right';
 
-        ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
-        ctx.fillText('🔴 RED ZONE: DEEPFAKE ALERT (0.65 - 1.00)', chartArea.right - 8, y1_00 + 14);
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.7)';
+        ctx.fillText('0.65 (Deepfake)', chartArea.right - 6, y0_65 - 6);
 
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
-        ctx.fillText('🟡 YELLOW ZONE: CAUTION (0.35 - 0.65)', chartArea.right - 8, y0_65 + 14);
-
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.9)';
-        ctx.fillText('🟢 GREEN ZONE: SAFE / BONAFIDE (0.00 - 0.35)', chartArea.right - 8, y0_35 + 14);
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
+        ctx.fillText('0.35 (Caution)', chartArea.right - 6, y0_35 - 6);
 
         ctx.restore();
       }
@@ -1396,18 +1393,18 @@
             label: 'Audio Trust / Risk Score',
             data: initialData,
             borderColor: '#10B981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 2.8,
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            borderWidth: 2.2,
             pointBackgroundColor: (context) => {
               const val = context.raw;
               if (val >= 0.65) return '#F43F5E';
               if (val >= 0.35) return '#F59E0B';
               return '#10B981';
             },
-            pointBorderColor: '#FFFFFF',
+            pointBorderColor: '#0F172A',
             pointBorderWidth: 1.5,
-            pointRadius: 4,
-            pointHoverRadius: 7,
+            pointRadius: 2.5,
+            pointHoverRadius: 6,
             tension: 0.35,
             fill: true
           }]
@@ -1415,7 +1412,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          animation: { duration: 300 },
+          animation: { duration: 250 },
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -1437,13 +1434,13 @@
           },
           scales: {
             x: {
-              grid: { color: 'rgba(51, 65, 85, 0.35)' },
+              grid: { color: 'rgba(51, 65, 85, 0.2)' },
               ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 8 }
             },
             y: {
               min: 0.0,
               max: 1.0,
-              grid: { color: 'rgba(51, 65, 85, 0.3)' },
+              grid: { color: 'rgba(51, 65, 85, 0.2)' },
               ticks: {
                 color: '#94A3B8',
                 stepSize: 0.2,
