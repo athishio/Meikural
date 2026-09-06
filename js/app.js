@@ -252,7 +252,9 @@ function updateMetricCards(data) {
   }
 
   if (callerHashElem && data.caller_id_hash) {
-    callerHashElem.textContent = data.caller_id_hash;
+    const hashStr = data.caller_id_hash;
+    callerHashElem.textContent = hashStr.length > 20 ? `${hashStr.slice(0, 16)}...` : hashStr;
+    callerHashElem.title = hashStr;
   }
 }
 

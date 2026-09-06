@@ -330,14 +330,16 @@ body {
 }
 
 .metric-card {
-  background: var(--bg-slate-card);
+  background: var(--surface-card);
   border: 1px solid var(--border-slate);
   border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
+  padding: 1.1rem 1.35rem;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  overflow: hidden;
+  min-width: 0;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -362,6 +364,9 @@ body {
   font-weight: 800;
   font-family: var(--font-mono);
   color: #FFFFFF;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metric-sub {
@@ -370,6 +375,16 @@ body {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.metric-sub span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metric-card.coral-accent .metric-value { color: var(--accent-coral); }
