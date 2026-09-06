@@ -1,10 +1,10 @@
 import json
 import logging
+import os
 import time
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Set
 
-import os
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -52,6 +52,18 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Connected WebSocket clients manager for multi-client broadcasting
+active_websockets: Set[WebSocket] = set()
+
+
+async def broadcast_telemetry(payload_json: str):
+    """Broadcasts real-time telemetry to all connected dashboard viewers."""
+    for ws in list(active_websockets):
+        try:
+            await ws.send_text(payload_json)
+        except Exception:
+            active_websockets.discard(ws)
 
 # Mount static asset folders for Bavi's dashboard
 if os.path.exists(os.path.join(BASE_DIR, "css")):
@@ -326,6 +338,8 @@ async def score_audio_file(file: UploadFile = File(...)):
             event=EventType.NORMAL,
         ),
     )
+    await broadcast_telemetry(broadcast.model_dump_json())
+    return broadcast
 
 
 @app.websocket("/ws/audio")
@@ -335,6 +349,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     zero-trust SQLite logging, and automatic step-up alert triggers.
     """
     await websocket.accept()
+    active_websockets.add(websocket)
     session_id = f"call_{uuid.uuid4().hex[:8]}"
     chunk_counter = 0
     logger.info(f"WebSocket client connected. Session ID: {session_id}")
@@ -433,7 +448,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     ),
                     challenge_state=current_challenge,
                 )
-                await websocket.send_text(broadcast.model_dump_json())
+                await broadcast_telemetry(broadcast.model_dump_json())
 
             elif "text" in message and message["text"] is not None:
                 try:
@@ -511,7 +526,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         ),
                         challenge_state=current_challenge,
                     )
-                    await websocket.send_text(broadcast.model_dump_json())
+                    await broadcast_telemetry(broadcast.model_dump_json())
                 except Exception as ex:
                     logger.warning(f"Error parsing text control command: {ex}")
 
@@ -524,6 +539,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
         except Exception:
             pass
     finally:
+        active_websockets.discard(websocket)
         # Finalize call session in SQLite
         database.finalize_call(
             session_id=session_id,
