@@ -8,57 +8,146 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* ==========================================================================
+       MEIKURAL DESIGN SYSTEM (Google × Claude × Antigravity × Linear × Stripe)
+       ========================================================================== */
     :root {
-      --bg-base: #1A1A1E;
-      --bg-sidebar: #212124;
-      --bg-card: #212124;
-      --bg-card-subtle: #232326;
-      --bg-hover: #2A2A2E;
-      --border-color: #2E2E32;
-      --border-subtle: #38383E;
-      --text-primary: #ECECEC;
-      --text-secondary: #9B9BA1;
-      --text-muted: #707078;
+      /* Surface Colors */
+      --bg-base: #171719;
+      --bg-surface-1: #1B1B1F;
+      --bg-surface-2: #202024;
+      --bg-surface-3: #252529;
+      --bg-surface-hover: #2B2B30;
+      --bg-surface-active: #323238;
+
+      /* Borders */
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-medium: rgba(255, 255, 255, 0.12);
+      --border-focus: rgba(59, 130, 246, 0.5);
+
+      /* Typography Colors */
+      --text-primary: #F3F3F4;
+      --text-secondary: #A2A2AA;
+      --text-muted: #73737C;
+      --text-inverse: #0F0F11;
+
+      /* Primary Brand / Action Color (Used sparingly) */
       --accent-blue: #3B82F6;
       --accent-blue-hover: #2563EB;
+      --accent-blue-subtle: rgba(59, 130, 246, 0.08);
+      --accent-blue-border: rgba(59, 130, 246, 0.25);
+
+      /* Security Semantic State Colors */
       --status-safe: #4ADE80;
-      --status-safe-bg: rgba(74, 222, 128, 0.1);
-      --status-caution: #FBBF24;
-      --status-caution-bg: rgba(251, 191, 36, 0.1);
-      --status-alert: #F87171;
-      --status-alert-bg: rgba(248, 113, 113, 0.12);
-      --alert-banner-bg: #991B1B;
-      --alert-banner-border: #DC2626;
+      --status-safe-bg: rgba(74, 222, 128, 0.08);
+      --status-safe-border: rgba(74, 222, 128, 0.2);
+
+      --status-warning: #FBBF24;
+      --status-warning-bg: rgba(251, 191, 36, 0.08);
+      --status-warning-border: rgba(251, 191, 36, 0.2);
+
+      --status-critical: #F87171;
+      --status-critical-bg: rgba(248, 113, 113, 0.09);
+      --status-critical-border: rgba(248, 113, 113, 0.25);
+
+      --alert-banner-bg: #881337;
+      --alert-banner-border: #E11D48;
+
+      /* Spacing & Radii */
+      --radius-sm: 6px;
+      --radius-md: 9px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+
+      /* Motion Tokens */
+      --ease-out-natural: cubic-bezier(0.2, 0, 0, 1);
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-fast: 120ms;
+      --dur-standard: 200ms;
+      --dur-panel: 260ms;
     }
 
+    /* Reset & Base Setup */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    body {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    html, body {
       background-color: var(--bg-base);
       color: var(--text-primary);
-      min-height: 100vh;
-      display: flex;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 14px;
       line-height: 1.5;
+      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
     }
 
-    /* Typography Utilities */
     .mono {
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: -0.02em;
     }
 
-    /* Sidebar Layout */
-    aside {
-      width: 240px;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-color);
+    /* ==========================================================================
+       LAYER 0 & 1: ARCHITECTURAL LOGO BACKGROUND & PARALLAX DEPTH
+       ========================================================================== */
+    .brand-background-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    /* Layer 2: Subtle radial depth illumination */
+    .bg-depth-glow {
+      position: absolute;
+      width: 1000px;
+      height: 700px;
+      right: -150px;
+      top: 10%;
+      background: radial-gradient(circle at 60% 40%, rgba(59, 130, 246, 0.035) 0%, rgba(30, 41, 59, 0.015) 50%, transparent 75%);
+      filter: blur(80px);
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Layer 1: Large Architectural Watermark Logo */
+    .bg-logo-watermark {
+      position: absolute;
+      width: 850px;
+      height: 850px;
+      right: -160px;
+      bottom: -180px;
+      opacity: 0.025; /* 2.5% opacity - quiet, high-end, zero distraction */
+      color: #FFFFFF;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      transition: opacity var(--dur-panel) var(--ease-smooth);
+    }
+
+    /* ==========================================================================
+       APP SHELL LAYOUT (Sidebar + Main Workspace)
+       ========================================================================== */
+    .app-shell {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    aside.app-sidebar {
+      width: 232px;
+      background-color: var(--bg-surface-1);
+      border-right: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -66,247 +155,350 @@
       position: sticky;
       top: 0;
       user-select: none;
+      z-index: 10;
     }
 
-    .brand-section {
-      padding: 24px 20px;
-      border-bottom: 1px solid var(--border-color);
+    .brand-block {
+      padding: 24px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .brand-title {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
+    .brand-logo-emblem {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: var(--text-primary);
     }
 
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-      margin-top: 2px;
+    .brand-wordmark {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
     }
 
-    .nav-section {
-      padding: 16px 10px;
+    .brand-subline {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: -2px;
+    }
+
+    /* Navigation with Gliding Active Pill */
+    .nav-container {
+      padding: 12px 10px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
+      position: relative;
     }
 
-    .nav-item {
+    /* The gliding indicator */
+    .nav-glider {
+      position: absolute;
+      left: 10px;
+      width: calc(100% - 20px);
+      height: 40px;
+      background-color: var(--accent-blue-subtle);
+      border-left: 2px solid var(--accent-blue);
+      border-radius: var(--radius-sm);
+      pointer-events: none;
+      transition: transform var(--dur-standard) var(--ease-out-natural), opacity var(--dur-fast) ease;
+      opacity: 0;
+      transform: translateY(0);
+      z-index: 1;
+    }
+
+    .nav-link {
+      position: relative;
+      z-index: 2;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 11px;
       padding: 9px 12px;
+      height: 40px;
       color: var(--text-secondary);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       text-decoration: none;
       font-size: 13.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease;
-      position: relative;
+      transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
     }
 
-    .nav-item:hover {
-      background-color: var(--bg-hover);
+    .nav-link:hover {
       color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.03);
     }
 
-    .nav-item.active {
-      background-color: rgba(59, 130, 246, 0.12);
+    .nav-link.active {
       color: var(--text-primary);
       font-weight: 600;
     }
 
-    .nav-item.active::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 6px;
-      bottom: 6px;
-      width: 3px;
-      background-color: var(--accent-blue);
-      border-radius: 0 2px 2px 0;
-    }
-
     .nav-icon {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       stroke-width: 1.8;
       stroke: currentColor;
       fill: none;
     }
 
+    /* Sidebar Footer Status */
     .sidebar-footer {
-      padding: 16px 20px;
-      border-top: 1px solid var(--border-color);
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .status-badge {
-      display: inline-flex;
+    .status-dot-row {
+      display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 12px;
       font-weight: 500;
       color: var(--text-secondary);
     }
 
-    .dot {
+    .status-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
       flex-shrink: 0;
+      transition: background-color var(--dur-standard) ease;
     }
 
     .dot-safe { background-color: var(--status-safe); }
-    .dot-caution { background-color: var(--status-caution); }
-    .dot-alert { background-color: var(--status-alert); }
+    .dot-warning { background-color: var(--status-warning); }
+    .dot-critical { background-color: var(--status-critical); }
     .dot-blue { background-color: var(--accent-blue); }
 
-    /* Main Container */
-    main {
+    /* ==========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================== */
+    main.main-viewport {
       flex: 1;
-      overflow-y: auto;
-      padding: 28px 36px 48px;
-      max-width: 1440px;
+      padding: 32px 44px 60px;
+      max-width: 1420px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
     }
 
-    /* Critical Banner */
-    .critical-alert-banner {
+    /* Dynamic Route Page Container Animation */
+    .page-section {
+      display: none;
+      animation: pageFadeIn var(--dur-panel) var(--ease-smooth);
+    }
+
+    .page-section.active {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    @keyframes pageFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ==========================================================================
+       CRITICAL ALERT BANNER (High-Risk Deepfake State Only)
+       ========================================================================== */
+    .critical-alert-bar {
+      display: none;
       background-color: var(--alert-banner-bg);
       border: 1px solid var(--alert-banner-border);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       padding: 16px 20px;
-      margin-bottom: 24px;
-      display: none;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      animation: fadeInBanner 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: slideAlertDown var(--dur-panel) var(--ease-smooth);
+      box-shadow: 0 4px 20px rgba(136, 19, 55, 0.25);
     }
 
-    .critical-alert-banner.visible {
+    .critical-alert-bar.visible {
       display: flex;
     }
 
-    @keyframes fadeInBanner {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes slideAlertDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    .banner-content {
+    .alert-lead {
       display: flex;
       align-items: flex-start;
       gap: 14px;
     }
 
-    .banner-icon {
-      color: #FEE2E2;
+    .alert-lead-icon {
+      color: #FFE4E6;
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
-    .banner-title {
-      font-size: 15px;
+    .alert-headline {
+      font-size: 14.5px;
       font-weight: 600;
       color: #FFFFFF;
       margin-bottom: 2px;
     }
 
-    .banner-text {
+    .alert-subtext {
       font-size: 13px;
-      color: #FECACA;
+      color: #FECDD3;
       line-height: 1.4;
     }
 
-    .banner-actions {
+    .alert-action-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
-    .btn-freeze {
-      background-color: #DC2626;
+    .btn-freeze-critical {
+      background-color: #E11D48;
       color: #FFFFFF;
-      border: 1px solid #EF4444;
+      border: 1px solid #F43F5E;
       padding: 8px 14px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color var(--dur-fast) ease, transform 80ms ease;
     }
 
-    .btn-freeze:hover {
-      background-color: #B91C1C;
+    .btn-freeze-critical:hover {
+      background-color: #BE123C;
     }
 
-    .btn-dismiss {
-      background-color: transparent;
-      color: #FECACA;
+    .btn-freeze-critical:active {
+      transform: scale(0.98);
+    }
+
+    .btn-reverify {
+      background-color: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 14px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color var(--dur-fast) ease;
     }
 
-    .btn-dismiss:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+    .btn-reverify:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-dismiss-alert {
+      background: transparent;
+      color: #FDA4AF;
+      border: none;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-dismiss-alert:hover {
       color: #FFFFFF;
     }
 
-    /* Header Section */
-    .main-header {
+    /* ==========================================================================
+       HEADER & CONTEXTUAL OVERVIEW REGION
+       ========================================================================== */
+    .top-header-region {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 20px;
     }
 
-    .header-title {
+    .header-main-text h1 {
       font-size: 22px;
       font-weight: 600;
+      letter-spacing: -0.015em;
       color: var(--text-primary);
-      letter-spacing: -0.01em;
     }
 
-    .header-desc {
+    .header-main-text p {
       font-size: 13.5px;
       color: var(--text-secondary);
       margin-top: 2px;
     }
 
-    .privacy-notice {
+    .header-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
       font-size: 12.5px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Contextual Overview Banner */
+    .context-overview-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       color: var(--text-muted);
-      margin-bottom: 24px;
+      font-size: 12.5px;
+      margin-top: -12px;
+    }
+
+    .privacy-micro-note {
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* Scenario Bar / Operator Controls */
-    .scenario-panel {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 14px 18px;
-      margin-bottom: 24px;
+    /* ==========================================================================
+       OPERATOR TEST SCENARIOS TOOLBAR (Compact, Secondary, Non-card)
+       ========================================================================== */
+    .scenario-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      gap: 16px;
       flex-wrap: wrap;
-      gap: 12px;
+    }
+
+    .scenario-label-group {
+      display: flex;
+      flex-direction: column;
     }
 
     .scenario-title {
@@ -320,7 +512,7 @@
       color: var(--text-muted);
     }
 
-    .scenario-buttons {
+    .scenario-button-group {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -328,29 +520,33 @@
     }
 
     .btn-scenario {
-      background-color: var(--bg-card-subtle);
+      background-color: var(--bg-surface-1);
       color: var(--text-secondary);
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border-subtle);
       padding: 7px 12px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s ease;
+      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform 80ms ease;
     }
 
     .btn-scenario:hover {
-      background-color: var(--bg-hover);
+      background-color: var(--bg-surface-hover);
       color: var(--text-primary);
-      border-color: var(--border-subtle);
+      border-color: var(--border-medium);
+    }
+
+    .btn-scenario:active {
+      transform: scale(0.985);
     }
 
     .btn-scenario.active {
-      background-color: rgba(59, 130, 246, 0.15);
-      border-color: var(--accent-blue);
+      background-color: var(--accent-blue-subtle);
+      border-color: var(--accent-blue-border);
       color: var(--text-primary);
       font-weight: 600;
     }
@@ -362,727 +558,1013 @@
       fill: none;
     }
 
-    /* Metric Cards Grid */
-    .metrics-grid {
+    /* ==========================================================================
+       PRIMARY LIVE SESSION WORKSPACE (Unified Connected Surface, NOT 4 cards)
+       ========================================================================== */
+    .unified-session-workspace {
+      background-color: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 26px 30px;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+      position: relative;
     }
 
-    .metric-card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 18px 20px;
+    /* Subtle divider lines between workspace columns */
+    .workspace-col {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      transition: border-color 0.15s ease;
+      gap: 6px;
+      position: relative;
     }
 
-    .metric-card:hover {
-      border-color: var(--border-subtle);
+    .workspace-col:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -12px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background-color: var(--border-subtle);
     }
 
-    .metric-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .metric-label {
-      font-size: 12.5px;
-      font-weight: 500;
-      color: var(--text-secondary);
+    .col-kicker {
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .tooltip-icon {
+    /* Tooltip */
+    .info-tooltip-wrap {
+      position: relative;
+      display: inline-flex;
       cursor: help;
       color: var(--text-muted);
-      position: relative;
     }
 
-    .tooltip-icon:hover {
+    .info-tooltip-wrap:hover {
       color: var(--text-secondary);
     }
 
-    .tooltip-box {
-      display: none;
+    .tooltip-content {
       position: absolute;
-      bottom: 125%;
+      bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      background-color: #2D2D32;
+      background-color: #26262B;
+      border: 1px solid var(--border-medium);
       color: var(--text-primary);
-      border: 1px solid var(--border-subtle);
       font-size: 11.5px;
-      line-height: 1.35;
-      padding: 6px 10px;
-      border-radius: 5px;
-      width: 210px;
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      line-height: 1.4;
+      padding: 7px 11px;
+      border-radius: var(--radius-sm);
+      width: 220px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      opacity: 0;
       pointer-events: none;
+      transition: opacity var(--dur-fast) ease;
+      z-index: 50;
+      text-transform: none;
+      font-weight: 400;
+      letter-spacing: normal;
     }
 
-    .tooltip-icon:hover .tooltip-box {
-      display: block;
+    .info-tooltip-wrap:hover .tooltip-content {
+      opacity: 1;
     }
 
-    .metric-value-row {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 4px;
+    /* Large Numeric & Semantic Display */
+    .stat-number-hero {
+      font-size: 42px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--text-primary);
+      transition: color var(--dur-standard) ease;
     }
 
-    .metric-value {
-      font-size: 28px;
+    .stat-semantic-desc {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      transition: color var(--dur-standard) ease;
+    }
+
+    .stat-subline {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .session-code-display {
+      font-size: 22px;
       font-weight: 600;
       color: var(--text-primary);
       letter-spacing: -0.02em;
     }
 
-    .metric-subtext {
-      font-size: 12px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .metric-trend {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-
-    /* Analytics Row (Chart + Challenge) */
-    .analytics-row {
+    /* ==========================================================================
+       ANALYTICS & VERIFICATION REGION (Line Chart + Live Challenge)
+       ========================================================================== */
+    .telemetry-row {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: 1.85fr 1.15fr;
+      gap: 20px;
     }
 
-    .panel {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 20px;
+    .telemetry-surface {
+      background-color: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    .panel-header {
+    .surface-header-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 16px;
     }
 
-    .panel-title {
-      font-size: 15px;
+    .surface-title {
+      font-size: 14.5px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .panel-subtitle {
-      font-size: 12.5px;
+    .surface-subtitle {
+      font-size: 12px;
       color: var(--text-muted);
       margin-top: 1px;
     }
 
-    /* Live Chart Canvas Area */
-    .chart-container {
+    /* Chart Canvas Container */
+    .chart-viewport {
       position: relative;
       height: 190px;
       width: 100%;
     }
 
-    canvas {
+    canvas#riskTimelineCanvas {
       display: block;
       width: 100%;
       height: 100%;
     }
 
-    .chart-legend {
+    .chart-threshold-legend {
       display: flex;
       align-items: center;
       gap: 16px;
       margin-top: 12px;
       font-size: 11.5px;
       color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 10px;
     }
 
-    /* Challenge Panel */
-    .challenge-panel {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+    /* Challenge Panel Details */
+    .challenge-display-card {
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      transition: transform var(--dur-panel) var(--ease-smooth), opacity var(--dur-panel) var(--ease-smooth);
     }
 
-    .challenge-box {
-      background-color: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-    }
-
-    .challenge-prompt {
+    .challenge-prompt-text {
       font-size: 14px;
       font-weight: 600;
       color: var(--text-primary);
+      line-height: 1.45;
       margin-bottom: 6px;
     }
 
-    .challenge-meta {
+    .challenge-meta-time {
       font-size: 12px;
       color: var(--text-muted);
     }
 
-    .challenge-footer {
+    .challenge-status-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-size: 12px;
       color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
     }
 
-    /* Secondary Notification / Out-of-band */
-    .oob-card {
-      background-color: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
+    /* ==========================================================================
+       OUT-OF-BAND VERIFICATION NOTICE (Restrained secondary bar)
+       ========================================================================== */
+    .oob-notice-bar {
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
 
-    .oob-left {
+    .oob-text-group {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .oob-title {
+    .oob-title-lead {
       font-size: 13.5px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .oob-desc {
+    .oob-explanation {
       font-size: 12.5px;
       color: var(--text-secondary);
     }
 
-    .oob-actions {
+    .oob-button-group {
       display: flex;
       gap: 8px;
       flex-shrink: 0;
     }
 
-    .btn-secondary {
-      background-color: var(--bg-card);
+    .btn-secondary-dark {
+      background-color: var(--bg-surface-1);
       color: var(--text-primary);
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border-subtle);
       padding: 6px 12px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
     }
 
-    .btn-secondary:hover {
-      background-color: var(--bg-hover);
-      border-color: var(--border-subtle);
+    .btn-secondary-dark:hover {
+      background-color: var(--bg-surface-hover);
+      border-color: var(--border-medium);
     }
 
-    .btn-danger-outline {
+    .btn-freeze-outline {
       background-color: transparent;
-      color: var(--status-alert);
-      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: var(--status-critical);
+      border: 1px solid rgba(248, 113, 113, 0.35);
       padding: 6px 12px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
     }
 
-    .btn-danger-outline:hover {
-      background-color: rgba(248, 113, 113, 0.12);
-      border-color: var(--status-alert);
+    .btn-freeze-outline:hover {
+      background-color: var(--status-critical-bg);
+      border-color: var(--status-critical);
     }
 
-    /* Audit Log Table */
-    .audit-header-row {
+    /* ==========================================================================
+       AUDIT LOG & RECENT ACTIVITY TABLE
+       ========================================================================== */
+    .audit-log-section {
+      background-color: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .audit-controls-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
       flex-wrap: wrap;
       gap: 12px;
     }
 
-    .search-filter-group {
+    .audit-search-filter {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .search-input {
-      background-color: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 10px;
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input-field {
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
       color: var(--text-primary);
       font-size: 12.5px;
-      padding: 6px 12px;
-      border-radius: 6px;
-      width: 240px;
+      padding: 6px 12px 6px 30px;
+      border-radius: var(--radius-sm);
+      width: 250px;
       outline: none;
-      transition: border-color 0.15s ease;
+      transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
     }
 
-    .search-input:focus {
+    .search-input-field:focus {
       border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
     }
 
-    .filter-select {
-      background-color: var(--bg-card-subtle);
-      border: 1px solid var(--border-color);
+    .select-verdict-filter {
+      background-color: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
       color: var(--text-secondary);
       font-size: 12.5px;
       padding: 6px 10px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       outline: none;
       cursor: pointer;
     }
 
-    .table-container {
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      overflow: hidden;
+    .select-verdict-filter:focus {
+      border-color: var(--accent-blue);
     }
 
-    table {
+    .btn-export-report {
+      background-color: var(--bg-surface-2);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--dur-fast) ease;
+    }
+
+    .btn-export-report:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-surface-hover);
+      border-color: var(--border-medium);
+    }
+
+    .table-shell {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+    }
+
+    table.audit-table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
       font-size: 13px;
     }
 
-    thead {
-      background-color: var(--bg-card-subtle);
-      border-bottom: 1px solid var(--border-color);
+    table.audit-table thead {
+      background-color: var(--bg-surface-2);
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    th {
+    table.audit-table th {
       padding: 10px 16px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       color: var(--text-muted);
-      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    tbody tr {
-      border-bottom: 1px solid var(--border-color);
-      transition: background-color 0.1s ease;
+    table.audit-table tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color var(--dur-fast) ease;
     }
 
-    tbody tr:last-child {
+    table.audit-table tbody tr:last-child {
       border-bottom: none;
     }
 
-    tbody tr:hover {
-      background-color: var(--bg-hover);
+    table.audit-table tbody tr:hover {
+      background-color: var(--bg-surface-hover);
     }
 
-    tbody tr:nth-child(even) {
-      background-color: rgba(255, 255, 255, 0.012);
-    }
-
-    td {
+    table.audit-table td {
       padding: 11px 16px;
       color: var(--text-secondary);
+      vertical-align: middle;
     }
 
-    .td-primary {
+    .td-primary-bold {
       color: var(--text-primary);
       font-weight: 500;
     }
 
-    .copy-btn {
+    .btn-copy-hash {
       background: none;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      margin-left: 6px;
+      margin-left: 5px;
       vertical-align: middle;
       display: inline-flex;
       align-items: center;
+      transition: color var(--dur-fast) ease;
     }
 
-    .copy-btn:hover {
+    .btn-copy-hash:hover {
       color: var(--text-primary);
     }
 
-    .btn-report {
-      background-color: transparent;
+    .btn-table-action {
+      background: transparent;
       color: var(--accent-blue);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      padding: 4px 8px;
-      border-radius: 4px;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
       font-size: 11.5px;
       font-weight: 500;
       cursor: pointer;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      transition: background-color var(--dur-fast) ease;
     }
 
-    .btn-report:hover {
+    .btn-table-action:hover {
       background-color: rgba(59, 130, 246, 0.1);
-      border-color: var(--accent-blue);
     }
 
-    /* Responsive */
-    @media (max-width: 1100px) {
-      .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
+    /* ==========================================================================
+       TOAST NOTIFICATIONS (Subtle, Non-blocking)
+       ========================================================================== */
+    .toast-tray {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast-pill {
+      background-color: #242429;
+      border: 1px solid var(--border-medium);
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      animation: toastIn var(--dur-panel) var(--ease-smooth);
+      pointer-events: auto;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
       }
-      .analytics-row {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* ==========================================================================
+       RESPONSIVENESS & REDUCED MOTION
+       ========================================================================== */
+    @media (max-width: 1200px) {
+      .unified-session-workspace {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .workspace-col:nth-child(2)::after {
+        display: none;
+      }
+      .telemetry-row {
         grid-template-columns: 1fr;
       }
     }
 
-    @media (max-width: 768px) {
-      body {
+    @media (max-width: 820px) {
+      .app-shell {
         flex-direction: column;
       }
-      aside {
+      aside.app-sidebar {
         width: 100%;
         height: auto;
         position: relative;
       }
-      main {
+      main.main-viewport {
         padding: 20px;
       }
-      .metrics-grid {
+      .unified-session-workspace {
         grid-template-columns: 1fr;
+      }
+      .workspace-col::after {
+        display: none !important;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      .bg-depth-glow, .bg-logo-watermark {
+        transform: none !important;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Left Sidebar Navigation -->
-  <aside>
-    <div class="brand-section">
-      <div class="brand-title">MEIKURAL</div>
-      <div class="brand-subtitle">Voice Biometrics SOC</div>
-    </div>
+  <!-- ==========================================================================
+       LAYER 0 & 1: ARCHITECTURAL LOGO BACKGROUND & CONTROLLED PARALLAX
+       ========================================================================== -->
+  <div class="brand-background-layer" aria-hidden="true">
+    <!-- Subtle depth illumination -->
+    <div class="bg-depth-glow" id="parallaxGlow"></div>
 
-    <nav class="nav-section">
-      <a class="nav-item active" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-        Dashboard
-      </a>
-      <a class="nav-item" href="#live-calls">
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        Live Calls
-      </a>
-      <a class="nav-item" href="#audit-log">
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Audit Log
-      </a>
-      <a class="nav-item" href="#settings">
-        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Settings
-      </a>
-    </nav>
+    <!-- Official MEIKURAL Acoustic Biometric Watermark Logo (Large scale, 2.5% opacity) -->
+    <svg class="bg-logo-watermark" id="parallaxLogo" viewBox="0 0 500 500" fill="none" stroke="currentColor">
+      <!-- Shield Perimeter Contour -->
+      <path d="M250 40 L430 110 V260 C430 370 250 450 250 450 C250 450 70 370 70 260 V110 Z" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Concentric Biometric Wave Rings -->
+      <path d="M250 100 C340 100 380 160 380 250 C380 340 250 395 250 395 C250 395 120 340 120 250 C120 160 160 100 250 100 Z" stroke-width="8" stroke-dasharray="12 10"/>
+      <!-- Precision Acoustic Biometric Impulse Bars (Waveform Core) -->
+      <line x1="170" y1="250" x2="170" y2="290" stroke-width="12" stroke-linecap="round"/>
+      <line x1="210" y1="210" x2="210" y2="330" stroke-width="14" stroke-linecap="round"/>
+      <line x1="250" y1="170" x2="250" y2="370" stroke-width="18" stroke-linecap="round"/>
+      <line x1="290" y1="210" x2="290" y2="330" stroke-width="14" stroke-linecap="round"/>
+      <line x1="330" y1="250" x2="330" y2="290" stroke-width="12" stroke-linecap="round"/>
+    </svg>
+  </div>
 
-    <div class="sidebar-footer">
-      <div class="status-badge">
-        <span class="dot dot-safe"></span>
-        <span>Connected</span>
-      </div>
-      <div style="font-size: 11.5px; color: var(--text-muted);" id="sidebarSimState">Simulator active</div>
-    </div>
-  </aside>
+  <!-- ==========================================================================
+       APPLICATION SHELL
+       ========================================================================== -->
+  <div class="app-shell">
 
-  <!-- Main Content View -->
-  <main>
-
-    <!-- Critical High-Risk Alert Banner (State 2) -->
-    <div class="critical-alert-banner" id="criticalBanner">
-      <div class="banner-content">
-        <svg class="banner-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <!-- Left Sidebar -->
+    <aside class="app-sidebar">
+      <div class="brand-block">
+        <div class="brand-logo-emblem">
+          <svg width="22" height="22" viewBox="0 0 500 500" fill="none" stroke="currentColor" stroke-width="32">
+            <path d="M250 40 L430 110 V260 C430 370 250 450 250 450 C250 450 70 370 70 260 V110 Z"/>
+            <line x1="200" y1="220" x2="200" y2="320"/>
+            <line x1="250" y1="180" x2="250" y2="360"/>
+            <line x1="300" y1="220" x2="300" y2="320"/>
+          </svg>
+        </div>
         <div>
-          <div class="banner-title">High spoof probability detected — don't proceed until re-verified</div>
-          <div class="banner-text">The caller's voice shows strong signs of impersonation. Freeze account activity or complete additional verification before continuing.</div>
-        </div>
-      </div>
-      <div class="banner-actions">
-        <button class="btn-freeze" onclick="handleFreezeAccount()">Freeze account</button>
-        <button class="btn-dismiss" onclick="dismissBanner()">Dismiss</button>
-      </div>
-    </div>
-
-    <!-- Main Header -->
-    <header class="main-header">
-      <div>
-        <h1 class="header-title">Live Call Monitoring</h1>
-        <p class="header-desc">Monitor caller trust, verification challenges, and compliance activity in real time.</p>
-      </div>
-      <div class="status-badge" style="background-color: var(--bg-card); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-        <span class="dot dot-safe" id="headerMonitorDot"></span>
-        <span id="headerMonitorText">Monitoring active</span>
-      </div>
-    </header>
-
-    <div class="privacy-notice">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span>Audio is never stored to disk. Hashes are salted and automatically expire after 90 days.</span>
-    </div>
-
-    <!-- Operator Test Suite / Scenarios -->
-    <section class="scenario-panel">
-      <div>
-        <div class="scenario-title">Test scenarios</div>
-        <div class="scenario-desc">Simulate common call conditions to verify dashboard behavior.</div>
-      </div>
-      <div class="scenario-buttons">
-        <button class="btn-scenario active" id="btnScenarioSafe" onclick="setScenario('safe')">
-          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          Safe caller
-        </button>
-        <button class="btn-scenario" id="btnScenarioCaution" onclick="setScenario('caution')">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Caution jitter
-        </button>
-        <button class="btn-scenario" id="btnScenarioDeepfake" onclick="setScenario('deepfake')">
-          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Deepfake alert
-        </button>
-        <button class="btn-scenario" id="btnScenarioFire" onclick="triggerChallengeAction()">
-          <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-          Fire challenge
-        </button>
-      </div>
-    </section>
-
-    <!-- Key Metrics Grid -->
-    <section class="metrics-grid">
-      <!-- 1. Live Trust Score -->
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-label">
-            Live trust score
-            <span class="tooltip-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-              <span class="tooltip-box">How likely the caller's voice is to match the expected identity based on the current call.</span>
-            </span>
-          </span>
-          <span class="dot dot-caution" id="metricTrustDot"></span>
-        </div>
-        <div class="metric-value-row">
-          <span class="metric-value" id="valTrustScore">0.76</span>
-          <span class="metric-trend" id="valTrustTrend">↑ 0.04 from 10s ago</span>
-        </div>
-        <div class="metric-subtext" id="valTrustLabel" style="font-weight: 600; color: var(--text-primary);">
-          High risk — step-up verification required
+          <div class="brand-wordmark">MEIKURAL</div>
+          <div class="brand-subline">Voice Biometrics SOC</div>
         </div>
       </div>
 
-      <!-- 2. Active Session -->
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-label">Active session</span>
-          <span class="dot dot-safe"></span>
-        </div>
-        <div class="metric-value-row">
-          <span class="metric-value mono" id="valSessionId" style="font-size: 24px;">SES-84F2A1</span>
-        </div>
-        <div class="metric-subtext">Live call • Voice verification stream</div>
-      </div>
+      <!-- Navigation with Animated Glider Indicator -->
+      <nav class="nav-container" id="sidebarNav">
+        <div class="nav-glider" id="navGlider"></div>
+        <a class="nav-link active" data-page="dashboard" onclick="switchRoute('dashboard', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-link" data-page="live-calls" onclick="switchRoute('live-calls', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Live Calls
+        </a>
+        <a class="nav-link" data-page="audit-log" onclick="switchRoute('audit-log', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Audit Log
+        </a>
+        <a class="nav-link" data-page="settings" onclick="switchRoute('settings', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </a>
+      </nav>
 
-      <!-- 3. Biometric Verdict -->
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-label">Biometric verdict</span>
-          <span class="dot dot-caution" id="metricVerdictDot"></span>
+      <div class="sidebar-footer">
+        <div class="status-dot-row">
+          <span class="status-dot dot-safe" id="sidebarDot"></span>
+          <span id="sidebarConnStatus">Connected</span>
         </div>
-        <div class="metric-value-row">
-          <span class="metric-value" id="valVerdictText">Step-up</span>
-        </div>
-        <div class="metric-subtext" id="valVerdictDesc">Additional verification required</div>
+        <div style="font-size: 11.5px; color: var(--text-muted);" id="sidebarModeTag">WS Stream Active</div>
       </div>
+    </aside>
 
-      <!-- 4. Compliance Status -->
-      <div class="metric-card">
-        <div class="metric-header">
-          <span class="metric-label">Compliance status</span>
-          <span class="dot dot-safe"></span>
-        </div>
-        <div class="metric-value-row">
-          <span class="metric-value" style="color: var(--status-safe);">Compliant</span>
-        </div>
-        <div class="metric-subtext">90-day retention • zero-disk audio</div>
-      </div>
-    </section>
+    <!-- Main Workspace Viewport -->
+    <main class="main-viewport">
 
-    <!-- Main Analytics Row: Line Chart + Verification Challenge -->
-    <section class="analytics-row">
-      <!-- Live Trust & Spoof Score Line Chart -->
-      <div class="panel">
-        <div class="panel-header">
+      <!-- ==========================================================================
+           CRITICAL ALERT NOTIFICATION BAR (Appears strictly during Deepfake Alert)
+           ========================================================================== -->
+      <div class="critical-alert-bar" id="criticalAlertBar">
+        <div class="alert-lead">
+          <svg class="alert-lead-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div>
-            <div class="panel-title">Live trust score</div>
-            <div class="panel-subtitle">Caller confidence over the last 30 seconds</div>
-          </div>
-          <div class="status-badge" style="background-color: var(--bg-card-subtle); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color);">
-            <span class="dot dot-blue"></span>
-            <span>Live</span>
+            <div class="alert-headline">High spoof probability detected — don't proceed until re-verified</div>
+            <div class="alert-subtext">The caller's voice shows strong signs of impersonation. Freeze account activity or complete additional verification before continuing.</div>
           </div>
         </div>
-
-        <div class="chart-container">
-          <canvas id="liveScoreCanvas"></canvas>
-        </div>
-
-        <div class="chart-legend">
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span class="dot dot-safe"></span> Safe (&gt;0.70)
-          </span>
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span class="dot dot-caution"></span> Caution (0.40–0.70)
-          </span>
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span class="dot dot-alert"></span> Alert (&lt;0.40)
-          </span>
+        <div class="alert-action-group">
+          <button class="btn-freeze-critical" onclick="executeAccountFreeze()">Freeze account</button>
+          <button class="btn-reverify" onclick="triggerChallengeAction()">Re-verify caller</button>
+          <button class="btn-dismiss-alert" onclick="dismissAlertBanner()">Dismiss</button>
         </div>
       </div>
 
-      <!-- Active Verification Challenge Panel -->
-      <div class="panel challenge-panel" id="challengePanel">
-        <div>
-          <div class="panel-header" style="margin-bottom: 12px;">
-            <div>
-              <div class="panel-title">Verification challenge</div>
-              <div class="panel-subtitle">Out-of-band active liveness protocol</div>
+      <!-- ==========================================================================
+           PAGE 1: LIVE DASHBOARD
+           ========================================================================== -->
+      <section class="page-section active" id="page-dashboard">
+
+        <!-- Header -->
+        <header class="top-header-region">
+          <div class="header-main-text">
+            <h1 id="overviewTitle">Live Call Monitoring</h1>
+            <p id="overviewSubtitle">Monitor caller trust, verification challenges and compliance activity in real time.</p>
+          </div>
+          <div class="header-status-badge">
+            <span class="status-dot dot-safe" id="headerLiveDot"></span>
+            <span id="headerLiveStatus">Monitoring active</span>
+          </div>
+        </header>
+
+        <!-- Contextual Overview & Privacy Note -->
+        <div class="context-overview-row">
+          <span id="contextMetaText">Monitoring 1 active call • Last analysis &lt;1s ago</span>
+          <div class="privacy-micro-note">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Audio is never stored to disk. Hashes are salted and automatically expire after 90 days.</span>
+          </div>
+        </div>
+
+        <!-- Operator Test Scenarios Toolbar -->
+        <div class="scenario-toolbar">
+          <div class="scenario-label-group">
+            <span class="scenario-title">Test scenarios</span>
+            <span class="scenario-desc">Simulate common call conditions to verify dashboard behavior.</span>
+          </div>
+          <div class="scenario-button-group">
+            <button class="btn-scenario active" id="btnScenSafe" onclick="selectScenario('safe')">
+              <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Safe caller
+            </button>
+            <button class="btn-scenario" id="btnScenCaution" onclick="selectScenario('caution')">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Caution jitter
+            </button>
+            <button class="btn-scenario" id="btnScenDeepfake" onclick="selectScenario('deepfake')">
+              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Deepfake alert
+            </button>
+            <button class="btn-scenario" id="btnScenFire" onclick="triggerChallengeAction()">
+              <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              Fire challenge
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Live Session Workspace (Unified Surface) -->
+        <div class="unified-session-workspace">
+          <!-- Column 1: Live Trust Score -->
+          <div class="workspace-col">
+            <div class="col-kicker">
+              Live Trust Score
+              <span class="info-tooltip-wrap">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span class="tooltip-content">How confidently MEIKURAL believes the current caller matches the expected identity based on the live voice stream.</span>
+              </span>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <div class="stat-number-hero" id="heroTrustValue">0.76</div>
+            <div class="stat-semantic-desc" id="heroTrustVerdict">High risk — step-up verification required</div>
+            <div class="stat-subline" id="heroTrustTrend">↑ 0.04 from 10s ago</div>
           </div>
 
-          <div class="challenge-box">
-            <div class="challenge-prompt" id="challengePromptText">Please confirm your employee ID and budget code.</div>
-            <div class="challenge-meta" id="challengeSentTime">Sent at 21:03:14</div>
+          <!-- Column 2: Active Session -->
+          <div class="workspace-col">
+            <div class="col-kicker">Active Session</div>
+            <div class="session-code-display mono" id="heroSessionId">SES-84F2A1</div>
+            <div class="stat-semantic-desc" style="color: var(--text-primary);">Live call session</div>
+            <div class="stat-subline">Voice verification stream</div>
+          </div>
+
+          <!-- Column 3: Biometric Verdict -->
+          <div class="workspace-col">
+            <div class="col-kicker">
+              Biometric Verdict
+              <span class="info-tooltip-wrap">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span class="tooltip-content">The current verification recommendation based on real-time neural acoustic feature analysis.</span>
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <span class="status-dot dot-warning" id="heroVerdictDot"></span>
+              <span style="font-size: 22px; font-weight: 600; color: var(--text-primary);" id="heroVerdictText">Step-up</span>
+            </div>
+            <div class="stat-semantic-desc" id="heroVerdictDesc">Additional verification required</div>
+            <div class="stat-subline">Neural VAD active</div>
+          </div>
+
+          <!-- Column 4: Compliance Status -->
+          <div class="workspace-col">
+            <div class="col-kicker">
+              Compliance Status
+              <span class="info-tooltip-wrap">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span class="tooltip-content">Shows whether the current session follows configured privacy, hashing, and retention controls.</span>
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+              <span class="status-dot dot-safe"></span>
+              <span style="font-size: 22px; font-weight: 600; color: var(--status-safe);">Compliant</span>
+            </div>
+            <div class="stat-semantic-desc">90-day retention</div>
+            <div class="stat-subline">Zero audio stored on disk</div>
           </div>
         </div>
 
-        <div class="challenge-footer">
-          <span class="status-badge">
-            <span class="dot dot-caution" id="challengeDot"></span>
-            <span id="challengeStatusText">Waiting for caller response</span>
-          </span>
-          <span class="mono" style="font-size: 11.5px; color: var(--text-muted);" id="challengeTimer">14s elapsed</span>
-        </div>
-      </div>
-    </section>
+        <!-- Telemetry Row: Line Chart + Verification Challenge -->
+        <div class="telemetry-row">
+          <!-- Chart -->
+          <div class="telemetry-surface">
+            <div class="surface-header-row">
+              <div>
+                <div class="surface-title">Live trust score</div>
+                <div class="surface-subtitle">Caller confidence over the last 30 seconds</div>
+              </div>
+              <div class="header-status-badge" style="padding: 4px 8px; font-size: 11.5px;">
+                <span class="status-dot dot-blue"></span>
+                <span>Live Feed</span>
+              </div>
+            </div>
 
-    <!-- Out-of-band Secondary Action Card -->
-    <section class="oob-card">
-      <div class="oob-left">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-caution)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-        <div>
-          <div class="oob-title">Out-of-band verification</div>
-          <div class="oob-desc" id="oobMessageText">Suspicious voice activity detected on an active call claiming to be you.</div>
-        </div>
-      </div>
-      <div class="oob-actions">
-        <button class="btn-danger-outline" onclick="handleFreezeAccount()">Freeze account</button>
-        <button class="btn-secondary" onclick="handleVerifySelf()">It was me</button>
-      </div>
-    </section>
+            <div class="chart-viewport">
+              <canvas id="riskTimelineCanvas"></canvas>
+            </div>
 
-    <!-- Live Audit Log Table -->
-    <section class="panel" id="audit-log">
-      <div class="audit-header-row">
-        <div>
-          <div class="panel-title">Recent activity</div>
-          <div class="panel-subtitle">Zero-trust audit trail with 90-day compliance purging</div>
+            <div class="chart-threshold-legend">
+              <span style="display: flex; align-items: center; gap: 5px;">
+                <span class="status-dot dot-safe"></span> Safe (&gt;0.70)
+              </span>
+              <span style="display: flex; align-items: center; gap: 5px;">
+                <span class="status-dot dot-warning"></span> Caution (0.40–0.70)
+              </span>
+              <span style="display: flex; align-items: center; gap: 5px;">
+                <span class="status-dot dot-critical"></span> Alert (&lt;0.40)
+              </span>
+            </div>
+          </div>
+
+          <!-- Active Challenge Panel -->
+          <div class="telemetry-surface" id="challengeContainer">
+            <div>
+              <div class="surface-header-row" style="margin-bottom: 12px;">
+                <div>
+                  <div class="surface-title">Verification challenge</div>
+                  <div class="surface-subtitle">Dynamic counter-impersonation prompt</div>
+                </div>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              </div>
+
+              <div class="challenge-display-card" id="challengeCardBox">
+                <div class="challenge-prompt-text" id="challengePromptMsg">Please confirm your employee ID and budget code.</div>
+                <div class="challenge-meta-time" id="challengeTimestamp">Sent at 21:03:14</div>
+              </div>
+            </div>
+
+            <div class="challenge-status-bar">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <span class="status-dot dot-warning" id="challengeStatusDot"></span>
+                <span id="challengeStatusLabel">Waiting for caller response</span>
+              </span>
+              <span class="mono" style="font-size: 11.5px; color: var(--text-muted);" id="challengeElapsedTicker">14s elapsed</span>
+            </div>
+          </div>
         </div>
 
-        <div class="search-filter-group">
-          <input type="text" class="search-input" id="auditSearchInput" placeholder="Search sessions or caller hashes..." oninput="filterAuditTable()">
-          <select class="filter-select" id="auditVerdictFilter" onchange="filterAuditTable()">
-            <option value="ALL">All verdicts</option>
-            <option value="Pass">Pass (Safe)</option>
-            <option value="Step-up">Step-up (Caution)</option>
-            <option value="Alert">Alert (Deepfake)</option>
-          </select>
-          <button class="btn-secondary" onclick="exportIncidentReport('SES-84F2A1')" title="Download SOC Incident Forensic Report">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export SOC Report
+        <!-- Out-of-band Verification Secondary Notice -->
+        <div class="oob-notice-bar">
+          <div class="oob-text-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--status-warning)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            <div>
+              <div class="oob-title-lead">Out-of-band verification</div>
+              <div class="oob-explanation">Suspicious voice activity detected on an active call claiming to be you.</div>
+            </div>
+          </div>
+          <div class="oob-button-group">
+            <button class="btn-freeze-outline" onclick="executeAccountFreeze()">Freeze account</button>
+            <button class="btn-secondary-dark" onclick="executeVerifySelf()">It was me</button>
+          </div>
+        </div>
+
+        <!-- Recent Activity / Live Audit Log Section -->
+        <div class="audit-log-section">
+          <div class="audit-controls-bar">
+            <div>
+              <div class="surface-title">Recent activity</div>
+              <div class="surface-subtitle">Zero-trust audit trail with 90-day automated compliance purge</div>
+            </div>
+
+            <div class="audit-search-filter">
+              <div class="search-input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="search-input-field" id="tableSearchField" placeholder="Search sessions or caller hashes..." oninput="filterAuditRecords()">
+              </div>
+              <select class="select-verdict-filter" id="tableVerdictSelect" onchange="filterAuditRecords()">
+                <option value="ALL">All verdicts</option>
+                <option value="Pass">Pass</option>
+                <option value="Step-up">Step-up</option>
+                <option value="Alert">Alert</option>
+              </select>
+              <button class="btn-export-report" onclick="downloadIncidentReport('SES-84F2A1')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export SOC Report
+              </button>
+            </div>
+          </div>
+
+          <div class="table-shell">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Session ID</th>
+                  <th>Caller hash</th>
+                  <th>Risk score</th>
+                  <th>Verdict</th>
+                  <th>Challenge</th>
+                  <th>Timestamp</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableRows">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==========================================================================
+           PAGE 2: LIVE CALLS DIRECTORY
+           ========================================================================== -->
+      <section class="page-section" id="page-live-calls">
+        <header class="top-header-region">
+          <div class="header-main-text">
+            <h1>Active Voice Streams</h1>
+            <p>Active telecom trunk lines and live biometric verification feeds.</p>
+          </div>
+          <div class="header-status-badge">
+            <span class="status-dot dot-safe"></span>
+            <span>1 Call Active</span>
+          </div>
+        </header>
+
+        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr;">
+          <div class="workspace-col">
+            <div class="col-kicker">Trunk Connection</div>
+            <div class="session-code-display mono">SIP-TRUNK-092</div>
+            <div class="stat-semantic-desc">Low Latency Edge Gateway (48ms)</div>
+            <div class="stat-subline">Active channel: 16kHz mono PCM stream</div>
+          </div>
+          <div class="workspace-col">
+            <div class="col-kicker">Biometric Model</div>
+            <div class="session-code-display">AASIST v2 Neural</div>
+            <div class="stat-semantic-desc">Int8 Quantized ONNX Core</div>
+            <div class="stat-subline">Passive spoof inference: 48.2ms per chunk</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           PAGE 3: FULL AUDIT LOG
+           ========================================================================== -->
+      <section class="page-section" id="page-audit-log">
+        <header class="top-header-region">
+          <div class="header-main-text">
+            <h1>Compliance Audit Trail</h1>
+            <p>Cryptographic hash verification and regulatory retention logs.</p>
+          </div>
+          <button class="btn-export-report" onclick="downloadIncidentReport('SES-84F2A1')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export All Sessions
           </button>
+        </header>
+
+        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="workspace-col">
+            <div class="col-kicker">Total Audited Sessions</div>
+            <div class="session-code-display" id="auditCountTotal">1,482</div>
+            <div class="stat-subline">90-day auto-purge policy enforced</div>
+          </div>
+          <div class="workspace-col">
+            <div class="col-kicker">Deepfake Attempts Blocked</div>
+            <div class="session-code-display" style="color: var(--status-critical);">47</div>
+            <div class="stat-subline">Multi-channel Twilio SMS & SMTP alerts dispatched</div>
+          </div>
+          <div class="workspace-col">
+            <div class="col-kicker">Regulatory Compliance</div>
+            <div class="session-code-display" style="color: var(--status-safe);">100%</div>
+            <div class="stat-subline">Zero unhashed audio stored to disk</div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Session ID</th>
-              <th>Caller hash</th>
-              <th>Risk score</th>
-              <th>Verdict</th>
-              <th>Challenge</th>
-              <th>Timestamp</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="auditTableBody">
-            <!-- Dynamic rows will be rendered here -->
-          </tbody>
-        </table>
-      </div>
-    </section>
+      <!-- ==========================================================================
+           PAGE 4: SYSTEM SETTINGS
+           ========================================================================== -->
+      <section class="page-section" id="page-settings">
+        <header class="top-header-region">
+          <div class="header-main-text">
+            <h1>SOC Gateway Settings</h1>
+            <p>Detection thresholds, retention policies, and multi-channel alerting.</p>
+          </div>
+        </header>
 
-  </main>
+        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr;">
+          <div class="workspace-col">
+            <div class="col-kicker">Alert Thresholds</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 4px;">Step-up Threshold: 0.65</div>
+            <div class="stat-subline">Triggers dynamic challenge prompt & SMS/Email delivery</div>
+          </div>
+          <div class="workspace-col">
+            <div class="col-kicker">Retention Policy</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 4px;">90 Days Auto-Purge</div>
+            <div class="stat-subline">Calls and event records purged via automated cron</div>
+          </div>
+        </div>
+      </section>
 
+    </main>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div class="toast-tray" id="toastTray"></div>
+
+  <!-- ==========================================================================
+       SCRIPTS: REAL-TIME CHART, SUBTLE PARALLAX, STATE CONTROLLER
+       ========================================================================== -->
   <script>
-    // State Model
-    const state = {
+    // --- 1. Global State Model ---
+    const appState = {
       scenario: 'caution', // 'safe', 'caution', 'deepfake'
       sessionId: 'SES-84F2A1',
       trustScore: 0.76,
+      displayedScore: 0.76,
       verdict: 'Step-up',
       verdictDesc: 'Additional verification required',
       trustLabel: 'High risk — step-up verification required',
-      trend: '↑ 0.04 from 10s ago',
-      criticalBanner: false,
+      trendText: '↑ 0.04 from 10s ago',
+      criticalBannerActive: false,
       challengeText: 'Please confirm your employee ID and budget code.',
-      challengeSentTime: '21:03:14',
+      challengeTime: '21:03:14',
       challengeStatus: 'Waiting for caller response',
-      chartHistory: []
+      chartHistory: [],
+      targetLogoX: 0,
+      targetLogoY: 0,
+      currentLogoX: 0,
+      currentLogoY: 0
     };
 
-    // Pre-populate 30 seconds of chart data
-    const chartPoints = 30;
-    for (let i = 0; i < chartPoints; i++) {
-      state.chartHistory.push(0.74 + (Math.sin(i / 2) * 0.06));
+    // Pre-seed chart with 30 seconds of historical data
+    const CHART_POINTS = 30;
+    for (let i = 0; i < CHART_POINTS; i++) {
+      appState.chartHistory.push(0.74 + (Math.sin(i / 2) * 0.05));
     }
 
-    // Audit logs mock data
-    let auditData = [
+    // Historical Audit Data
+    let auditRecords = [
       { id: 'SES-84F2A1', hash: '9f7a4e12c8b02d91', score: '0.76', verdict: 'Step-up', challenge: 'Yes', time: '21:03:14', fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e' },
       { id: 'SES-73D9B0', hash: 'a1b2c3d4e5f67890', score: '0.94', verdict: 'Pass', challenge: 'No', time: '20:58:02', fullHash: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0' },
       { id: 'SES-62A8C4', hash: 'e4f5a6b7c8d90123', score: '0.19', verdict: 'Alert', challenge: 'Yes', time: '20:44:50', fullHash: 'e4f5a6b7c8d90123456789abcdef0123456789abcdef0123456789abcdef0123' },
@@ -1090,219 +1572,247 @@
       { id: 'SES-40B1D9', hash: '7a8b9c0d1e2f3456', score: '0.62', verdict: 'Step-up', challenge: 'Yes', time: '20:15:33', fullHash: '7a8b9c0d1e2f3456789abcdef0123456789abcdef0123456789abcdef012345' },
     ];
 
-    // Canvas Chart Rendering
-    const canvas = document.getElementById('liveScoreCanvas');
-    const ctx = canvas.getContext('2d');
+    // --- 2. Canvas Chart Engine (Stripe/Google Minimalist Aesthetics) ---
+    const chartCanvas = document.getElementById('riskTimelineCanvas');
+    const chartCtx = chartCanvas.getContext('2d');
 
-    function resizeCanvas() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    function resizeChartCanvas() {
+      const parentRect = chartCanvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      chartCanvas.width = parentRect.width * dpr;
+      chartCanvas.height = parentRect.height * dpr;
+      chartCtx.scale(dpr, dpr);
     }
 
-    function renderChart() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+    function renderRiskChart() {
+      const parentRect = chartCanvas.parentElement.getBoundingClientRect();
+      const w = parentRect.width;
+      const h = parentRect.height;
 
-      ctx.clearRect(0, 0, w, h);
+      chartCtx.clearRect(0, 0, w, h);
 
-      // Subtle horizontal gridlines
-      ctx.strokeStyle = '#2A2A2E';
-      ctx.lineWidth = 1;
+      // Subtle horizontal threshold gridlines (0.2, 0.4, 0.7, 0.9)
+      chartCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      chartCtx.lineWidth = 1;
 
-      const lines = [0.2, 0.4, 0.7, 0.9];
-      lines.forEach(val => {
-        const y = h - (val * (h - 20)) - 10;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
+      const thresholds = [0.2, 0.4, 0.7, 0.9];
+      thresholds.forEach(val => {
+        const y = h - (val * (h - 24)) - 12;
+        chartCtx.beginPath();
+        chartCtx.moveTo(0, y);
+        chartCtx.lineTo(w, y);
+        chartCtx.stroke();
 
-        ctx.fillStyle = '#5A5A62';
-        ctx.font = '10px Inter, sans-serif';
-        ctx.fillText(val.toFixed(1), 4, y - 3);
+        chartCtx.fillStyle = '#5A5A63';
+        chartCtx.font = '10px Inter, sans-serif';
+        chartCtx.fillText(val.toFixed(1), 4, y - 3);
       });
 
-      // Plot smooth line
-      if (state.chartHistory.length < 2) return;
+      if (appState.chartHistory.length < 2) return;
 
-      const step = w / (chartPoints - 1);
+      const step = w / (CHART_POINTS - 1);
+      chartCtx.beginPath();
+      chartCtx.lineWidth = 2;
 
-      ctx.beginPath();
-      ctx.lineWidth = 2;
-
-      // Color dynamically based on current latest score
-      const latest = state.chartHistory[state.chartHistory.length - 1];
-      if (latest >= 0.70) {
-        ctx.strokeStyle = '#3B82F6'; // Muted corporate blue for calm/safe
-      } else if (latest >= 0.40) {
-        ctx.strokeStyle = '#FBBF24'; // Amber caution
+      // Restrained line coloring
+      const latestVal = appState.chartHistory[appState.chartHistory.length - 1];
+      if (latestVal >= 0.70) {
+        chartCtx.strokeStyle = '#3B82F6'; // Muted classic corporate blue
+      } else if (latestVal >= 0.40) {
+        chartCtx.strokeStyle = '#FBBF24'; // Restrained amber
       } else {
-        ctx.strokeStyle = '#F87171'; // Red alert
+        chartCtx.strokeStyle = '#F87171'; // Clear alert red
       }
 
-      state.chartHistory.forEach((val, idx) => {
+      appState.chartHistory.forEach((val, idx) => {
         const x = idx * step;
-        const y = h - (val * (h - 20)) - 10;
+        const y = h - (val * (h - 24)) - 12;
         if (idx === 0) {
-          ctx.moveTo(x, y);
+          chartCtx.moveTo(x, y);
         } else {
-          ctx.lineTo(x, y);
+          chartCtx.lineTo(x, y);
         }
       });
-      ctx.stroke();
+      chartCtx.stroke();
 
-      // Draw subtle end point
-      const lastX = (state.chartHistory.length - 1) * step;
-      const lastY = h - (latest * (h - 20)) - 10;
+      // Current live data point indicator
+      const lastX = (appState.chartHistory.length - 1) * step;
+      const lastY = h - (latestVal * (h - 24)) - 12;
 
-      ctx.beginPath();
-      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-      ctx.fillStyle = ctx.strokeStyle;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#212124';
-      ctx.stroke();
+      chartCtx.beginPath();
+      chartCtx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      chartCtx.fillStyle = chartCtx.strokeStyle;
+      chartCtx.fill();
+      chartCtx.lineWidth = 2;
+      chartCtx.strokeStyle = '#1B1B1F';
+      chartCtx.stroke();
     }
 
     window.addEventListener('resize', () => {
-      resizeCanvas();
-      renderChart();
+      resizeChartCanvas();
+      renderRiskChart();
     });
 
-    // Scenario Switcher
-    function setScenario(type) {
-      state.scenario = type;
+    // --- 3. Numeric Interpolation Animation (0.76 -> 0.64 in 200ms) ---
+    function animateNumericTransition(targetValue) {
+      const startValue = appState.displayedScore;
+      const duration = 220;
+      const startTime = performance.now();
 
-      // Reset button active classes
+      function updateNumber(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const current = startValue + (targetValue - startValue) * ease;
+        appState.displayedScore = current;
+
+        document.getElementById('heroTrustValue').innerText = current.toFixed(2);
+
+        if (progress < 1) {
+          requestAnimationFrame(updateNumber);
+        } else {
+          appState.displayedScore = targetValue;
+          document.getElementById('heroTrustValue').innerText = targetValue.toFixed(2);
+        }
+      }
+      requestAnimationFrame(updateNumber);
+    }
+
+    // --- 4. Operator Scenario Switcher ---
+    function selectScenario(type) {
+      appState.scenario = type;
+
+      // Update button active state
       document.querySelectorAll('.btn-scenario').forEach(b => b.classList.remove('active'));
 
-      const banner = document.getElementById('criticalBanner');
-      const trustVal = document.getElementById('valTrustScore');
-      const trustTrend = document.getElementById('valTrustTrend');
-      const trustLabel = document.getElementById('valTrustLabel');
-      const verdictText = document.getElementById('valVerdictText');
-      const verdictDesc = document.getElementById('valVerdictDesc');
-      const trustDot = document.getElementById('metricTrustDot');
-      const verdictDot = document.getElementById('metricVerdictDot');
-      const monitorDot = document.getElementById('headerMonitorDot');
-      const monitorText = document.getElementById('headerMonitorText');
-      const simState = document.getElementById('sidebarSimState');
+      const alertBar = document.getElementById('criticalAlertBar');
+      const trustVerdict = document.getElementById('heroTrustVerdict');
+      const trustTrend = document.getElementById('heroTrustTrend');
+      const verdictText = document.getElementById('heroVerdictText');
+      const verdictDesc = document.getElementById('heroVerdictDesc');
+      const verdictDot = document.getElementById('heroVerdictDot');
+      const liveDot = document.getElementById('headerLiveDot');
+      const liveStatus = document.getElementById('headerLiveStatus');
+      const overviewTitle = document.getElementById('overviewTitle');
+      const overviewSubtitle = document.getElementById('overviewSubtitle');
 
       const now = new Date().toTimeString().split(' ')[0];
 
       if (type === 'safe') {
-        document.getElementById('btnScenarioSafe').classList.add('active');
-        state.trustScore = 0.92;
-        state.verdict = 'Pass';
-        state.verdictDesc = 'Caller verified successfully';
-        state.trustLabel = 'Safe — identity confirmed';
-        state.trend = '↑ 0.08 from 10s ago';
-        banner.classList.remove('visible');
+        document.getElementById('btnScenSafe').classList.add('active');
+        appState.trustScore = 0.92;
+        appState.verdict = 'Pass';
+        appState.verdictDesc = 'Caller verified successfully';
+        appState.trustLabel = 'Safe — identity confirmed';
+        appState.trendText = '↑ 0.08 from 10s ago';
+        alertBar.classList.remove('visible');
 
-        trustDot.className = 'dot dot-safe';
-        verdictDot.className = 'dot dot-safe';
-        monitorDot.className = 'dot dot-safe';
-        monitorText.innerText = 'Monitoring active';
-        simState.innerText = 'Safe stream active';
+        verdictDot.className = 'status-dot dot-safe';
+        liveDot.className = 'status-dot dot-safe';
+        liveStatus.innerText = 'Monitoring active';
+        overviewTitle.innerText = 'Live Call Monitoring';
+        overviewSubtitle.innerText = 'Everything is operating normally. Zero security anomalies detected.';
 
-        // Add audit log
-        addAuditEntry(state.sessionId, '9f7a...2d91', '0.92', 'Pass', 'No', now);
+        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.92', 'Pass', 'No', now);
+        showToast('🟢 Safe caller scenario active: Voiceprint matched with high confidence.', 'safe');
 
       } else if (type === 'caution') {
-        document.getElementById('btnScenarioCaution').classList.add('active');
-        state.trustScore = 0.64;
-        state.verdict = 'Step-up';
-        state.verdictDesc = 'Voice instability detected';
-        state.trustLabel = 'Moderate risk — challenge recommended';
-        state.trend = '↓ 0.05 from 10s ago';
-        banner.classList.remove('visible');
+        document.getElementById('btnScenCaution').classList.add('active');
+        appState.trustScore = 0.64;
+        appState.verdict = 'Step-up';
+        appState.verdictDesc = 'Voice instability detected';
+        appState.trustLabel = 'High risk — step-up verification required';
+        appState.trendText = '↓ 0.05 from 10s ago';
+        alertBar.classList.remove('visible');
 
-        trustDot.className = 'dot dot-caution';
-        verdictDot.className = 'dot dot-caution';
-        monitorDot.className = 'dot dot-caution';
-        monitorText.innerText = 'Monitoring active (Caution)';
-        simState.innerText = 'Jitter active';
+        verdictDot.className = 'status-dot dot-warning';
+        liveDot.className = 'status-dot dot-warning';
+        liveStatus.innerText = 'Caution Advisory';
+        overviewTitle.innerText = 'Live Call Monitoring';
+        overviewSubtitle.innerText = 'Moderate risk indicators. Verification challenge recommended.';
 
-        addAuditEntry(state.sessionId, '9f7a...2d91', '0.64', 'Step-up', 'Yes', now);
+        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.64', 'Step-up', 'Yes', now);
+        showToast('🟡 Caution jitter scenario active: Challenge protocol dispatched.', 'warning');
 
       } else if (type === 'deepfake') {
-        document.getElementById('btnScenarioDeepfake').classList.add('active');
-        state.trustScore = 0.18;
-        state.verdict = 'Alert';
-        state.verdictDesc = 'Deepfake indicators detected';
-        state.trustLabel = 'Critical risk — likely voice impersonation';
-        state.trend = '↓ 0.42 from 10s ago';
+        document.getElementById('btnScenDeepfake').classList.add('active');
+        appState.trustScore = 0.18;
+        appState.verdict = 'Alert';
+        appState.verdictDesc = 'Deepfake indicators detected';
+        appState.trustLabel = 'Critical risk — likely voice impersonation';
+        appState.trendText = '↓ 0.42 from 10s ago';
 
-        // Show critical alert banner
-        banner.classList.add('visible');
+        // Display the critical red alert banner
+        alertBar.classList.add('visible');
 
-        trustDot.className = 'dot dot-alert';
-        verdictDot.className = 'dot dot-alert';
-        monitorDot.className = 'dot dot-alert';
-        monitorText.innerText = 'High Risk Detected';
-        simState.innerText = 'Deepfake injected';
+        verdictDot.className = 'status-dot dot-critical';
+        liveDot.className = 'status-dot dot-critical';
+        liveStatus.innerText = 'High Risk Detected';
+        overviewTitle.innerText = 'Live Call Monitoring — Incident In Progress';
+        overviewSubtitle.innerText = 'Immediate verification required. Synthetic voice artifacts detected.';
 
-        addAuditEntry(state.sessionId, '9f7a...2d91', '0.18', 'Alert', 'Yes', now);
+        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.18', 'Alert', 'Yes', now);
+        showToast('🔴 Critical Deepfake alert triggered: Step-up verification and account freeze recommended.', 'critical');
       }
 
-      // Update UI texts
-      trustVal.innerText = state.trustScore.toFixed(2);
-      trustTrend.innerText = state.trend;
-      trustLabel.innerText = state.trustLabel;
-      verdictText.innerText = state.verdict;
-      verdictDesc.innerText = state.verdictDesc;
+      // Smoothly animate the numeric score
+      animateNumericTransition(appState.trustScore);
 
-      // Add point to chart and animate
-      state.chartHistory.shift();
-      state.chartHistory.push(state.trustScore);
-      renderChart();
+      trustVerdict.innerText = appState.trustLabel;
+      trustTrend.innerText = appState.trendText;
+      verdictText.innerText = appState.verdict;
+      verdictDesc.innerText = appState.verdictDesc;
+
+      // Update Chart points
+      appState.chartHistory.shift();
+      appState.chartHistory.push(appState.trustScore);
+      renderRiskChart();
     }
 
+    // --- 5. Verification Challenge Trigger Action ---
     function triggerChallengeAction() {
       const prompts = [
         "Please confirm your employee ID and budget code.",
-        "Please repeat the security digits: 9 - 4 - 2 - 7.",
+        "Please repeat the verification digits: 9 - 4 - 2 - 7.",
         "State your department and direct reporting manager's name.",
         "Please confirm the last four digits of your corporate card."
       ];
       const selected = prompts[Math.floor(Math.random() * prompts.length)];
       const now = new Date().toTimeString().split(' ')[0];
 
-      const panel = document.getElementById('challengePanel');
-      panel.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
-      panel.style.transform = 'scale(0.98)';
-      panel.style.opacity = '0.7';
+      const challengeBox = document.getElementById('challengeCardBox');
+      challengeBox.style.transform = 'translateY(6px)';
+      challengeBox.style.opacity = '0.5';
 
       setTimeout(() => {
-        document.getElementById('challengePromptText').innerText = selected;
-        document.getElementById('challengeSentTime').innerText = `Sent at ${now}`;
-        document.getElementById('challengeStatusText').innerText = 'Waiting for caller response';
-        document.getElementById('challengeDot').className = 'dot dot-caution';
-        panel.style.transform = 'scale(1)';
-        panel.style.opacity = '1';
-      }, 150);
+        document.getElementById('challengePromptMsg').innerText = selected;
+        document.getElementById('challengeTimestamp').innerText = `Sent at ${now}`;
+        document.getElementById('challengeStatusLabel').innerText = 'Waiting for caller response';
+        document.getElementById('challengeStatusDot').className = 'status-dot dot-warning';
+        challengeBox.style.transform = 'translateY(0)';
+        challengeBox.style.opacity = '1';
+      }, 140);
 
-      addAuditEntry(state.sessionId, '9f7a...2d91', state.trustScore.toFixed(2), state.verdict, 'Fired', now);
+      appendAuditEntry(appState.sessionId, '9f7a...2d91', appState.trustScore.toFixed(2), appState.verdict, 'Fired', now);
+      showToast('🎤 Dynamic verification challenge transmitted to caller stream.', 'info');
     }
 
-    function dismissBanner() {
-      document.getElementById('criticalBanner').classList.remove('visible');
+    function dismissAlertBanner() {
+      document.getElementById('criticalAlertBar').classList.remove('visible');
     }
 
-    function handleFreezeAccount() {
-      alert(`[MEIKURAL ACTION] Transaction frozen for Session ID: ${state.sessionId}.\nSalted caller ID locked in fraud registry and SMS alert dispatched.`);
-      dismissBanner();
+    function executeAccountFreeze() {
+      showToast(`🔒 Transaction locked for Session ${appState.sessionId}. Caller ID hash locked in fraud registry.`, 'critical');
+      dismissAlertBanner();
     }
 
-    function handleVerifySelf() {
-      alert(`[MEIKURAL ACTION] Out-of-band verification confirmed by account holder for Session ID: ${state.sessionId}.`);
+    function executeVerifySelf() {
+      showToast(`✅ Out-of-band verification confirmed by account holder for ${appState.sessionId}.`, 'safe');
     }
 
-    function addAuditEntry(id, hash, score, verdict, challenge, time) {
-      auditData.unshift({
+    // --- 6. Audit Table Management & Search/Filter ---
+    function appendAuditEntry(id, hash, score, verdict, challenge, time) {
+      auditRecords.unshift({
         id,
         hash,
         score,
@@ -1311,58 +1821,58 @@
         time,
         fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e'
       });
-      if (auditData.length > 8) auditData.pop();
-      filterAuditTable();
+      if (auditRecords.length > 8) auditRecords.pop();
+      filterAuditRecords();
     }
 
-    function copyToClipboard(text) {
+    function copyHashToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
-        alert(`Copied hash to clipboard: ${text}`);
+        showToast(`📋 Copied SHA-256 hash to clipboard`, 'info');
       });
     }
 
-    function exportIncidentReport(sessionId) {
-      // Connects directly to our backend /calls/{session_id}/report endpoint or downloads live summary
+    function downloadIncidentReport(sessionId) {
       const url = `http://127.0.0.1:8000/calls/${sessionId}/report`;
       window.open(url, '_blank');
+      showToast(`📄 SOC Forensic Report downloaded for ${sessionId}`, 'safe');
     }
 
-    function filterAuditTable() {
-      const search = document.getElementById('auditSearchInput').value.toLowerCase();
-      const filter = document.getElementById('auditVerdictFilter').value;
-      const tbody = document.getElementById('auditTableBody');
+    function filterAuditRecords() {
+      const query = document.getElementById('tableSearchField').value.toLowerCase();
+      const verdictFilter = document.getElementById('tableVerdictSelect').value;
+      const tbody = document.getElementById('auditTableRows');
 
-      const filtered = auditData.filter(row => {
-        const matchesSearch = row.id.toLowerCase().includes(search) || row.hash.toLowerCase().includes(search);
-        const matchesFilter = (filter === 'ALL') || (row.verdict === filter);
-        return matchesSearch && matchesFilter;
+      const filtered = auditRecords.filter(row => {
+        const matchesQuery = row.id.toLowerCase().includes(query) || row.hash.toLowerCase().includes(query);
+        const matchesVerdict = (verdictFilter === 'ALL') || (row.verdict === verdictFilter);
+        return matchesQuery && matchesVerdict;
       });
 
       tbody.innerHTML = filtered.map(row => {
-        let dotClass = 'dot-safe';
-        if (row.verdict === 'Step-up') dotClass = 'dot-caution';
-        if (row.verdict === 'Alert') dotClass = 'dot-alert';
+        let dot = 'dot-safe';
+        if (row.verdict === 'Step-up') dot = 'dot-warning';
+        if (row.verdict === 'Alert') dot = 'dot-critical';
 
         return `
           <tr>
-            <td class="td-primary mono">${row.id}</td>
+            <td class="td-primary-bold mono">${row.id}</td>
             <td class="mono">
               ${row.hash}
-              <button class="copy-btn" onclick="copyToClipboard('${row.fullHash}')" title="Copy full SHA-256 hash">
+              <button class="btn-copy-hash" onclick="copyHashToClipboard('${row.fullHash}')" title="Copy full salted SHA-256 hash">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
             </td>
-            <td class="mono td-primary">${row.score}</td>
+            <td class="mono td-primary-bold">${row.score}</td>
             <td>
-              <span class="status-badge">
-                <span class="dot ${dotClass}"></span>
+              <span class="status-dot-row">
+                <span class="status-dot ${dot}"></span>
                 <span>${row.verdict}</span>
               </span>
             </td>
             <td>${row.challenge}</td>
             <td class="mono" style="font-size: 12px;">${row.time}</td>
             <td>
-              <button class="btn-report" onclick="exportIncidentReport('${row.id}')">
+              <button class="btn-table-action" onclick="downloadIncidentReport('${row.id}')">
                 SOC Report
               </button>
             </td>
@@ -1371,20 +1881,126 @@
       }).join('');
     }
 
-    // Live continuous chart tick simulation
+    // --- 7. Sidebar Gliding Navigation Pill ---
+    function updateNavGlider(targetElement) {
+      const glider = document.getElementById('navGlider');
+      if (!targetElement || !glider) return;
+      const containerRect = document.getElementById('sidebarNav').getBoundingClientRect();
+      const targetRect = targetElement.getBoundingClientRect();
+      const relativeTop = targetRect.top - containerRect.top;
+
+      glider.style.opacity = '1';
+      glider.style.transform = `translateY(${relativeTop}px)`;
+    }
+
+    function switchRoute(pageId, navElement) {
+      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+      navElement.classList.add('active');
+      updateNavGlider(navElement);
+
+      document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+      const activeSection = document.getElementById(`page-${pageId}`);
+      if (activeSection) {
+        activeSection.classList.add('active');
+      }
+
+      if (pageId === 'dashboard') {
+        resizeChartCanvas();
+        renderRiskChart();
+      }
+    }
+
+    // --- 8. Controlled Spatial Parallax Effect ---
+    // Background logo moves max 10px, illumination 5px with damping coefficient ~0.08
+    const logoElement = document.getElementById('parallaxLogo');
+    const glowElement = document.getElementById('parallaxGlow');
+
+    window.addEventListener('mousemove', (e) => {
+      const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to +1
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
+
+      appState.targetLogoX = normX * 10;
+      appState.targetLogoY = normY * 7;
+    });
+
+    function stepParallax() {
+      // Damping interpolation
+      appState.currentLogoX += (appState.targetLogoX - appState.currentLogoX) * 0.08;
+      appState.currentLogoY += (appState.targetLogoY - appState.currentLogoY) * 0.08;
+
+      if (logoElement && glowElement) {
+        logoElement.style.transform = `translate3d(${appState.currentLogoX.toFixed(2)}px, ${appState.currentLogoY.toFixed(2)}px, 0)`;
+        glowElement.style.transform = `translate3d(${(appState.currentLogoX * 0.5).toFixed(2)}px, ${(appState.currentLogoY * 0.5).toFixed(2)}px, 0)`;
+      }
+      requestAnimationFrame(stepParallax);
+    }
+
+    // --- 9. Toast Notifications ---
+    function showToast(message, type = 'info') {
+      const tray = document.getElementById('toastTray');
+      const toast = document.createElement('div');
+      toast.className = 'toast-pill';
+      toast.innerHTML = message;
+      tray.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        setTimeout(() => toast.remove(), 200);
+      }, 3200);
+    }
+
+    // --- 10. Live Continuous Background Chart Tick & WebSocket Handler ---
     setInterval(() => {
-      let noise = (Math.random() - 0.5) * 0.02;
-      let nextVal = Math.max(0.05, Math.min(0.99, state.trustScore + noise));
-      state.chartHistory.shift();
-      state.chartHistory.push(nextVal);
-      renderChart();
+      if (appState.scenario === 'caution' || appState.scenario === 'safe') {
+        const noise = (Math.random() - 0.5) * 0.018;
+        const nextVal = Math.max(0.05, Math.min(0.99, appState.trustScore + noise));
+        appState.chartHistory.shift();
+        appState.chartHistory.push(nextVal);
+        renderRiskChart();
+      }
     }, 1200);
 
-    // Initialization
+    // Native WebSocket integration with auto-recovery
+    function connectBackendWebSocket() {
+      try {
+        const ws = new WebSocket("ws://localhost:8000/ws/audio");
+        ws.onopen = () => {
+          document.getElementById('sidebarConnStatus').innerText = 'Connected (8000)';
+          document.getElementById('sidebarModeTag').innerText = 'Backend WS Live';
+          document.getElementById('sidebarDot').className = 'status-dot dot-safe';
+        };
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.score !== undefined) {
+              appState.trustScore = data.score;
+              animateNumericTransition(data.score);
+              appState.chartHistory.shift();
+              appState.chartHistory.push(data.score);
+              renderRiskChart();
+            }
+          } catch(e) {}
+        };
+        ws.onerror = () => {
+          document.getElementById('sidebarConnStatus').innerText = 'Connected (Sim)';
+          document.getElementById('sidebarModeTag').innerText = 'Simulator Mode';
+        };
+      } catch (err) {}
+    }
+
+    // --- 11. Lifecycle Startup ---
     window.addEventListener('DOMContentLoaded', () => {
-      resizeCanvas();
-      renderChart();
-      filterAuditTable();
+      resizeChartCanvas();
+      renderRiskChart();
+      filterAuditRecords();
+      requestAnimationFrame(stepParallax);
+
+      const activeNav = document.querySelector('.nav-link.active');
+      if (activeNav) updateNavGlider(activeNav);
+
+      connectBackendWebSocket();
     });
   </script>
 </body>
