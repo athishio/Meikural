@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEIKURAL — Enterprise Voice Biometrics & Deepfake Detection SOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #1A1A1E;
+      --bg-sidebar: #212124;
+      --bg-card: #212124;
+      --bg-card-subtle: #232326;
+      --bg-hover: #2A2A2E;
+      --border-color: #2E2E32;
+      --border-subtle: #38383E;
+      --text-primary: #ECECEC;
+      --text-secondary: #9B9BA1;
+      --text-muted: #707078;
+      --accent-blue: #3B82F6;
+      --accent-blue-hover: #2563EB;
+      --status-safe: #4ADE80;
+      --status-safe-bg: rgba(74, 222, 128, 0.1);
+      --status-caution: #FBBF24;
+      --status-caution-bg: rgba(251, 191, 36, 0.1);
+      --status-alert: #F87171;
+      --status-alert-bg: rgba(248, 113, 113, 0.12);
+      --alert-banner-bg: #991B1B;
+      --alert-banner-border: #DC2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Typography Utilities */
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.02em;
+    }
+
+    /* Sidebar Layout */
+    aside {
+      width: 240px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      user-select: none;
+    }
+
+    .brand-section {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-primary);
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 16px 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      color: var(--text-secondary);
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background-color: rgba(59, 130, 246, 0.12);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .nav-item.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      background-color: var(--accent-blue);
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-safe { background-color: var(--status-safe); }
+    .dot-caution { background-color: var(--status-caution); }
+    .dot-alert { background-color: var(--status-alert); }
+    .dot-blue { background-color: var(--accent-blue); }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px 48px;
+      max-width: 1440px;
+    }
+
+    /* Critical Banner */
+    .critical-alert-banner {
+      background-color: var(--alert-banner-bg);
+      border: 1px solid var(--alert-banner-border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      animation: fadeInBanner 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .critical-alert-banner.visible {
+      display: flex;
+    }
+
+    @keyframes fadeInBanner {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .banner-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .banner-icon {
+      color: #FEE2E2;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .banner-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 2px;
+    }
+
+    .banner-text {
+      font-size: 13px;
+      color: #FECACA;
+      line-height: 1.4;
+    }
+
+    .banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-freeze {
+      background-color: #DC2626;
+      color: #FFFFFF;
+      border: 1px solid #EF4444;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-freeze:hover {
+      background-color: #B91C1C;
+    }
+
+    .btn-dismiss {
+      background-color: transparent;
+      color: #FECACA;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-dismiss:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+    }
+
+    /* Header Section */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .header-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .header-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .privacy-notice {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Scenario Bar / Operator Controls */
+    .scenario-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .scenario-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .scenario-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .scenario-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-scenario {
+      background-color: var(--bg-card-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-scenario:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-scenario.active {
+      background-color: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .btn-scenario svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.15s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-subtle);
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .metric-label {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tooltip-icon {
+      cursor: help;
+      color: var(--text-muted);
+      position: relative;
+    }
+
+    .tooltip-icon:hover {
+      color: var(--text-secondary);
+    }
+
+    .tooltip-box {
+      display: none;
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #2D2D32;
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      line-height: 1.35;
+      padding: 6px 10px;
+      border-radius: 5px;
+      width: 210px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+
+    .tooltip-icon:hover .tooltip-box {
+      display: block;
+    }
+
+    .metric-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .metric-subtext {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-trend {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Analytics Row (Chart + Challenge) */
+    .analytics-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .panel-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* Live Chart Canvas Area */
+    .chart-container {
+      position: relative;
+      height: 190px;
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Challenge Panel */
+    .challenge-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .challenge-box {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .challenge-prompt {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .challenge-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .challenge-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Secondary Notification / Out-of-band */
+    .oob-card {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .oob-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .oob-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .oob-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .oob-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-hover);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-danger-outline {
+      background-color: transparent;
+      color: var(--status-alert);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-danger-outline:hover {
+      background-color: rgba(248, 113, 113, 0.12);
+      border-color: var(--status-alert);
+    }
+
+    /* Audit Log Table */
+    .audit-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-input {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 12.5px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      width: 240px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .filter-select {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .table-container {
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    thead {
+      background-color: var(--bg-card-subtle);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border-color);
+      transition: background-color 0.1s ease;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: var(--bg-hover);
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.012);
+    }
+
+    td {
+      padding: 11px 16px;
+      color: var(--text-secondary);
+    }
+
+    .td-primary {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-left: 6px;
+      vertical-align: middle;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .btn-report {
+      background-color: transparent;
+      color: var(--accent-blue);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-report:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      border-color: var(--accent-blue);
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .analytics-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      aside {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      main {
+        padding: 20px;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Navigation -->
+  <aside>
+    <div class="brand-section">
+      <div class="brand-title">MEIKURAL</div>
+      <div class="brand-subtitle">Voice Biometrics SOC</div>
+    </div>
+
+    <nav class="nav-section">
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#live-calls">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Live Calls
+      </a>
+      <a class="nav-item" href="#audit-log">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Audit Log
+      </a>
+      <a class="nav-item" href="#settings">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-badge">
+        <span class="dot dot-safe"></span>
+        <span>Connected</span>
+      </div>
+      <div style="font-size: 11.5px; color: var(--text-muted);" id="sidebarSimState">Simulator active</div>
+    </div>
+  </aside>
+
+  <!-- Main Content View -->
+  <main>
+
+    <!-- Critical High-Risk Alert Banner (State 2) -->
+    <div class="critical-alert-banner" id="criticalBanner">
+      <div class="banner-content">
+        <svg class="banner-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <div class="banner-title">High spoof probability detected — don't proceed until re-verified</div>
+          <div class="banner-text">The caller's voice shows strong signs of impersonation. Freeze account activity or complete additional verification before continuing.</div>
+        </div>
+      </div>
+      <div class="banner-actions">
+        <button class="btn-freeze" onclick="handleFreezeAccount()">Freeze account</button>
+        <button class="btn-dismiss" onclick="dismissBanner()">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="main-header">
+      <div>
+        <h1 class="header-title">Live Call Monitoring</h1>
+        <p class="header-desc">Monitor caller trust, verification challenges, and compliance activity in real time.</p>
+      </div>
+      <div class="status-badge" style="background-color: var(--bg-card); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+        <span class="dot dot-safe" id="headerMonitorDot"></span>
+        <span id="headerMonitorText">Monitoring active</span>
+      </div>
+    </header>
+
+    <div class="privacy-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Audio is never stored to disk. Hashes are salted and automatically expire after 90 days.</span>
+    </div>
+
+    <!-- Operator Test Suite / Scenarios -->
+    <section class="scenario-panel">
+      <div>
+        <div class="scenario-title">Test scenarios</div>
+        <div class="scenario-desc">Simulate common call conditions to verify dashboard behavior.</div>
+      </div>
+      <div class="scenario-buttons">
+        <button class="btn-scenario active" id="btnScenarioSafe" onclick="setScenario('safe')">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Safe caller
+        </button>
+        <button class="btn-scenario" id="btnScenarioCaution" onclick="setScenario('caution')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Caution jitter
+        </button>
+        <button class="btn-scenario" id="btnScenarioDeepfake" onclick="setScenario('deepfake')">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Deepfake alert
+        </button>
+        <button class="btn-scenario" id="btnScenarioFire" onclick="triggerChallengeAction()">
+          <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          Fire challenge
+        </button>
+      </div>
+    </section>
+
+    <!-- Key Metrics Grid -->
+    <section class="metrics-grid">
+      <!-- 1. Live Trust Score -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-label">
+            Live trust score
+            <span class="tooltip-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span class="tooltip-box">How likely the caller's voice is to match the expected identity based on the current call.</span>
+            </span>
+          </span>
+          <span class="dot dot-caution" id="metricTrustDot"></span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valTrustScore">0.76</span>
+          <span class="metric-trend" id="valTrustTrend">↑ 0.04 from 10s ago</span>
+        </div>
+        <div class="metric-subtext" id="valTrustLabel" style="font-weight: 600; color: var(--text-primary);">
+          High risk — step-up verification required
+        </div>
+      </div>
+
+      <!-- 2. Active Session -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-label">Active session</span>
+          <span class="dot dot-safe"></span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value mono" id="valSessionId" style="font-size: 24px;">SES-84F2A1</span>
+        </div>
+        <div class="metric-subtext">Live call • Voice verification stream</div>
+      </div>
+
+      <!-- 3. Biometric Verdict -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-label">Biometric verdict</span>
+          <span class="dot dot-caution" id="metricVerdictDot"></span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" id="valVerdictText">Step-up</span>
+        </div>
+        <div class="metric-subtext" id="valVerdictDesc">Additional verification required</div>
+      </div>
+
+      <!-- 4. Compliance Status -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-label">Compliance status</span>
+          <span class="dot dot-safe"></span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-value" style="color: var(--status-safe);">Compliant</span>
+        </div>
+        <div class="metric-subtext">90-day retention • zero-disk audio</div>
+      </div>
+    </section>
+
+    <!-- Main Analytics Row: Line Chart + Verification Challenge -->
+    <section class="analytics-row">
+      <!-- Live Trust & Spoof Score Line Chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Live trust score</div>
+            <div class="panel-subtitle">Caller confidence over the last 30 seconds</div>
+          </div>
+          <div class="status-badge" style="background-color: var(--bg-card-subtle); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <span class="dot dot-blue"></span>
+            <span>Live</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="liveScoreCanvas"></canvas>
+        </div>
+
+        <div class="chart-legend">
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span class="dot dot-safe"></span> Safe (&gt;0.70)
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span class="dot dot-caution"></span> Caution (0.40–0.70)
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span class="dot dot-alert"></span> Alert (&lt;0.40)
+          </span>
+        </div>
+      </div>
+
+      <!-- Active Verification Challenge Panel -->
+      <div class="panel challenge-panel" id="challengePanel">
+        <div>
+          <div class="panel-header" style="margin-bottom: 12px;">
+            <div>
+              <div class="panel-title">Verification challenge</div>
+              <div class="panel-subtitle">Out-of-band active liveness protocol</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </div>
+
+          <div class="challenge-box">
+            <div class="challenge-prompt" id="challengePromptText">Please confirm your employee ID and budget code.</div>
+            <div class="challenge-meta" id="challengeSentTime">Sent at 21:03:14</div>
+          </div>
+        </div>
+
+        <div class="challenge-footer">
+          <span class="status-badge">
+            <span class="dot dot-caution" id="challengeDot"></span>
+            <span id="challengeStatusText">Waiting for caller response</span>
+          </span>
+          <span class="mono" style="font-size: 11.5px; color: var(--text-muted);" id="challengeTimer">14s elapsed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Out-of-band Secondary Action Card -->
+    <section class="oob-card">
+      <div class="oob-left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--status-caution)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        <div>
+          <div class="oob-title">Out-of-band verification</div>
+          <div class="oob-desc" id="oobMessageText">Suspicious voice activity detected on an active call claiming to be you.</div>
+        </div>
+      </div>
+      <div class="oob-actions">
+        <button class="btn-danger-outline" onclick="handleFreezeAccount()">Freeze account</button>
+        <button class="btn-secondary" onclick="handleVerifySelf()">It was me</button>
+      </div>
+    </section>
+
+    <!-- Live Audit Log Table -->
+    <section class="panel" id="audit-log">
+      <div class="audit-header-row">
+        <div>
+          <div class="panel-title">Recent activity</div>
+          <div class="panel-subtitle">Zero-trust audit trail with 90-day compliance purging</div>
+        </div>
+
+        <div class="search-filter-group">
+          <input type="text" class="search-input" id="auditSearchInput" placeholder="Search sessions or caller hashes..." oninput="filterAuditTable()">
+          <select class="filter-select" id="auditVerdictFilter" onchange="filterAuditTable()">
+            <option value="ALL">All verdicts</option>
+            <option value="Pass">Pass (Safe)</option>
+            <option value="Step-up">Step-up (Caution)</option>
+            <option value="Alert">Alert (Deepfake)</option>
+          </select>
+          <button class="btn-secondary" onclick="exportIncidentReport('SES-84F2A1')" title="Download SOC Incident Forensic Report">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export SOC Report
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>Caller hash</th>
+              <th>Risk score</th>
+              <th>Verdict</th>
+              <th>Challenge</th>
+              <th>Timestamp</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody">
+            <!-- Dynamic rows will be rendered here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // State Model
+    const state = {
+      scenario: 'caution', // 'safe', 'caution', 'deepfake'
+      sessionId: 'SES-84F2A1',
+      trustScore: 0.76,
+      verdict: 'Step-up',
+      verdictDesc: 'Additional verification required',
+      trustLabel: 'High risk — step-up verification required',
+      trend: '↑ 0.04 from 10s ago',
+      criticalBanner: false,
+      challengeText: 'Please confirm your employee ID and budget code.',
+      challengeSentTime: '21:03:14',
+      challengeStatus: 'Waiting for caller response',
+      chartHistory: []
+    };
+
+    // Pre-populate 30 seconds of chart data
+    const chartPoints = 30;
+    for (let i = 0; i < chartPoints; i++) {
+      state.chartHistory.push(0.74 + (Math.sin(i / 2) * 0.06));
+    }
+
+    // Audit logs mock data
+    let auditData = [
+      { id: 'SES-84F2A1', hash: '9f7a4e12c8b02d91', score: '0.76', verdict: 'Step-up', challenge: 'Yes', time: '21:03:14', fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e' },
+      { id: 'SES-73D9B0', hash: 'a1b2c3d4e5f67890', score: '0.94', verdict: 'Pass', challenge: 'No', time: '20:58:02', fullHash: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0' },
+      { id: 'SES-62A8C4', hash: 'e4f5a6b7c8d90123', score: '0.19', verdict: 'Alert', challenge: 'Yes', time: '20:44:50', fullHash: 'e4f5a6b7c8d90123456789abcdef0123456789abcdef0123456789abcdef0123' },
+      { id: 'SES-51F0E7', hash: '5c6d7e8f9a0b1234', score: '0.88', verdict: 'Pass', challenge: 'No', time: '20:31:19', fullHash: '5c6d7e8f9a0b123456789abcdef0123456789abcdef0123456789abcdef01234' },
+      { id: 'SES-40B1D9', hash: '7a8b9c0d1e2f3456', score: '0.62', verdict: 'Step-up', challenge: 'Yes', time: '20:15:33', fullHash: '7a8b9c0d1e2f3456789abcdef0123456789abcdef0123456789abcdef012345' },
+    ];
+
+    // Canvas Chart Rendering
+    const canvas = document.getElementById('liveScoreCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function renderChart() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Subtle horizontal gridlines
+      ctx.strokeStyle = '#2A2A2E';
+      ctx.lineWidth = 1;
+
+      const lines = [0.2, 0.4, 0.7, 0.9];
+      lines.forEach(val => {
+        const y = h - (val * (h - 20)) - 10;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#5A5A62';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillText(val.toFixed(1), 4, y - 3);
+      });
+
+      // Plot smooth line
+      if (state.chartHistory.length < 2) return;
+
+      const step = w / (chartPoints - 1);
+
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+
+      // Color dynamically based on current latest score
+      const latest = state.chartHistory[state.chartHistory.length - 1];
+      if (latest >= 0.70) {
+        ctx.strokeStyle = '#3B82F6'; // Muted corporate blue for calm/safe
+      } else if (latest >= 0.40) {
+        ctx.strokeStyle = '#FBBF24'; // Amber caution
+      } else {
+        ctx.strokeStyle = '#F87171'; // Red alert
+      }
+
+      state.chartHistory.forEach((val, idx) => {
+        const x = idx * step;
+        const y = h - (val * (h - 20)) - 10;
+        if (idx === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw subtle end point
+      const lastX = (state.chartHistory.length - 1) * step;
+      const lastY = h - (latest * (h - 20)) - 10;
+
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#212124';
+      ctx.stroke();
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      renderChart();
+    });
+
+    // Scenario Switcher
+    function setScenario(type) {
+      state.scenario = type;
+
+      // Reset button active classes
+      document.querySelectorAll('.btn-scenario').forEach(b => b.classList.remove('active'));
+
+      const banner = document.getElementById('criticalBanner');
+      const trustVal = document.getElementById('valTrustScore');
+      const trustTrend = document.getElementById('valTrustTrend');
+      const trustLabel = document.getElementById('valTrustLabel');
+      const verdictText = document.getElementById('valVerdictText');
+      const verdictDesc = document.getElementById('valVerdictDesc');
+      const trustDot = document.getElementById('metricTrustDot');
+      const verdictDot = document.getElementById('metricVerdictDot');
+      const monitorDot = document.getElementById('headerMonitorDot');
+      const monitorText = document.getElementById('headerMonitorText');
+      const simState = document.getElementById('sidebarSimState');
+
+      const now = new Date().toTimeString().split(' ')[0];
+
+      if (type === 'safe') {
+        document.getElementById('btnScenarioSafe').classList.add('active');
+        state.trustScore = 0.92;
+        state.verdict = 'Pass';
+        state.verdictDesc = 'Caller verified successfully';
+        state.trustLabel = 'Safe — identity confirmed';
+        state.trend = '↑ 0.08 from 10s ago';
+        banner.classList.remove('visible');
+
+        trustDot.className = 'dot dot-safe';
+        verdictDot.className = 'dot dot-safe';
+        monitorDot.className = 'dot dot-safe';
+        monitorText.innerText = 'Monitoring active';
+        simState.innerText = 'Safe stream active';
+
+        // Add audit log
+        addAuditEntry(state.sessionId, '9f7a...2d91', '0.92', 'Pass', 'No', now);
+
+      } else if (type === 'caution') {
+        document.getElementById('btnScenarioCaution').classList.add('active');
+        state.trustScore = 0.64;
+        state.verdict = 'Step-up';
+        state.verdictDesc = 'Voice instability detected';
+        state.trustLabel = 'Moderate risk — challenge recommended';
+        state.trend = '↓ 0.05 from 10s ago';
+        banner.classList.remove('visible');
+
+        trustDot.className = 'dot dot-caution';
+        verdictDot.className = 'dot dot-caution';
+        monitorDot.className = 'dot dot-caution';
+        monitorText.innerText = 'Monitoring active (Caution)';
+        simState.innerText = 'Jitter active';
+
+        addAuditEntry(state.sessionId, '9f7a...2d91', '0.64', 'Step-up', 'Yes', now);
+
+      } else if (type === 'deepfake') {
+        document.getElementById('btnScenarioDeepfake').classList.add('active');
+        state.trustScore = 0.18;
+        state.verdict = 'Alert';
+        state.verdictDesc = 'Deepfake indicators detected';
+        state.trustLabel = 'Critical risk — likely voice impersonation';
+        state.trend = '↓ 0.42 from 10s ago';
+
+        // Show critical alert banner
+        banner.classList.add('visible');
+
+        trustDot.className = 'dot dot-alert';
+        verdictDot.className = 'dot dot-alert';
+        monitorDot.className = 'dot dot-alert';
+        monitorText.innerText = 'High Risk Detected';
+        simState.innerText = 'Deepfake injected';
+
+        addAuditEntry(state.sessionId, '9f7a...2d91', '0.18', 'Alert', 'Yes', now);
+      }
+
+      // Update UI texts
+      trustVal.innerText = state.trustScore.toFixed(2);
+      trustTrend.innerText = state.trend;
+      trustLabel.innerText = state.trustLabel;
+      verdictText.innerText = state.verdict;
+      verdictDesc.innerText = state.verdictDesc;
+
+      // Add point to chart and animate
+      state.chartHistory.shift();
+      state.chartHistory.push(state.trustScore);
+      renderChart();
+    }
+
+    function triggerChallengeAction() {
+      const prompts = [
+        "Please confirm your employee ID and budget code.",
+        "Please repeat the security digits: 9 - 4 - 2 - 7.",
+        "State your department and direct reporting manager's name.",
+        "Please confirm the last four digits of your corporate card."
+      ];
+      const selected = prompts[Math.floor(Math.random() * prompts.length)];
+      const now = new Date().toTimeString().split(' ')[0];
+
+      const panel = document.getElementById('challengePanel');
+      panel.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      panel.style.transform = 'scale(0.98)';
+      panel.style.opacity = '0.7';
+
+      setTimeout(() => {
+        document.getElementById('challengePromptText').innerText = selected;
+        document.getElementById('challengeSentTime').innerText = `Sent at ${now}`;
+        document.getElementById('challengeStatusText').innerText = 'Waiting for caller response';
+        document.getElementById('challengeDot').className = 'dot dot-caution';
+        panel.style.transform = 'scale(1)';
+        panel.style.opacity = '1';
+      }, 150);
+
+      addAuditEntry(state.sessionId, '9f7a...2d91', state.trustScore.toFixed(2), state.verdict, 'Fired', now);
+    }
+
+    function dismissBanner() {
+      document.getElementById('criticalBanner').classList.remove('visible');
+    }
+
+    function handleFreezeAccount() {
+      alert(`[MEIKURAL ACTION] Transaction frozen for Session ID: ${state.sessionId}.\nSalted caller ID locked in fraud registry and SMS alert dispatched.`);
+      dismissBanner();
+    }
+
+    function handleVerifySelf() {
+      alert(`[MEIKURAL ACTION] Out-of-band verification confirmed by account holder for Session ID: ${state.sessionId}.`);
+    }
+
+    function addAuditEntry(id, hash, score, verdict, challenge, time) {
+      auditData.unshift({
+        id,
+        hash,
+        score,
+        verdict,
+        challenge,
+        time,
+        fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e'
+      });
+      if (auditData.length > 8) auditData.pop();
+      filterAuditTable();
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`Copied hash to clipboard: ${text}`);
+      });
+    }
+
+    function exportIncidentReport(sessionId) {
+      // Connects directly to our backend /calls/{session_id}/report endpoint or downloads live summary
+      const url = `http://127.0.0.1:8000/calls/${sessionId}/report`;
+      window.open(url, '_blank');
+    }
+
+    function filterAuditTable() {
+      const search = document.getElementById('auditSearchInput').value.toLowerCase();
+      const filter = document.getElementById('auditVerdictFilter').value;
+      const tbody = document.getElementById('auditTableBody');
+
+      const filtered = auditData.filter(row => {
+        const matchesSearch = row.id.toLowerCase().includes(search) || row.hash.toLowerCase().includes(search);
+        const matchesFilter = (filter === 'ALL') || (row.verdict === filter);
+        return matchesSearch && matchesFilter;
+      });
+
+      tbody.innerHTML = filtered.map(row => {
+        let dotClass = 'dot-safe';
+        if (row.verdict === 'Step-up') dotClass = 'dot-caution';
+        if (row.verdict === 'Alert') dotClass = 'dot-alert';
+
+        return `
+          <tr>
+            <td class="td-primary mono">${row.id}</td>
+            <td class="mono">
+              ${row.hash}
+              <button class="copy-btn" onclick="copyToClipboard('${row.fullHash}')" title="Copy full SHA-256 hash">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              </button>
+            </td>
+            <td class="mono td-primary">${row.score}</td>
+            <td>
+              <span class="status-badge">
+                <span class="dot ${dotClass}"></span>
+                <span>${row.verdict}</span>
+              </span>
+            </td>
+            <td>${row.challenge}</td>
+            <td class="mono" style="font-size: 12px;">${row.time}</td>
+            <td>
+              <button class="btn-report" onclick="exportIncidentReport('${row.id}')">
+                SOC Report
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Live continuous chart tick simulation
+    setInterval(() => {
+      let noise = (Math.random() - 0.5) * 0.02;
+      let nextVal = Math.max(0.05, Math.min(0.99, state.trustScore + noise));
+      state.chartHistory.shift();
+      state.chartHistory.push(nextVal);
+      renderChart();
+    }, 1200);
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      renderChart();
+      filterAuditTable();
+    });
+  </script>
+</body>
+</html>

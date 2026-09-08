@@ -84,6 +84,9 @@ def startup_event():
 
 @app.get("/dashboard")
 async def get_dashboard():
+    dashboard_path = os.path.join(BASE_DIR, "dashboard.html")
+    if os.path.exists(dashboard_path):
+        return FileResponse(dashboard_path)
     return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
 
 
