@@ -1614,12 +1614,12 @@
       chartCtx.beginPath();
       chartCtx.lineWidth = 2;
 
-      // Restrained line coloring
+      // Line coloring matching legend
       const latestVal = appState.chartHistory[appState.chartHistory.length - 1];
       if (latestVal >= 0.70) {
-        chartCtx.strokeStyle = '#3B82F6'; // Muted classic corporate blue
+        chartCtx.strokeStyle = '#4ADE80'; // Emerald green safe
       } else if (latestVal >= 0.40) {
-        chartCtx.strokeStyle = '#FBBF24'; // Restrained amber
+        chartCtx.strokeStyle = '#FBBF24'; // Restrained amber caution
       } else {
         chartCtx.strokeStyle = '#F87171'; // Clear alert red
       }
@@ -1635,10 +1635,28 @@
       });
       chartCtx.stroke();
 
-      // Current live data point indicator
+      // Subtle under-line area fill
       const lastX = (appState.chartHistory.length - 1) * step;
       const lastY = h - (latestVal * (h - 24)) - 12;
 
+      chartCtx.lineTo(lastX, h);
+      chartCtx.lineTo(0, h);
+      chartCtx.closePath();
+      const fillGrad = chartCtx.createLinearGradient(0, 0, 0, h);
+      if (latestVal >= 0.70) {
+        fillGrad.addColorStop(0, 'rgba(74, 222, 128, 0.12)');
+        fillGrad.addColorStop(1, 'rgba(74, 222, 128, 0.0)');
+      } else if (latestVal >= 0.40) {
+        fillGrad.addColorStop(0, 'rgba(251, 191, 36, 0.12)');
+        fillGrad.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
+      } else {
+        fillGrad.addColorStop(0, 'rgba(248, 113, 113, 0.16)');
+        fillGrad.addColorStop(1, 'rgba(248, 113, 113, 0.0)');
+      }
+      chartCtx.fillStyle = fillGrad;
+      chartCtx.fill();
+
+      // Current live data point indicator
       chartCtx.beginPath();
       chartCtx.arc(lastX, lastY, 4, 0, Math.PI * 2);
       chartCtx.fillStyle = chartCtx.strokeStyle;
@@ -1832,7 +1850,7 @@
     }
 
     function downloadIncidentReport(sessionId) {
-      const url = `http://127.0.0.1:8000/calls/${sessionId}/report`;
+      const url = `/calls/${encodeURIComponent(sessionId)}/report`;
       window.open(url, '_blank');
       showToast(`📄 SOC Forensic Report downloaded for ${sessionId}`, 'safe');
     }
@@ -1953,8 +1971,9 @@
 
     // --- 10. Live Continuous Background Chart Tick & WebSocket Handler ---
     setInterval(() => {
+      // Only add slight organic drift if live audio stream is quiet
       if (appState.scenario === 'caution' || appState.scenario === 'safe') {
-        const noise = (Math.random() - 0.5) * 0.018;
+        const noise = (Math.random() - 0.5) * 0.008;
         const nextVal = Math.max(0.05, Math.min(0.99, appState.trustScore + noise));
         appState.chartHistory.shift();
         appState.chartHistory.push(nextVal);
@@ -1962,32 +1981,178 @@
       }
     }, 1200);
 
+    function handleIncomingBackendPacket(data) {
+      // 1. Extract passive spoof risk score (0.00 = human, 1.00 = deepfake)
+      const rawSpoofScore = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
+        ? data.anti_spoofing.passive_score
+        : (typeof data.score === 'number' ? data.score : 0.0);
+
+      // Convert to Voice Trust Score (1.00 = human / safe, 0.00 = deepfake / zero trust)
+      const trust = Math.max(0.02, Math.min(0.98, 1.0 - rawSpoofScore));
+      appState.trustScore = trust;
+      animateNumericTransition(trust);
+
+      // 2. Extract session metadata
+      const sessionId = (data.metadata && data.metadata.session_id) ? data.metadata.session_id : (data.session_id || appState.sessionId);
+      appState.sessionId = sessionId;
+      const heroSession = document.getElementById('heroSessionId');
+      if (heroSession) heroSession.innerText = sessionId;
+
+      // Caller ID hash
+      const callerHash = data.caller_id_hash || 'sha256:9f7a4e12c8b0...';
+      const shortHash = callerHash.length > 18 ? `${callerHash.slice(0, 14)}...` : callerHash;
+
+      // 3. Extract verdict and update UI
+      const rawVerdict = (data.anti_spoofing && data.anti_spoofing.verdict)
+        ? data.anti_spoofing.verdict
+        : (data.verdict || (rawSpoofScore > 0.65 ? 'STEP_UP_VERIFICATION' : (rawSpoofScore >= 0.35 ? 'WARN' : 'ALLOW')));
+
+      const alertBar = document.getElementById('criticalAlertBar');
+      const trustVerdict = document.getElementById('heroTrustVerdict');
+      const trustTrend = document.getElementById('heroTrustTrend');
+      const verdictText = document.getElementById('heroVerdictText');
+      const verdictDesc = document.getElementById('heroVerdictDesc');
+      const verdictDot = document.getElementById('heroVerdictDot');
+      const liveDot = document.getElementById('headerLiveDot');
+      const liveStatus = document.getElementById('headerLiveStatus');
+      const overviewTitle = document.getElementById('overviewTitle');
+      const overviewSubtitle = document.getElementById('overviewSubtitle');
+
+      const now = new Date().toTimeString().split(' ')[0];
+
+      if (rawSpoofScore > 0.65 || rawVerdict === 'STEP_UP_VERIFICATION' || rawVerdict === 'spoof') {
+        appState.scenario = 'deepfake';
+        appState.verdict = 'Alert';
+        appState.verdictDesc = 'Deepfake indicators detected';
+        appState.trustLabel = `Critical risk (${(rawSpoofScore * 100).toFixed(0)}% spoof prob) — step-up required`;
+        appState.trendText = `↓ ${(rawSpoofScore).toFixed(2)} anomaly spike`;
+
+        if (alertBar) alertBar.classList.add('visible');
+        if (verdictDot) verdictDot.className = 'status-dot dot-critical';
+        if (liveDot) liveDot.className = 'status-dot dot-critical';
+        if (liveStatus) liveStatus.innerText = 'High Risk Detected';
+        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring — Incident In Progress';
+        if (overviewSubtitle) overviewSubtitle.innerText = 'Immediate verification required. Synthetic voice artifacts detected.';
+
+        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Alert', 'Yes', now, callerHash);
+        showToast(`🔴 Critical Spoof Detected (Score: ${rawSpoofScore.toFixed(3)}) — Step-up locked!`, 'critical');
+
+      } else if (rawSpoofScore >= 0.35 || rawVerdict === 'WARN' || rawVerdict === 'uncertain') {
+        appState.scenario = 'caution';
+        appState.verdict = 'Step-up';
+        appState.verdictDesc = 'Voice instability / jitter detected';
+        appState.trustLabel = `Caution zone (${(rawSpoofScore * 100).toFixed(0)}% spoof prob)`;
+        appState.trendText = '↓ 0.05 caution drift';
+
+        if (alertBar) alertBar.classList.remove('visible');
+        if (verdictDot) verdictDot.className = 'status-dot dot-warning';
+        if (liveDot) liveDot.className = 'status-dot dot-warning';
+        if (liveStatus) liveStatus.innerText = 'Caution Advisory';
+        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring';
+        if (overviewSubtitle) overviewSubtitle.innerText = 'Moderate risk indicators. Verification challenge recommended.';
+
+        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Step-up', 'No', now, callerHash);
+
+      } else {
+        appState.scenario = 'safe';
+        appState.verdict = 'Pass';
+        appState.verdictDesc = 'Caller verified successfully';
+        appState.trustLabel = `Safe (Bonafide human, ${(rawSpoofScore * 100).toFixed(0)}% spoof prob)`;
+        appState.trendText = '↑ Optimal baseline';
+
+        if (alertBar) alertBar.classList.remove('visible');
+        if (verdictDot) verdictDot.className = 'status-dot dot-safe';
+        if (liveDot) liveDot.className = 'status-dot dot-safe';
+        if (liveStatus) liveStatus.innerText = 'Monitoring active';
+        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring';
+        if (overviewSubtitle) overviewSubtitle.innerText = 'Everything is operating normally. Zero security anomalies detected.';
+
+        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Pass', 'No', now, callerHash);
+      }
+
+      if (trustVerdict) trustVerdict.innerText = appState.trustLabel;
+      if (trustTrend) trustTrend.innerText = appState.trendText;
+      if (verdictText) verdictText.innerText = appState.verdict;
+      if (verdictDesc) verdictDesc.innerText = appState.verdictDesc;
+
+      // 4. Update challenge state if fired
+      if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
+        const promptText = data.challenge_state.prompt_text || 'Please repeat: 9 - 2 - 5';
+        const challengeBox = document.getElementById('challengeCardBox');
+        if (challengeBox) {
+          challengeBox.style.transform = 'translateY(6px)';
+          challengeBox.style.opacity = '0.5';
+          setTimeout(() => {
+            const promptElem = document.getElementById('challengePromptMsg');
+            const timeElem = document.getElementById('challengeTimestamp');
+            const statusLabel = document.getElementById('challengeStatusLabel');
+            const statusDot = document.getElementById('challengeStatusDot');
+            if (promptElem) promptElem.innerText = promptText;
+            if (timeElem) timeElem.innerText = `Sent at ${now}`;
+            if (statusLabel) statusLabel.innerText = 'Waiting for caller response';
+            if (statusDot) statusDot.className = 'status-dot dot-warning';
+            challengeBox.style.transform = 'translateY(0)';
+            challengeBox.style.opacity = '1';
+          }, 120);
+        }
+        showToast(`⚡ Active Challenge Injected: "${promptText}"`, 'warning');
+      }
+
+      // 5. Update timeline chart
+      appState.chartHistory.shift();
+      appState.chartHistory.push(trust);
+      renderRiskChart();
+    }
+
     // Native WebSocket integration with auto-recovery
     function connectBackendWebSocket() {
+      const host = window.location.host || '127.0.0.1:8000';
+      const wsUrl = `ws://${host}/ws/audio`;
+
       try {
-        const ws = new WebSocket("ws://localhost:8000/ws/audio");
+        const ws = new WebSocket(wsUrl);
+        appState.ws = ws;
+
         ws.onopen = () => {
-          document.getElementById('sidebarConnStatus').innerText = 'Connected (8000)';
-          document.getElementById('sidebarModeTag').innerText = 'Backend WS Live';
-          document.getElementById('sidebarDot').className = 'status-dot dot-safe';
+          const statusElem = document.getElementById('sidebarConnStatus');
+          const modeTag = document.getElementById('sidebarModeTag');
+          const dot = document.getElementById('sidebarDot');
+          if (statusElem) statusElem.innerText = `Live (${host})`;
+          if (modeTag) modeTag.innerText = 'Backend WS Live';
+          if (dot) dot.className = 'status-dot dot-safe';
+          showToast(`🟢 Connected to MEIKURAL Backend (${host})`, 'safe');
         };
+
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.score !== undefined) {
-              appState.trustScore = data.score;
-              animateNumericTransition(data.score);
-              appState.chartHistory.shift();
-              appState.chartHistory.push(data.score);
-              renderRiskChart();
-            }
-          } catch(e) {}
+            handleIncomingBackendPacket(data);
+          } catch(e) {
+            console.error("Error parsing WebSocket JSON:", e);
+          }
         };
-        ws.onerror = () => {
-          document.getElementById('sidebarConnStatus').innerText = 'Connected (Sim)';
-          document.getElementById('sidebarModeTag').innerText = 'Simulator Mode';
+
+        ws.onerror = (err) => {
+          const statusElem = document.getElementById('sidebarConnStatus');
+          const modeTag = document.getElementById('sidebarModeTag');
+          const dot = document.getElementById('sidebarDot');
+          if (statusElem) statusElem.innerText = 'Standby (Sim)';
+          if (modeTag) modeTag.innerText = 'Simulator Active';
+          if (dot) dot.className = 'status-dot dot-warning';
         };
-      } catch (err) {}
+
+        ws.onclose = () => {
+          const statusElem = document.getElementById('sidebarConnStatus');
+          const modeTag = document.getElementById('sidebarModeTag');
+          const dot = document.getElementById('sidebarDot');
+          if (statusElem) statusElem.innerText = 'Reconnecting...';
+          if (modeTag) modeTag.innerText = 'Reconnecting';
+          if (dot) dot.className = 'status-dot dot-critical';
+          setTimeout(connectBackendWebSocket, 2500);
+        };
+      } catch (err) {
+        setTimeout(connectBackendWebSocket, 3000);
+      }
     }
 
     // --- 11. Lifecycle Startup ---
