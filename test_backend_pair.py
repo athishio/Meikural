@@ -188,6 +188,41 @@ class TestMeikuralAuditDatabase(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertEqual(broken_idx, 1)
 
+    def test_legacy_backfill(self):
+        session_id = "call_legacy_migration_001"
+        database.log_call_start(session_id=session_id, caller_id="+15551234567", db_path=self.test_db)
+        for i in range(3):
+            database.log_event(
+                session_id=session_id,
+                score=0.20,
+                smoothed_score=0.20,
+                verdict="ALLOW",
+                timestamp=1700000000.0 + i,
+                db_path=self.test_db,
+            )
+
+        # Simulate legacy state: set all record_hash and prev_hash to GENESIS_HASH
+        with database.get_db_connection(self.test_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE events SET record_hash = ?, prev_hash = ? WHERE session_id = ?",
+                (database.GENESIS_HASH, database.GENESIS_HASH, session_id),
+            )
+
+        # Verification would fail before backfill
+        is_valid_before, _ = database.verify_chain(session_id, db_path=self.test_db)
+        self.assertFalse(is_valid_before)
+
+        # Execute backfill
+        backfilled = database.backfill_legacy_event_hashes(db_path=self.test_db)
+        self.assertEqual(backfilled, 3)
+
+        # Now verification succeeds
+        is_valid_after, broken_idx = database.verify_chain(session_id, db_path=self.test_db)
+        self.assertTrue(is_valid_after)
+        self.assertIsNone(broken_idx)
+
+
 
 class TestMeikuralAlerts(unittest.TestCase):
     def test_send_sms_alert(self):

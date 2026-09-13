@@ -119,6 +119,52 @@ def init_db(db_path: str = DB_PATH) -> None:
 
         logger.info(f"Meikural database initialized at {db_path}")
 
+    # Backfill any unchained legacy records where record_hash == GENESIS_HASH
+    backfilled = backfill_legacy_event_hashes(db_path=db_path)
+    if backfilled > 0:
+        logger.info(f"Backfilled cryptographic hash-chain for {backfilled} legacy event records.")
+
+
+def backfill_legacy_event_hashes(db_path: str = DB_PATH) -> int:
+    """
+    Backfills cryptographic SHA-256 hash-chains for legacy event records where record_hash == GENESIS_HASH.
+    Ensures pre-existing sessions can be verified without false tamper alerts.
+    Walks each session's events in insertion order (ORDER BY event_id ASC).
+    """
+    with get_db_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT DISTINCT session_id FROM events WHERE record_hash = ?",
+            (GENESIS_HASH,),
+        )
+        sessions = [r["session_id"] for r in cursor.fetchall()]
+        if not sessions:
+            return 0
+
+        updated_count = 0
+        for sid in sessions:
+            cursor.execute(
+                "SELECT event_id, session_id, timestamp, score, verdict FROM events WHERE session_id = ? ORDER BY event_id ASC",
+                (sid,),
+            )
+            rows = cursor.fetchall()
+            prev_h = GENESIS_HASH
+            for r in rows:
+                rec_h = compute_event_hash(
+                    prev_hash=prev_h,
+                    session_id=r["session_id"],
+                    timestamp=r["timestamp"],
+                    score=r["score"],
+                    verdict=r["verdict"],
+                )
+                cursor.execute(
+                    "UPDATE events SET prev_hash = ?, record_hash = ? WHERE event_id = ?",
+                    (prev_h, rec_h, r["event_id"]),
+                )
+                prev_h = rec_h
+                updated_count += 1
+        return updated_count
+
 
 def log_call_start(
     session_id: str,
@@ -292,7 +338,11 @@ def verify_chain(session_id: str, db_path: str = DB_PATH) -> ChainVerificationRe
     Note: This is an appendable cryptographic hash-chain for tamper detection,
     not a distributed blockchain.
     """
-    events = get_events(session_id, db_path=db_path)
+    with get_db_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM events WHERE session_id = ? ORDER BY event_id ASC", (session_id,))
+        events = [dict(r) for r in cursor.fetchall()]
+
     if not events:
         return ChainVerificationResult(True, None, total_events=0)
 

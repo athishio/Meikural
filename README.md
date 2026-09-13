@@ -104,6 +104,9 @@ Instead of relying on phonological dictionaries or language-dependent ASR gramma
 
 *Run `python -m unittest tests/multilingual/validate_multilingual.py` to run the automated regression suite.*
 
+> [!NOTE]
+> **Acoustic Unit Test Fixtures vs. Multi-Speaker Field Trials:** The current `tests/multilingual/` evaluation suite validates that SincNet 1D filterbanks correctly discriminate organic vocal-tract formant structures from neural vocoder phase artifacts (>7.5 kHz) regardless of regional formant frequency shifts (tested on 12 reproducible acoustic speech fixtures across Tamil, Hindi, and English). Large-scale multi-speaker empirical benchmarking across diverse regional dialects and low-bitrate telecom channels remains an active roadmap objective.
+
 ---
 
 ## 📡 Available API Endpoints
