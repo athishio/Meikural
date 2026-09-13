@@ -308,25 +308,33 @@ def get_forensic_certificate_endpoint(session_id: str):
     events = database.get_events_for_call(session_id)
 
     st_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["start_time"])) if call.get("start_time") else "N/A"
-    et_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["end_time"])) if call.get("end_time") else "In Progress"
-    duration_s = f"{(call['end_time'] - call['start_time']):.1f}s" if call.get("end_time") and call.get("start_time") else "N/A"
+    et_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["end_time"])) if call.get("end_time") else "In Progress (Active Stream)"
+    duration_s = f"{(call['end_time'] - call['start_time']):.1f}s" if call.get("end_time") and call.get("start_time") else (f"{(time.time() - call['start_time']):.1f}s (Active)" if call.get("start_time") else "N/A")
     retention_str = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(call["retention_expiry"])) if call.get("retention_expiry") else "N/A"
 
-    score = call.get("final_risk_score", 0.0)
-    verdict = call.get("final_verdict", "INITIALIZING")
+    # For finished calls use final scores; for in-progress calls derive from latest events
+    if call.get("final_risk_score") is not None and call.get("final_verdict") not in (None, "INITIALIZING"):
+        score = call["final_risk_score"]
+        verdict = call["final_verdict"]
+    elif events:
+        score = events[-1]["smoothed_score"]
+        verdict = events[-1]["verdict"]
+    else:
+        score = call.get("final_risk_score", 0.0)
+        verdict = call.get("final_verdict", "INITIALIZING")
 
     # Cryptographic HMAC-SHA256 digital signature
     sign_payload = f"{session_id}:{call['caller_id_hash']}:{score:.4f}:{verdict}"
     hmac_sig = hmac.new(database.SALT.encode("utf-8"), sign_payload.encode("utf-8"), hashlib.sha256).hexdigest()
 
     # Verdict styling & classification
-    if verdict == "STEP_UP_VERIFICATION" or score > RISK_THRESHOLD_STEP_UP:
+    if verdict in ("STEP_UP_VERIFICATION", "spoof") or score > RISK_THRESHOLD_STEP_UP:
         status_title = "CRITICAL: DEEPFAKE VOICE CLONE ATTACK DETECTED"
         status_desc = "High-confidence synthetic acoustic artifacts detected. Step-up multi-factor verification enforced."
         status_color = "#ef4444"
         badge_bg = "rgba(239, 68, 68, 0.15)"
         badge_border = "#ef4444"
-    elif verdict == "WARN" or score >= 0.35:
+    elif verdict in ("WARN", "uncertain") or score >= 0.35:
         status_title = "CAUTION: SUSPICIOUS CONVERSATIONAL JITTER"
         status_desc = "Ambiguous spectral parameters. Dynamic unscripted micro-challenge protocol executed."
         status_color = "#f59e0b"
@@ -339,15 +347,25 @@ def get_forensic_certificate_endpoint(session_id: str):
         badge_bg = "rgba(16, 185, 129, 0.15)"
         badge_border = "#10b981"
 
-    # Format event rows (up to 8 events)
+    # Format event rows (show up to 8 most recent events so live speech is reflected)
     events_html = ""
-    for ev in events[:8]:
+    display_events = events[-8:] if len(events) > 8 else events
+    for ev in display_events:
+        row_score = ev.get("score", 0.0)
+        row_verdict = ev.get("verdict", "ALLOW")
+        if row_verdict in ("STEP_UP_VERIFICATION", "spoof") or row_score > RISK_THRESHOLD_STEP_UP:
+            row_color = "#ef4444"
+        elif row_verdict in ("WARN", "uncertain") or row_score >= 0.35:
+            row_color = "#f59e0b"
+        else:
+            row_color = "#10b981"
+
         events_html += f"""
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
           <td style="padding: 8px 12px; font-family: monospace; font-size: 12px;">+{ev['timestamp'] - (call.get('start_time') or ev['timestamp']):.2f}s</td>
           <td style="padding: 8px 12px; font-family: monospace; font-size: 12px;">{ev['score']:.4f}</td>
           <td style="padding: 8px 12px; font-family: monospace; font-size: 12px;">{ev['smoothed_score']:.4f}</td>
-          <td style="padding: 8px 12px; font-size: 12px;"><span style="color: {status_color}; font-weight: 600;">{ev['verdict']}</span></td>
+          <td style="padding: 8px 12px; font-size: 12px;"><span style="color: {row_color}; font-weight: 600;">{ev['verdict']}</span></td>
           <td style="padding: 8px 12px; font-family: monospace; font-size: 11px; color: #94a3b8;">{ev.get('challenge_id') or '—'}</td>
         </tr>
         """
@@ -639,7 +657,7 @@ def get_forensic_certificate_endpoint(session_id: str):
         <div class="info-row"><span class="info-label">Final Risk Score</span><span class="info-val mono" style="color: {status_color}; font-size: 15px;">{score:.4f}</span></div>
         <div class="info-row"><span class="info-label">Voice Trust Index</span><span class="info-val mono">{max(0.01, min(0.99, 1.0 - score)):.4f}</span></div>
         <div class="info-row"><span class="info-label">Acoustic Engine</span><span class="info-val">AASIST v2 (INT8 CPU Quantized)</span></div>
-        <div class="info-row"><span class="info-label">Inference Latency</span><span class="info-val mono">441.9ms per 4.04s chunk</span></div>
+        <div class="info-row"><span class="info-label">Inference Latency</span><span class="info-val mono">~350–490ms (avg 437.3ms)</span></div>
         <div class="info-row"><span class="info-label">VAD Silence Gating</span><span class="info-val">-45.0 dBFS Threshold</span></div>
         <div class="info-row"><span class="info-label">Challenge Protocol</span><span class="info-val">{'TRIGGERED & FIRED' if call.get('challenge_fired') else 'PASSIVE MONITORING'}</span></div>
       </div>
