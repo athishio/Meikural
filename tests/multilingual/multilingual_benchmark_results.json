@@ -1,0 +1,192 @@
+{
+  "timestamp": 1789279873.9368362,
+  "device": "cpu",
+  "summary": {
+    "en": {
+      "name": "English (Control)",
+      "total_samples": 4,
+      "bonafide_samples": 2,
+      "spoof_samples": 2,
+      "correct": 4,
+      "accuracy_pct": 100.0,
+      "far_pct": 0.0,
+      "frr_pct": 0.0,
+      "avg_latency_ms": 447.19
+    },
+    "ta": {
+      "name": "Tamil (Regional)",
+      "total_samples": 4,
+      "bonafide_samples": 2,
+      "spoof_samples": 2,
+      "correct": 4,
+      "accuracy_pct": 100.0,
+      "far_pct": 0.0,
+      "frr_pct": 0.0,
+      "avg_latency_ms": 403.2
+    },
+    "hi": {
+      "name": "Hindi (Regional)",
+      "total_samples": 4,
+      "bonafide_samples": 2,
+      "spoof_samples": 2,
+      "correct": 4,
+      "accuracy_pct": 100.0,
+      "far_pct": 0.0,
+      "frr_pct": 0.0,
+      "avg_latency_ms": 402.06
+    },
+    "overall": {
+      "total_samples": 12,
+      "accuracy_pct": 100.0,
+      "far_pct": 0.0,
+      "frr_pct": 0.0,
+      "avg_latency_ms": 417.48
+    }
+  },
+  "evaluations": [
+    {
+      "id": "en_bonafide_01",
+      "language": "en",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0134,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 480.87,
+      "description": "English conversational human speech fixture"
+    },
+    {
+      "id": "en_bonafide_02",
+      "language": "en",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0147,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 413.79,
+      "description": "English natural question intonation fixture"
+    },
+    {
+      "id": "en_spoof_01",
+      "language": "en",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9822,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 438.46,
+      "description": "English neural vocoder deepfake voice clone"
+    },
+    {
+      "id": "en_spoof_02",
+      "language": "en",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9995,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 455.63,
+      "description": "English voice conversion clone with phase artifacts"
+    },
+    {
+      "id": "ta_bonafide_01",
+      "language": "ta",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0119,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 419.72,
+      "description": "Tamil conversational human speech with retroflex resonance"
+    },
+    {
+      "id": "ta_bonafide_02",
+      "language": "ta",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0083,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 420.95,
+      "description": "Tamil narrative rhythm human speech fixture"
+    },
+    {
+      "id": "ta_spoof_01",
+      "language": "ta",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9971,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 382.75,
+      "description": "Tamil deepfake voice clone with neural vocoder artifacts"
+    },
+    {
+      "id": "ta_spoof_02",
+      "language": "ta",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9977,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 389.38,
+      "description": "Tamil cross-lingual voice conversion clone"
+    },
+    {
+      "id": "hi_bonafide_01",
+      "language": "hi",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0176,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 433.77,
+      "description": "Hindi conversational human speech fixture"
+    },
+    {
+      "id": "hi_bonafide_02",
+      "language": "hi",
+      "ground_truth": "bonafide",
+      "predicted_verdict": "bonafide",
+      "passive_score": 0.0071,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 415.24,
+      "description": "Hindi narrative human speech fixture"
+    },
+    {
+      "id": "hi_spoof_01",
+      "language": "hi",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9299,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 399.32,
+      "description": "Hindi neural vocoder voice clone"
+    },
+    {
+      "id": "hi_spoof_02",
+      "language": "hi",
+      "ground_truth": "spoof",
+      "predicted_verdict": "spoof",
+      "passive_score": 0.9885,
+      "correct": true,
+      "false_acceptance": false,
+      "false_rejection": false,
+      "latency_ms": 359.89,
+      "description": "Hindi synthetic voice conversion with vocoder glitches"
+    }
+  ]
+}

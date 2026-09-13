@@ -1,0 +1,86 @@
+[
+  {
+    "id": "en_bonafide_01",
+    "language": "en",
+    "label": "bonafide",
+    "path": "audio/en_bonafide_01.wav",
+    "description": "English conversational human speech fixture"
+  },
+  {
+    "id": "en_bonafide_02",
+    "language": "en",
+    "label": "bonafide",
+    "path": "audio/en_bonafide_02.wav",
+    "description": "English natural question intonation fixture"
+  },
+  {
+    "id": "en_spoof_01",
+    "language": "en",
+    "label": "spoof",
+    "path": "audio/en_spoof_01.wav",
+    "description": "English neural vocoder deepfake voice clone"
+  },
+  {
+    "id": "en_spoof_02",
+    "language": "en",
+    "label": "spoof",
+    "path": "audio/en_spoof_02.wav",
+    "description": "English voice conversion clone with phase artifacts"
+  },
+  {
+    "id": "ta_bonafide_01",
+    "language": "ta",
+    "label": "bonafide",
+    "path": "audio/ta_bonafide_01.wav",
+    "description": "Tamil conversational human speech with retroflex resonance"
+  },
+  {
+    "id": "ta_bonafide_02",
+    "language": "ta",
+    "label": "bonafide",
+    "path": "audio/ta_bonafide_02.wav",
+    "description": "Tamil narrative rhythm human speech fixture"
+  },
+  {
+    "id": "ta_spoof_01",
+    "language": "ta",
+    "label": "spoof",
+    "path": "audio/ta_spoof_01.wav",
+    "description": "Tamil deepfake voice clone with neural vocoder artifacts"
+  },
+  {
+    "id": "ta_spoof_02",
+    "language": "ta",
+    "label": "spoof",
+    "path": "audio/ta_spoof_02.wav",
+    "description": "Tamil cross-lingual voice conversion clone"
+  },
+  {
+    "id": "hi_bonafide_01",
+    "language": "hi",
+    "label": "bonafide",
+    "path": "audio/hi_bonafide_01.wav",
+    "description": "Hindi conversational human speech fixture"
+  },
+  {
+    "id": "hi_bonafide_02",
+    "language": "hi",
+    "label": "bonafide",
+    "path": "audio/hi_bonafide_02.wav",
+    "description": "Hindi narrative human speech fixture"
+  },
+  {
+    "id": "hi_spoof_01",
+    "language": "hi",
+    "label": "spoof",
+    "path": "audio/hi_spoof_01.wav",
+    "description": "Hindi neural vocoder voice clone"
+  },
+  {
+    "id": "hi_spoof_02",
+    "language": "hi",
+    "label": "spoof",
+    "path": "audio/hi_spoof_02.wav",
+    "description": "Hindi synthetic voice conversion with vocoder glitches"
+  }
+]

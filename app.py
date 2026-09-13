@@ -193,6 +193,28 @@ def get_call_events_endpoint(session_id: str):
     return [EventRecord(**e) for e in events]
 
 
+@app.get("/calls/{session_id}/verify")
+def verify_call_chain_endpoint(session_id: str):
+    """
+    Verifies cryptographic hash-chain integrity across all telemetry events for a call session.
+    Walks all sequential events and confirms sha256(prev_hash + session_id + timestamp + score + verdict).
+    Returns verification status and the first tampered index if integrity is violated.
+    Note: This is an appendable cryptographic hash-chain for tamper detection, not a distributed blockchain.
+    """
+    call = database.get_call(session_id)
+    if not call:
+        raise HTTPException(status_code=404, detail="Call session not found")
+
+    res = database.verify_chain(session_id)
+    return {
+        "session_id": session_id,
+        "valid": res.valid,
+        "total_events": res.total_events,
+        "broken_index": res.broken_index,
+        "algorithm": "SHA-256 appendable hash-chain",
+    }
+
+
 @app.get("/calls/{session_id}/report", response_class=PlainTextResponse)
 def download_incident_report_endpoint(session_id: str):
     """

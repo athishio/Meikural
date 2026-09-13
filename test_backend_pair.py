@@ -135,6 +135,59 @@ class TestMeikuralAuditDatabase(unittest.TestCase):
         self.assertIsNone(database.get_call_summary(session_id, db_path=self.test_db))
         self.assertEqual(len(database.get_events(session_id, db_path=self.test_db)), 0)
 
+    def test_hash_chain_intact(self):
+        session_id = "call_chain_intact_001"
+        database.log_call_start(session_id=session_id, caller_id="+15551234567", db_path=self.test_db)
+        for i in range(4):
+            database.log_event(
+                session_id=session_id,
+                score=0.1 * (i + 1),
+                smoothed_score=0.1 * (i + 1),
+                verdict="ALLOW" if i < 2 else "WARN",
+                timestamp=1700000000.0 + i,
+                db_path=self.test_db,
+            )
+
+        is_valid, broken_idx = database.verify_chain(session_id, db_path=self.test_db)
+        self.assertTrue(is_valid)
+        self.assertIsNone(broken_idx)
+
+        # Attribute-based access check
+        res = database.verify_chain(session_id, db_path=self.test_db)
+        self.assertTrue(res.valid)
+        self.assertIsNone(res.broken_index)
+        self.assertEqual(res.total_events, 4)
+
+    def test_hash_chain_tamper_detection(self):
+        session_id = "call_chain_tamper_001"
+        database.log_call_start(session_id=session_id, caller_id="+15551234567", db_path=self.test_db)
+        for i in range(3):
+            database.log_event(
+                session_id=session_id,
+                score=0.85,
+                smoothed_score=0.85,
+                verdict="STEP_UP_VERIFICATION",
+                timestamp=1700000000.0 + i,
+                db_path=self.test_db,
+            )
+
+        # Confirm chain is initially intact
+        self.assertTrue(database.verify_chain(session_id, db_path=self.test_db).valid)
+
+        # Tamper with row 1 directly in SQLite (silent modification)
+        with database.get_db_connection(self.test_db) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT event_id FROM events WHERE session_id = ? ORDER BY event_id ASC", (session_id,))
+            event_ids = [r["event_id"] for r in cursor.fetchall()]
+            target_id = event_ids[1]
+            # Attacker lowers risk score to 0.10
+            cursor.execute("UPDATE events SET score = 0.10, verdict = 'ALLOW' WHERE event_id = ?", (target_id,))
+
+        # Verify tamper detection
+        is_valid, broken_idx = database.verify_chain(session_id, db_path=self.test_db)
+        self.assertFalse(is_valid)
+        self.assertEqual(broken_idx, 1)
+
 
 class TestMeikuralAlerts(unittest.TestCase):
     def test_send_sms_alert(self):
@@ -221,6 +274,38 @@ class TestIncidentReportEndpoint(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["detail"], "Call session not found")
 
+    def test_verify_endpoint_valid_and_tampered(self):
+        # 1. Verify endpoint on valid session
+        res = self.client.get(f"/calls/{self.session_id}/verify")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["session_id"], self.session_id)
+        self.assertTrue(data["valid"])
+        self.assertIsNone(data["broken_index"])
+        self.assertGreaterEqual(data["total_events"], 1)
+        self.assertEqual(data["algorithm"], "SHA-256 appendable hash-chain")
+
+        # 2. Tamper with the event in DB
+        with database.get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE events SET score = 0.05 WHERE session_id = ?",
+                (self.session_id,),
+            )
+
+        # 3. Verify endpoint reports invalid
+        res_tampered = self.client.get(f"/calls/{self.session_id}/verify")
+        self.assertEqual(res_tampered.status_code, 200)
+        tampered_data = res_tampered.json()
+        self.assertFalse(tampered_data["valid"])
+        self.assertEqual(tampered_data["broken_index"], 0)
+
+    def test_verify_endpoint_not_found(self):
+        response = self.client.get("/calls/non_existent_session_888/verify")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Call session not found")
+
 
 if __name__ == "__main__":
     unittest.main()
+

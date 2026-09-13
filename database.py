@@ -13,13 +13,30 @@ import logging
 import sqlite3
 import time
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("meikural_database")
 
 DB_PATH = "meikural_audit.db"
 SALT = "MEIKURAL_SECURE_SALT_2026"
 RETENTION_PERIOD_SECONDS = 90 * 86400  # 90 days in seconds
+GENESIS_HASH = "0" * 64  # Initial seed hash for the appendable event hash-chain
+
+
+def compute_event_hash(
+    prev_hash: str,
+    session_id: str,
+    timestamp: float,
+    score: float,
+    verdict: str,
+) -> str:
+    """
+    Computes a deterministic SHA-256 hash for an event record in the appendable hash-chain.
+    Hash payload: prev_hash + session_id + timestamp + score + verdict
+    Note: This is an appendable cryptographic hash-chain for tamper detection, not a distributed blockchain.
+    """
+    raw_payload = f"{prev_hash}{session_id}{timestamp:.4f}{score:.4f}{verdict}"
+    return hashlib.sha256(raw_payload.encode("utf-8")).hexdigest()
 
 
 def hash_caller_id(caller_id: str) -> str:
@@ -72,8 +89,8 @@ def init_db(db_path: str = DB_PATH) -> None:
             )
         """)
 
-        # Table 2: events
-        cursor.execute("""
+        # Table 2: events (Lightweight appendable SHA-256 hash-chain for tamper detection)
+        cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS events (
                 event_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
@@ -82,9 +99,19 @@ def init_db(db_path: str = DB_PATH) -> None:
                 smoothed_score REAL NOT NULL,
                 verdict TEXT NOT NULL,
                 challenge_id TEXT,
+                prev_hash TEXT NOT NULL DEFAULT '{GENESIS_HASH}',
+                record_hash TEXT NOT NULL DEFAULT '{GENESIS_HASH}',
                 FOREIGN KEY (session_id) REFERENCES calls (session_id) ON DELETE CASCADE
             )
         """)
+
+        # Column migration check for existing tables
+        cursor.execute("PRAGMA table_info(events)")
+        existing_cols = {row["name"] for row in cursor.fetchall()}
+        if "prev_hash" not in existing_cols:
+            cursor.execute(f"ALTER TABLE events ADD COLUMN prev_hash TEXT NOT NULL DEFAULT '{GENESIS_HASH}'")
+        if "record_hash" not in existing_cols:
+            cursor.execute(f"ALTER TABLE events ADD COLUMN record_hash TEXT NOT NULL DEFAULT '{GENESIS_HASH}'")
 
         # Indexes for fast lookup and purge operations
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_events_session_id ON events (session_id)")
@@ -147,17 +174,36 @@ def log_event(
     db_path: str = DB_PATH,
 ) -> int:
     """
-    Logs a real-time event/chunk inference result for a session.
+    Logs a real-time event/chunk inference result for a session with appendable SHA-256 hash-chaining.
+    Note: This is an appendable cryptographic hash-chain for tamper detection, not a distributed blockchain.
     """
     ts = timestamp if timestamp is not None else time.time()
     with get_db_connection(db_path) as conn:
         cursor = conn.cursor()
+
+        # Retrieve previous row's record_hash for this session
+        cursor.execute(
+            "SELECT record_hash FROM events WHERE session_id = ? ORDER BY event_id DESC LIMIT 1",
+            (session_id,),
+        )
+        prev_row = cursor.fetchone()
+        prev_hash = prev_row["record_hash"] if prev_row and prev_row["record_hash"] else GENESIS_HASH
+
+        # Compute hash-chain record hash: sha256(prev_hash + session_id + timestamp + score + verdict)
+        record_hash = compute_event_hash(
+            prev_hash=prev_hash,
+            session_id=session_id,
+            timestamp=ts,
+            score=score,
+            verdict=verdict,
+        )
+
         cursor.execute(
             """
-            INSERT INTO events (session_id, timestamp, score, smoothed_score, verdict, challenge_id)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO events (session_id, timestamp, score, smoothed_score, verdict, challenge_id, prev_hash, record_hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (session_id, ts, score, smoothed_score, verdict, challenge_id),
+            (session_id, ts, score, smoothed_score, verdict, challenge_id, prev_hash, record_hash),
         )
         event_id = cursor.lastrowid
         return event_id
@@ -216,9 +262,68 @@ def get_events(session_id: str, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
     """
     with get_db_connection(db_path) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM events WHERE session_id = ? ORDER BY timestamp ASC", (session_id,))
+        cursor.execute("SELECT * FROM events WHERE session_id = ? ORDER BY event_id ASC", (session_id,))
         rows = cursor.fetchall()
         return [dict(r) for r in rows]
+
+
+class ChainVerificationResult(tuple):
+    """
+    Result tuple for verify_chain, unpackable as (is_valid, broken_index).
+    Attributes:
+        valid (bool): True if all records in the hash-chain are cryptographically intact.
+        broken_index (Optional[int]): 0-based index of the first record where the hash-chain breaks.
+        total_events (int): Total number of events verified in the session.
+    """
+    def __new__(cls, valid: bool, broken_index: Optional[int], total_events: int = 0):
+        return super().__new__(cls, (valid, broken_index))
+
+    def __init__(self, valid: bool, broken_index: Optional[int], total_events: int = 0):
+        self.valid = valid
+        self.broken_index = broken_index
+        self.total_events = total_events
+
+
+def verify_chain(session_id: str, db_path: str = DB_PATH) -> ChainVerificationResult:
+    """
+    Walks all events for a given session and recomputes the appendable hash-chain.
+    Returns (True, None) if intact, or (False, first_broken_index) if modified.
+
+    Note: This is an appendable cryptographic hash-chain for tamper detection,
+    not a distributed blockchain.
+    """
+    events = get_events(session_id, db_path=db_path)
+    if not events:
+        return ChainVerificationResult(True, None, total_events=0)
+
+    expected_prev = GENESIS_HASH
+    for idx, ev in enumerate(events):
+        # 1. Verify link to previous event's hash
+        if ev.get("prev_hash") != expected_prev:
+            logger.warning(
+                f"Hash-chain link broken at event index {idx} (event_id={ev.get('event_id')}): "
+                f"expected prev_hash={expected_prev}, found={ev.get('prev_hash')}"
+            )
+            return ChainVerificationResult(False, idx, total_events=len(events))
+
+        # 2. Recompute record_hash over (prev_hash + session_id + timestamp + score + verdict)
+        recomputed_hash = compute_event_hash(
+            prev_hash=expected_prev,
+            session_id=ev["session_id"],
+            timestamp=ev["timestamp"],
+            score=ev["score"],
+            verdict=ev["verdict"],
+        )
+        if ev.get("record_hash") != recomputed_hash:
+            logger.warning(
+                f"Record hash mismatch at event index {idx} (event_id={ev.get('event_id')}): "
+                f"recomputed={recomputed_hash}, stored={ev.get('record_hash')}"
+            )
+            return ChainVerificationResult(False, idx, total_events=len(events))
+
+        expected_prev = recomputed_hash
+
+    return ChainVerificationResult(True, None, total_events=len(events))
 
 
 def purge_expired_records(current_time: Optional[float] = None, db_path: str = DB_PATH) -> int:
