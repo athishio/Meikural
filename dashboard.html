@@ -666,7 +666,7 @@
 
     .waveform-diagnostics {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-top: 4px;
     }
@@ -1746,7 +1746,7 @@
               </div>
             </div>
 
-            <!-- Diagnostics Row -->
+            <!-- Diagnostics Row (6 Metrics Grid) -->
             <div class="waveform-diagnostics">
               <div class="diag-box">
                 <div class="diag-label">RMS Energy</div>
@@ -1759,6 +1759,14 @@
               <div class="diag-box">
                 <div class="diag-label">Inference</div>
                 <div class="diag-val mono" id="diagLatency">436 ms</div>
+              </div>
+              <div class="diag-box">
+                <div class="diag-label">Turnaround Reflex</div>
+                <div class="diag-val mono" id="diagTurnaround" style="color: var(--safe);">420 ms (Human)</div>
+              </div>
+              <div class="diag-box">
+                <div class="diag-label">Telecom Codec</div>
+                <div class="diag-val mono" id="diagCodec">G.711 / PCM</div>
               </div>
               <div class="diag-box">
                 <div class="diag-label">Sample Rate</div>
@@ -3125,6 +3133,24 @@
       if (sessElem) sessElem.innerText = sessionId;
 
       updateTrustGauge(rawSpoof);
+
+      // Timing Profile & Turnaround Reflex Update
+      if (data.timing_profile) {
+        const tp = data.timing_profile;
+        const turnElem = document.getElementById('diagTurnaround');
+        if (turnElem) {
+          turnElem.innerText = `${tp.turnaround_ms}ms (${tp.classification.replace('_', ' ')})`;
+          turnElem.style.color = tp.is_biological ? 'var(--safe)' : 'var(--critical)';
+        }
+      }
+
+      // Telecom Codec Profile Update
+      if (data.codec_profile) {
+        const codecElem = document.getElementById('diagCodec');
+        if (codecElem) {
+          codecElem.innerText = data.codec_profile.toUpperCase().replace('_', ' ');
+        }
+      }
 
       if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
         const prompt = data.challenge_state.prompt_text || 'Please repeat dynamic token: 9 - 2 - 5';

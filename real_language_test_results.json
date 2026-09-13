@@ -1,0 +1,98 @@
+[
+  {
+    "file": "en_bonafide_01.wav",
+    "language": "en",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "en_bonafide_02.wav",
+    "language": "en",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "en_spoof_01.wav",
+    "language": "en",
+    "ground_truth": "SPOOF",
+    "score": 0.9994,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  },
+  {
+    "file": "en_spoof_02.wav",
+    "language": "en",
+    "ground_truth": "SPOOF",
+    "score": 0.9893,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  },
+  {
+    "file": "hi_bonafide_01.wav",
+    "language": "hi",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "hi_bonafide_02.wav",
+    "language": "hi",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "hi_spoof_01.wav",
+    "language": "hi",
+    "ground_truth": "SPOOF",
+    "score": 0.999,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  },
+  {
+    "file": "hi_spoof_02.wav",
+    "language": "hi",
+    "ground_truth": "SPOOF",
+    "score": 0.9633,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  },
+  {
+    "file": "ta_bonafide_01.wav",
+    "language": "ta",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "ta_bonafide_02.wav",
+    "language": "ta",
+    "ground_truth": "BONAFIDE",
+    "score": 1.0,
+    "verdict": "SPOOF",
+    "correct": "NO"
+  },
+  {
+    "file": "ta_spoof_01.wav",
+    "language": "ta",
+    "ground_truth": "SPOOF",
+    "score": 0.999,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  },
+  {
+    "file": "ta_spoof_02.wav",
+    "language": "ta",
+    "ground_truth": "SPOOF",
+    "score": 0.9995,
+    "verdict": "SPOOF",
+    "correct": "YES"
+  }
+]

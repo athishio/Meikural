@@ -1,5 +1,5 @@
 {
-  "timestamp": 1789281776.1023777,
+  "timestamp": 1789288840.9788983,
   "device": "cpu",
   "summary": {
     "en": {
@@ -11,7 +11,7 @@
       "accuracy_pct": 100.0,
       "far_pct": 0.0,
       "frr_pct": 0.0,
-      "avg_latency_ms": 454.06
+      "avg_latency_ms": 350.89
     },
     "ta": {
       "name": "Tamil (Regional)",
@@ -22,7 +22,7 @@
       "accuracy_pct": 100.0,
       "far_pct": 0.0,
       "frr_pct": 0.0,
-      "avg_latency_ms": 426.05
+      "avg_latency_ms": 327.54
     },
     "hi": {
       "name": "Hindi (Regional)",
@@ -33,14 +33,14 @@
       "accuracy_pct": 100.0,
       "far_pct": 0.0,
       "frr_pct": 0.0,
-      "avg_latency_ms": 393.01
+      "avg_latency_ms": 337.81
     },
     "overall": {
       "total_samples": 12,
       "accuracy_pct": 100.0,
       "far_pct": 0.0,
       "frr_pct": 0.0,
-      "avg_latency_ms": 424.37
+      "avg_latency_ms": 338.75
     }
   },
   "evaluations": [
@@ -53,7 +53,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 482.3,
+      "latency_ms": 391.19,
       "description": "Synthetic bonafide-pattern acoustic fixture (English conversational formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
     },
     {
@@ -65,7 +65,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 469.16,
+      "latency_ms": 350.68,
       "description": "Synthetic bonafide-pattern acoustic fixture (English rising-intonation formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
     },
     {
@@ -77,7 +77,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 409.25,
+      "latency_ms": 313.79,
       "description": "Synthetic deepfake-pattern acoustic fixture (HiFi-GAN vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
     },
     {
@@ -89,7 +89,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 455.53,
+      "latency_ms": 347.89,
       "description": "Synthetic deepfake-pattern acoustic fixture (WaveGlow vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio"
     },
     {
@@ -101,7 +101,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 469.08,
+      "latency_ms": 325.65,
       "description": "Synthetic bonafide-pattern acoustic fixture (Tamil retroflex formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
     },
     {
@@ -113,7 +113,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 392.37,
+      "latency_ms": 353.73,
       "description": "Synthetic bonafide-pattern acoustic fixture (Tamil narrative cadence formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
     },
     {
@@ -125,7 +125,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 427.42,
+      "latency_ms": 323.59,
       "description": "Synthetic deepfake-pattern acoustic fixture (Tamil clone vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
     },
     {
@@ -137,7 +137,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 415.33,
+      "latency_ms": 307.2,
       "description": "Synthetic deepfake-pattern acoustic fixture (Tamil VC vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 45Hz frame glitch, not neural TTS audio"
     },
     {
@@ -149,7 +149,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 398.1,
+      "latency_ms": 373.93,
       "description": "Synthetic bonafide-pattern acoustic fixture (Hindi dental/aspirated formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
     },
     {
@@ -161,7 +161,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 387.85,
+      "latency_ms": 350.96,
       "description": "Synthetic bonafide-pattern acoustic fixture (Hindi continuous cadence formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
     },
     {
@@ -173,7 +173,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 386.68,
+      "latency_ms": 320.83,
       "description": "Synthetic deepfake-pattern acoustic fixture (Hindi TTS vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
     },
     {
@@ -185,7 +185,7 @@
       "correct": true,
       "false_acceptance": false,
       "false_rejection": false,
-      "latency_ms": 399.4,
+      "latency_ms": 305.51,
       "description": "Synthetic deepfake-pattern acoustic fixture (Hindi VC vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio"
     }
   ]

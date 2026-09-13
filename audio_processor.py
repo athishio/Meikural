@@ -7,6 +7,7 @@ import time
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
+import scipy.signal as signal
 import soundfile as sf
 import torch
 import torch.nn.functional as F
@@ -24,6 +25,109 @@ except (ModuleNotFoundError, ImportError):
 TARGET_SAMPLE_RATE = 16000
 TARGET_SAMPLES = 64600  # ~4.0375 seconds at 16kHz
 SILENCE_RMS_THRESHOLD_DB = -45.0  # Signals below -45 dB are treated as silence/background
+
+
+class TelephonyCodecEngine:
+    """
+    Simulates real-world telecommunication lossy compression codecs:
+    - ITU-T G.711 mu-law (North America / Japan PSTN standard)
+    - ITU-T G.711 A-law (Europe / India PSTN standard)
+    - PSTN Narrowband 8kHz downsampling with Butterworth 300-3400 Hz bandpass filter
+    - AMR-WB (Adaptive Multi-Rate Wideband telecom profile)
+    """
+
+    @staticmethod
+    def apply_g711_ulaw(waveform: np.ndarray, mu: float = 255.0) -> np.ndarray:
+        """
+        Applies G.711 mu-law non-linear logarithmic companding, 8-bit quantization,
+        and de-quantization back to floating point PCM.
+        """
+        if len(waveform) == 0:
+            return waveform
+        x = np.clip(waveform, -1.0, 1.0)
+        # Mu-law compression
+        y = np.sign(x) * np.log(1.0 + mu * np.abs(x)) / np.log(1.0 + mu)
+        # 8-bit integer quantization (-127 to 127)
+        q = np.round(y * 127.0).astype(np.int8)
+        # De-quantization (expansion)
+        x_recon = np.sign(q) * (1.0 / mu) * ((1.0 + mu) ** (np.abs(q) / 127.0) - 1.0)
+        return x_recon.astype(np.float32)
+
+    @staticmethod
+    def apply_g711_alaw(waveform: np.ndarray, A: float = 87.6) -> np.ndarray:
+        """
+        Applies G.711 A-law non-linear logarithmic companding, 8-bit quantization,
+        and de-quantization back to floating point PCM.
+        """
+        if len(waveform) == 0:
+            return waveform
+        x = np.clip(waveform, -1.0, 1.0)
+        abs_x = np.abs(x)
+        inv_A = 1.0 / A
+        denom = 1.0 + np.log(A)
+
+        y = np.zeros_like(x)
+        linear_mask = abs_x < inv_A
+        log_mask = ~linear_mask
+
+        y[linear_mask] = np.sign(x[linear_mask]) * (A * abs_x[linear_mask]) / denom
+        y[log_mask] = np.sign(x[log_mask]) * (1.0 + np.log(np.maximum(1e-12, A * abs_x[log_mask]))) / denom
+
+        q = np.round(y * 127.0).astype(np.int8)
+
+        # De-quantization
+        abs_q_norm = np.abs(q) / 127.0
+        x_recon = np.zeros_like(x)
+        lin_recon_mask = abs_q_norm < (1.0 / denom)
+        log_recon_mask = ~lin_recon_mask
+
+        x_recon[lin_recon_mask] = np.sign(q[lin_recon_mask]) * (abs_q_norm[lin_recon_mask] * denom) / A
+        x_recon[log_recon_mask] = np.sign(q[log_recon_mask]) * np.exp(abs_q_norm[log_recon_mask] * denom - 1.0) / A
+
+        return x_recon.astype(np.float32)
+
+    @staticmethod
+    def apply_pstn_narrowband(waveform: np.ndarray, sample_rate: int = TARGET_SAMPLE_RATE) -> np.ndarray:
+        """
+        Simulates traditional 8kHz PSTN narrowband telephony:
+        1. Downsamples from 16kHz to 8kHz
+        2. Applies 4th-order Butterworth bandpass filter (300 Hz - 3400 Hz)
+        3. Upsamples back to 16kHz with anti-aliasing interpolation
+        """
+        if len(waveform) == 0:
+            return waveform
+
+        # Resample to 8kHz
+        num_8k = max(1, int(len(waveform) * (8000.0 / sample_rate)))
+        downsampled = signal.resample(waveform, num_8k)
+
+        # Butterworth bandpass filter: 300 Hz to 3400 Hz at 8000 Hz Nyquist (4000 Hz)
+        sos = signal.butter(4, [300.0, 3400.0], btype="bandpass", fs=8000.0, output="sos")
+        filtered_8k = signal.sosfilt(sos, downsampled)
+
+        # Resample back to 16kHz
+        num_16k = max(1, int(len(filtered_8k) * (TARGET_SAMPLE_RATE / 8000.0)))
+        upsampled = signal.resample(filtered_8k, num_16k)
+        return upsampled.astype(np.float32)
+
+    @classmethod
+    def apply_codec(cls, waveform: np.ndarray, codec_name: str, sample_rate: int = TARGET_SAMPLE_RATE) -> np.ndarray:
+        """
+        Applies requested telephony compression codec simulation.
+        """
+        codec = codec_name.lower().strip()
+        if codec in ("g711_ulaw", "ulaw", "mu_law", "g711u"):
+            return cls.apply_g711_ulaw(waveform)
+        elif codec in ("g711_alaw", "alaw", "a_law", "g711a"):
+            return cls.apply_g711_alaw(waveform)
+        elif codec in ("pstn", "narrowband", "pstn_8k", "pstn_narrowband"):
+            nb = cls.apply_pstn_narrowband(waveform, sample_rate)
+            return cls.apply_g711_ulaw(nb)
+        elif codec in ("amr_wb", "amr", "wideband"):
+            # Wideband telecom bandpass: 50 Hz to 7000 Hz
+            sos = signal.butter(4, [50.0, 7000.0], btype="bandpass", fs=sample_rate, output="sos")
+            return signal.sosfilt(sos, waveform).astype(np.float32)
+        return waveform
 
 
 class AASISTWrapper:
@@ -62,12 +166,14 @@ class AASISTWrapper:
         self,
         waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
+        simulate_codec: Optional[str] = None,
     ) -> Tuple[torch.Tensor, np.ndarray, float]:
         """
         Standardizes input waveform:
         - Accepts file path strings, raw bytes, ndarray, or Torch Tensor
         - Converts multi-channel to mono
         - Resamples if necessary
+        - Optionally simulates lossy telecommunication codecs (G.711 / PSTN)
         - Measures RMS energy and duration
         - Pads/slices to fixed AASIST length: 64,600 samples
         """
@@ -105,6 +211,10 @@ class AASISTWrapper:
             indices = np.round(np.arange(0, len(waveform), sample_rate / TARGET_SAMPLE_RATE)).astype(int)
             indices = indices[indices < len(waveform)]
             waveform = waveform[indices]
+
+        # Apply telephony codec simulation if requested
+        if simulate_codec:
+            waveform = TelephonyCodecEngine.apply_codec(waveform, simulate_codec, sample_rate=TARGET_SAMPLE_RATE)
 
         # Calculate original duration
         duration_ms = (len(waveform) / TARGET_SAMPLE_RATE) * 1000.0 if len(waveform) > 0 else 0.0
@@ -145,12 +255,13 @@ class AASISTWrapper:
         waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
         threshold: float = 0.50,
+        simulate_codec: Optional[str] = None,
     ) -> Dict:
         """
         Full detailed inference pass returning scores, audio health, verdict, confidence, and latency.
         """
         start_time = time.perf_counter()
-        tensor_x, raw_mono, duration_ms = self.preprocess_waveform(waveform, sample_rate)
+        tensor_x, raw_mono, duration_ms = self.preprocess_waveform(waveform, sample_rate, simulate_codec=simulate_codec)
         health = self.analyze_audio_health(raw_mono, duration_ms)
 
         with torch.no_grad():
@@ -183,36 +294,40 @@ class AASISTWrapper:
             "raw_logits": raw_logits,
             "audio_health": health,
             "inference_latency_ms": round(latency_ms, 2),
+            "codec_profile": simulate_codec or "uncompressed_pcm_16k",
         }
 
     def score(
         self,
         waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
+        simulate_codec: Optional[str] = None,
     ) -> float:
         """Simple scalar score wrapper."""
-        result = self.score_detailed(waveform, sample_rate)
+        result = self.score_detailed(waveform, sample_rate, simulate_codec=simulate_codec)
         return result["passive_score"]
 
 
 def score_audio_chunk(
     waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
     sample_rate: int = TARGET_SAMPLE_RATE,
+    simulate_codec: Optional[str] = None,
 ) -> float:
     """
     Public 1-line wrapper returning passive spoof score [0.0 - 1.0].
     """
     wrapper = AASISTWrapper.get_instance()
-    return wrapper.score(waveform, sample_rate)
+    return wrapper.score(waveform, sample_rate, simulate_codec=simulate_codec)
 
 
 def score_audio_chunk_detailed(
     waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
     sample_rate: int = TARGET_SAMPLE_RATE,
     threshold: float = 0.50,
+    simulate_codec: Optional[str] = None,
 ) -> Dict:
     """
     Public detailed wrapper returning full telemetry & classification dict.
     """
     wrapper = AASISTWrapper.get_instance()
-    return wrapper.score_detailed(waveform, sample_rate, threshold)
+    return wrapper.score_detailed(waveform, sample_rate, threshold, simulate_codec=simulate_codec)

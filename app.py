@@ -822,9 +822,10 @@ def purge_expired_endpoint():
 async def score_audio_file(
     file: Optional[UploadFile] = File(None),
     audio: Optional[UploadFile] = File(None),
+    codec: Optional[str] = Query(None, description="Simulated telephony codec: g711_ulaw, g711_alaw, pstn_narrowband, amr_wb"),
 ):
     """
-    HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry.
+    HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry and optional telephony codec simulation.
     Accepts audio binary in either 'file' or 'audio' multipart form field.
     """
     upload = file or audio
@@ -838,7 +839,7 @@ async def score_audio_file(
     # Register batch session in privacy DB
     database.create_call(session_id=session_id, caller_id_hash=database.hash_caller_id("BATCH_UPLOAD"))
 
-    detailed = score_audio_chunk_detailed(contents)
+    detailed = score_audio_chunk_detailed(contents, simulate_codec=codec)
     passive_score = detailed["passive_score"]
 
     # Classify verdict
@@ -890,6 +891,7 @@ async def score_audio_file(
         challenge_state=ChallengeState(
             event=EventType.NORMAL,
         ),
+        codec_profile=detailed.get("codec_profile", "uncompressed_pcm_16k"),
     )
     await broadcast_telemetry(broadcast.model_dump_json())
     return broadcast
@@ -915,6 +917,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
 
     mode = "live"  # "live" or "dummy"
     scenario_override = None  # None, "safe", "deepfake", "caution"
+    codec_override = None  # None, "g711_ulaw", "g711_alaw", "pstn_narrowband"
     current_challenge: ChallengeState = ChallengeState(event=EventType.NORMAL)
     challenge_fired = False
 
@@ -947,7 +950,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         "inference_latency_ms": 1.2,
                     }
                 else:
-                    detailed = score_audio_chunk_detailed(audio_bytes)
+                    detailed = score_audio_chunk_detailed(audio_bytes, simulate_codec=codec_override)
 
                 # Calibrate demo scenarios if explicitly specified by demo runner
                 if scenario_override == "safe":
@@ -1027,6 +1030,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         raw_logits=detailed["raw_logits"],
                     ),
                     challenge_state=current_challenge,
+                    timing_profile=fusion_res.get("timing_profile"),
+                    codec_profile=detailed.get("codec_profile", "uncompressed_pcm_16k"),
                 )
                 await broadcast_telemetry(broadcast.model_dump_json())
 
@@ -1035,6 +1040,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     data = json.loads(message["text"])
                     if "mode" in data:
                         mode = data["mode"]
+                    if "codec" in data:
+                        codec_override = data["codec"]
                     if "scenario" in data:
                         scenario_override = data["scenario"]
                         if data.get("action") == "set_scenario":
