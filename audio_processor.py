@@ -60,17 +60,23 @@ class AASISTWrapper:
 
     def preprocess_waveform(
         self,
-        waveform: Union[np.ndarray, torch.Tensor, bytes],
+        waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
     ) -> Tuple[torch.Tensor, np.ndarray, float]:
         """
         Standardizes input waveform:
-        - Decodes bytes or converts ndarray/Tensor
+        - Accepts file path strings, raw bytes, ndarray, or Torch Tensor
         - Converts multi-channel to mono
         - Resamples if necessary
         - Measures RMS energy and duration
         - Pads/slices to fixed AASIST length: 64,600 samples
         """
+        # Case 0: File path string or PathLike
+        if isinstance(waveform, (str, os.PathLike)) and os.path.isfile(str(waveform)):
+            data, sr = sf.read(str(waveform))
+            sample_rate = sr
+            waveform = data
+
         # Case 1: Raw bytes
         if isinstance(waveform, bytes):
             try:
@@ -136,7 +142,7 @@ class AASISTWrapper:
 
     def score_detailed(
         self,
-        waveform: Union[np.ndarray, torch.Tensor, bytes],
+        waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
         threshold: float = 0.50,
     ) -> Dict:
@@ -181,7 +187,7 @@ class AASISTWrapper:
 
     def score(
         self,
-        waveform: Union[np.ndarray, torch.Tensor, bytes],
+        waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
         sample_rate: int = TARGET_SAMPLE_RATE,
     ) -> float:
         """Simple scalar score wrapper."""
@@ -190,7 +196,7 @@ class AASISTWrapper:
 
 
 def score_audio_chunk(
-    waveform: Union[np.ndarray, torch.Tensor, bytes],
+    waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
     sample_rate: int = TARGET_SAMPLE_RATE,
 ) -> float:
     """
@@ -201,7 +207,7 @@ def score_audio_chunk(
 
 
 def score_audio_chunk_detailed(
-    waveform: Union[np.ndarray, torch.Tensor, bytes],
+    waveform: Union[np.ndarray, torch.Tensor, bytes, str, os.PathLike],
     sample_rate: int = TARGET_SAMPLE_RATE,
     threshold: float = 0.50,
 ) -> Dict:

@@ -551,6 +551,18 @@
       font-weight: 600;
     }
 
+    .btn-scenario.recording {
+      background-color: rgba(239, 68, 68, 0.16) !important;
+      border-color: #ef4444 !important;
+      color: #f87171 !important;
+      animation: pulse-recording 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-recording {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+
     .btn-scenario svg {
       width: 14px;
       height: 14px;
@@ -1252,6 +1264,14 @@
               <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
               Fire challenge
             </button>
+            <button class="btn-scenario" id="btnScenMic" onclick="toggleLiveMicrophone()" title="Stream microphone audio directly into AASIST in real-time">
+              <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              <span id="micLabel">Live mic</span>
+            </button>
+            <button class="btn-scenario" id="btnScenClip" onclick="streamDemoClip('deepfake_voice_clone')" title="Stream synthesized voice clone WAV into AASIST model">
+              <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Deepfake clip
+            </button>
           </div>
         </div>
 
@@ -1407,7 +1427,11 @@
                 <option value="Step-up">Step-up</option>
                 <option value="Alert">Alert</option>
               </select>
-              <button class="btn-export-report" onclick="downloadIncidentReport('SES-84F2A1')">
+              <button class="btn-export-report" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;" onclick="openForensicCertificate(appState.sessionId || 'SES-84F2A1')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Forensic Certificate
+              </button>
+              <button class="btn-export-report" onclick="downloadIncidentReport(appState.sessionId || 'SES-84F2A1')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export SOC Report
               </button>
@@ -1811,8 +1835,135 @@
         challengeBox.style.opacity = '1';
       }, 140);
 
+      // Send to backend WebSocket if connected
+      if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+        appState.ws.send(JSON.stringify({
+          action: "trigger_challenge",
+          prompt_text: selected
+        }));
+      }
+
       appendAuditEntry(appState.sessionId, '9f7a...2d91', appState.trustScore.toFixed(2), appState.verdict, 'Fired', now);
       showToast('🎤 Dynamic verification challenge transmitted to caller stream.', 'info');
+    }
+
+    // --- Live Microphone Audio Streaming (Web Audio API) ---
+    let liveAudioCtx = null;
+    let liveMicStream = null;
+    let liveMicNode = null;
+    let isMicActive = false;
+    let micPcmBuffer = [];
+    const CHUNK_SAMPLE_COUNT = 32000; // ~2.0 seconds at 16kHz for real-time INT8 CPU inference
+
+    async function toggleLiveMicrophone() {
+      if (isMicActive) {
+        stopLiveMicrophone();
+      } else {
+        await startLiveMicrophone();
+      }
+    }
+
+    async function startLiveMicrophone() {
+      try {
+        const btn = document.getElementById('btnScenMic');
+        const label = document.getElementById('micLabel');
+
+        liveMicStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: 16000,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: true
+          }
+        });
+
+        liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        const source = liveAudioCtx.createMediaStreamSource(liveMicStream);
+
+        // ScriptProcessorNode with bufferSize 4096 (broad cross-browser support)
+        liveMicNode = liveAudioCtx.createScriptProcessor(4096, 1, 1);
+        micPcmBuffer = [];
+
+        liveMicNode.onaudioprocess = (e) => {
+          if (!isMicActive) return;
+          const inputData = e.inputBuffer.getChannelData(0);
+          for (let i = 0; i < inputData.length; i++) {
+            micPcmBuffer.push(inputData[i]);
+          }
+
+          // When we accumulate 2.0s (32,000 samples), send as 16-bit PCM
+          if (micPcmBuffer.length >= CHUNK_SAMPLE_COUNT) {
+            const chunk = micPcmBuffer.slice(0, CHUNK_SAMPLE_COUNT);
+            micPcmBuffer = micPcmBuffer.slice(CHUNK_SAMPLE_COUNT / 2); // 50% overlap
+
+            const int16Array = new Int16Array(chunk.length);
+            for (let i = 0; i < chunk.length; i++) {
+              let s = Math.max(-1, Math.min(1, chunk[i]));
+              int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+
+            if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+              appState.ws.send(int16Array.buffer);
+            }
+          }
+        };
+
+        source.connect(liveMicNode);
+        liveMicNode.connect(liveAudioCtx.destination);
+
+        isMicActive = true;
+        if (btn) btn.classList.add('recording');
+        if (label) label.innerText = '🔴 Recording...';
+        showToast('🎙️ Live Microphone Active. Speak into your mic to test real-time AASIST scoring!', 'safe');
+      } catch (err) {
+        console.error('Error accessing microphone:', err);
+        showToast('⚠️ Microphone access denied or unavailable: ' + err.message, 'critical');
+      }
+    }
+
+    function stopLiveMicrophone() {
+      isMicActive = false;
+      if (liveMicStream) {
+        liveMicStream.getTracks().forEach(track => track.stop());
+        liveMicStream = null;
+      }
+      if (liveMicNode) {
+        liveMicNode.disconnect();
+        liveMicNode = null;
+      }
+      if (liveAudioCtx) {
+        liveAudioCtx.close();
+        liveAudioCtx = null;
+      }
+      micPcmBuffer = [];
+
+      const btn = document.getElementById('btnScenMic');
+      const label = document.getElementById('micLabel');
+      if (btn) btn.classList.remove('recording');
+      if (label) label.innerText = 'Live mic';
+      showToast('⏹️ Live Microphone stream stopped.', 'info');
+    }
+
+    // --- Stream Pre-Generated Demo Audio Clip ---
+    async function streamDemoClip(clipName = 'deepfake_voice_clone') {
+      try {
+        showToast(`🔄 Fetching demo clip: ${clipName}.wav...`, 'info');
+        const resp = await fetch(`/demo_clips/${clipName}.wav`);
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        const arrayBuf = await resp.arrayBuffer();
+        if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+          appState.ws.send(arrayBuf);
+          showToast(`⚡ Streamed ${clipName}.wav into AASIST model!`, 'safe');
+        } else {
+          showToast('⚠️ WebSocket not connected. Reconnecting...', 'warning');
+        }
+      } catch (e) {
+        console.error('Failed to stream audio clip:', e);
+        showToast(`❌ Error streaming clip: ${e.message}`, 'critical');
+      }
     }
 
     function dismissAlertBanner() {
@@ -1855,6 +2006,12 @@
       showToast(`📄 SOC Forensic Report downloaded for ${sessionId}`, 'safe');
     }
 
+    function openForensicCertificate(sessionId) {
+      const url = `/calls/${encodeURIComponent(sessionId)}/certificate`;
+      window.open(url, '_blank');
+      showToast(`🛡️ Forensic Certificate opened for ${sessionId}`, 'safe');
+    }
+
     function filterAuditRecords() {
       const query = document.getElementById('tableSearchField').value.toLowerCase();
       const verdictFilter = document.getElementById('tableVerdictSelect').value;
@@ -1890,8 +2047,11 @@
             <td>${row.challenge}</td>
             <td class="mono" style="font-size: 12px;">${row.time}</td>
             <td>
-              <button class="btn-table-action" onclick="downloadIncidentReport('${row.id}')">
-                SOC Report
+              <button class="btn-table-action" style="margin-right: 4px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;" onclick="openForensicCertificate('${row.id}')" title="View official printable certificate">
+                Cert
+              </button>
+              <button class="btn-table-action" onclick="downloadIncidentReport('${row.id}')" title="Download raw forensic report">
+                Report
               </button>
             </td>
           </tr>
