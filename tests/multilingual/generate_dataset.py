@@ -1,4 +1,4 @@
-﻿# tests/multilingual/generate_dataset.py
+# tests/multilingual/generate_dataset.py
 """
 Multilingual Acoustic Dataset Generator for Meikural
 Generates representative synthetic and acoustic speech fixtures for Tamil, Hindi, and English controls.
@@ -98,69 +98,69 @@ def generate_all():
     en_b1 = synthesize_bonafide(en_f0_1, [(750, 0.15), (1200, 0.10)], [(1.5, 1.8), (3.0, 3.2)], amp=0.035)
     path_en_b1 = os.path.join(AUDIO_DIR, 'en_bonafide_01.wav')
     sf.write(path_en_b1, en_b1, SAMPLE_RATE)
-    manifest.append({'id': 'en_bonafide_01', 'language': 'en', 'label': 'bonafide', 'path': 'audio/en_bonafide_01.wav', 'description': 'English conversational human speech fixture'})
+    manifest.append({'id': 'en_bonafide_01', 'language': 'en', 'label': 'bonafide', 'path': 'audio/en_bonafide_01.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (English conversational formant profile) — sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech'})
 
     en_f0_2 = 140.0 + 15.0 * (t / DURATION)
     en_b2 = synthesize_bonafide(en_f0_2, [(500, 0.18), (1800, 0.12)], [(1.8, 2.1)], amp=0.035)
     path_en_b2 = os.path.join(AUDIO_DIR, 'en_bonafide_02.wav')
     sf.write(path_en_b2, en_b2, SAMPLE_RATE)
-    manifest.append({'id': 'en_bonafide_02', 'language': 'en', 'label': 'bonafide', 'path': 'audio/en_bonafide_02.wav', 'description': 'English natural question intonation fixture'})
+    manifest.append({'id': 'en_bonafide_02', 'language': 'en', 'label': 'bonafide', 'path': 'audio/en_bonafide_02.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (English rising-intonation formant profile) — sine-harmonic synthesis, not recorded/TTS speech'})
 
     en_s1 = synthesize_spoof(145.0, vocoder_freq1=7820.0, vocoder_freq2=7940.0, frame_rate=40.0)
     path_en_s1 = os.path.join(AUDIO_DIR, 'en_spoof_01.wav')
     sf.write(path_en_s1, en_s1, SAMPLE_RATE)
-    manifest.append({'id': 'en_spoof_01', 'language': 'en', 'label': 'spoof', 'path': 'audio/en_spoof_01.wav', 'description': 'English neural vocoder deepfake voice clone'})
+    manifest.append({'id': 'en_spoof_01', 'language': 'en', 'label': 'spoof', 'path': 'audio/en_spoof_01.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (HiFi-GAN vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio'})
 
     en_s2 = synthesize_spoof(155.0, vocoder_freq1=7750.0, vocoder_freq2=7910.0, frame_rate=50.0)
     path_en_s2 = os.path.join(AUDIO_DIR, 'en_spoof_02.wav')
     sf.write(path_en_s2, en_s2, SAMPLE_RATE)
-    manifest.append({'id': 'en_spoof_02', 'language': 'en', 'label': 'spoof', 'path': 'audio/en_spoof_02.wav', 'description': 'English voice conversion clone with phase artifacts'})
+    manifest.append({'id': 'en_spoof_02', 'language': 'en', 'label': 'spoof', 'path': 'audio/en_spoof_02.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (WaveGlow vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio'})
 
     # 2. Tamil Dataset
     ta_f0_1 = 125.0 + 7.0 * np.sin(2 * np.pi * 2.1 * t)
     ta_b1 = synthesize_bonafide(ta_f0_1, [(400, 0.15), (1300, 0.12), (2700, 0.08)], [(1.2, 1.4), (2.4, 2.7)], amp=0.035)
     path_ta_b1 = os.path.join(AUDIO_DIR, 'ta_bonafide_01.wav')
     sf.write(path_ta_b1, ta_b1, SAMPLE_RATE)
-    manifest.append({'id': 'ta_bonafide_01', 'language': 'ta', 'label': 'bonafide', 'path': 'audio/ta_bonafide_01.wav', 'description': 'Tamil conversational human speech with retroflex resonance'})
+    manifest.append({'id': 'ta_bonafide_01', 'language': 'ta', 'label': 'bonafide', 'path': 'audio/ta_bonafide_01.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (Tamil retroflex formant profile) — sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech'})
 
     ta_f0_2 = 130.0 + 6.0 * np.cos(2 * np.pi * 2.8 * t)
     ta_b2 = synthesize_bonafide(ta_f0_2, [(600, 0.16), (1600, 0.10)], [(1.6, 1.9)], amp=0.035)
     path_ta_b2 = os.path.join(AUDIO_DIR, 'ta_bonafide_02.wav')
     sf.write(path_ta_b2, ta_b2, SAMPLE_RATE)
-    manifest.append({'id': 'ta_bonafide_02', 'language': 'ta', 'label': 'bonafide', 'path': 'audio/ta_bonafide_02.wav', 'description': 'Tamil narrative rhythm human speech fixture'})
+    manifest.append({'id': 'ta_bonafide_02', 'language': 'ta', 'label': 'bonafide', 'path': 'audio/ta_bonafide_02.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (Tamil narrative cadence formant profile) — sine-harmonic synthesis, not recorded/TTS speech'})
 
     ta_s1 = synthesize_spoof(135.0, vocoder_freq1=7800.0, vocoder_freq2=7960.0, frame_rate=40.0)
     path_ta_s1 = os.path.join(AUDIO_DIR, 'ta_spoof_01.wav')
     sf.write(path_ta_s1, ta_s1, SAMPLE_RATE)
-    manifest.append({'id': 'ta_spoof_01', 'language': 'ta', 'label': 'spoof', 'path': 'audio/ta_spoof_01.wav', 'description': 'Tamil deepfake voice clone with neural vocoder artifacts'})
+    manifest.append({'id': 'ta_spoof_01', 'language': 'ta', 'label': 'spoof', 'path': 'audio/ta_spoof_01.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (Tamil clone vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio'})
 
     ta_s2 = synthesize_spoof(142.0, vocoder_freq1=7780.0, vocoder_freq2=7920.0, frame_rate=45.0)
     path_ta_s2 = os.path.join(AUDIO_DIR, 'ta_spoof_02.wav')
     sf.write(path_ta_s2, ta_s2, SAMPLE_RATE)
-    manifest.append({'id': 'ta_spoof_02', 'language': 'ta', 'label': 'spoof', 'path': 'audio/ta_spoof_02.wav', 'description': 'Tamil cross-lingual voice conversion clone'})
+    manifest.append({'id': 'ta_spoof_02', 'language': 'ta', 'label': 'spoof', 'path': 'audio/ta_spoof_02.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (Tamil VC vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 45Hz frame glitch, not neural TTS audio'})
 
     # 3. Hindi Dataset
     hi_f0_1 = 128.0 + 9.0 * np.sin(2 * np.pi * 1.8 * t)
     hi_b1 = synthesize_bonafide(hi_f0_1, [(500, 0.16), (1500, 0.12)], [(1.3, 1.5), (2.8, 3.0)], amp=0.035)
     path_hi_b1 = os.path.join(AUDIO_DIR, 'hi_bonafide_01.wav')
     sf.write(path_hi_b1, hi_b1, SAMPLE_RATE)
-    manifest.append({'id': 'hi_bonafide_01', 'language': 'hi', 'label': 'bonafide', 'path': 'audio/hi_bonafide_01.wav', 'description': 'Hindi conversational human speech fixture'})
+    manifest.append({'id': 'hi_bonafide_01', 'language': 'hi', 'label': 'bonafide', 'path': 'audio/hi_bonafide_01.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (Hindi dental/aspirated formant profile) — sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech'})
 
     hi_f0_2 = 138.0 + 7.5 * np.cos(2 * np.pi * 2.2 * t)
     hi_b2 = synthesize_bonafide(hi_f0_2, [(650, 0.14), (1800, 0.11)], [(1.9, 2.2)], amp=0.035)
     path_hi_b2 = os.path.join(AUDIO_DIR, 'hi_bonafide_02.wav')
     sf.write(path_hi_b2, hi_b2, SAMPLE_RATE)
-    manifest.append({'id': 'hi_bonafide_02', 'language': 'hi', 'label': 'bonafide', 'path': 'audio/hi_bonafide_02.wav', 'description': 'Hindi narrative human speech fixture'})
+    manifest.append({'id': 'hi_bonafide_02', 'language': 'hi', 'label': 'bonafide', 'path': 'audio/hi_bonafide_02.wav', 'description': 'Synthetic bonafide-pattern acoustic fixture (Hindi continuous cadence formant profile) — sine-harmonic synthesis, not recorded/TTS speech'})
 
     hi_s1 = synthesize_spoof(140.0, vocoder_freq1=7830.0, vocoder_freq2=7950.0, frame_rate=40.0)
     path_hi_s1 = os.path.join(AUDIO_DIR, 'hi_spoof_01.wav')
     sf.write(path_hi_s1, hi_s1, SAMPLE_RATE)
-    manifest.append({'id': 'hi_spoof_01', 'language': 'hi', 'label': 'spoof', 'path': 'audio/hi_spoof_01.wav', 'description': 'Hindi neural vocoder voice clone'})
+    manifest.append({'id': 'hi_spoof_01', 'language': 'hi', 'label': 'spoof', 'path': 'audio/hi_spoof_01.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (Hindi TTS vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio'})
 
     hi_s2 = synthesize_spoof(150.0, vocoder_freq1=7790.0, vocoder_freq2=7930.0, frame_rate=50.0)
     path_hi_s2 = os.path.join(AUDIO_DIR, 'hi_spoof_02.wav')
     sf.write(path_hi_s2, hi_s2, SAMPLE_RATE)
-    manifest.append({'id': 'hi_spoof_02', 'language': 'hi', 'label': 'spoof', 'path': 'audio/hi_spoof_02.wav', 'description': 'Hindi synthetic voice conversion with vocoder glitches'})
+    manifest.append({'id': 'hi_spoof_02', 'language': 'hi', 'label': 'spoof', 'path': 'audio/hi_spoof_02.wav', 'description': 'Synthetic deepfake-pattern acoustic fixture (Hindi VC vocoder artifact simulation) — algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio'})
 
     with open(MANIFEST_PATH, 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=2)

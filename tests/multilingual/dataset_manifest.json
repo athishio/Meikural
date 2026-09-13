@@ -4,83 +4,83 @@
     "language": "en",
     "label": "bonafide",
     "path": "audio/en_bonafide_01.wav",
-    "description": "English conversational human speech fixture"
+    "description": "Synthetic bonafide-pattern acoustic fixture (English conversational formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
   },
   {
     "id": "en_bonafide_02",
     "language": "en",
     "label": "bonafide",
     "path": "audio/en_bonafide_02.wav",
-    "description": "English natural question intonation fixture"
+    "description": "Synthetic bonafide-pattern acoustic fixture (English rising-intonation formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
   },
   {
     "id": "en_spoof_01",
     "language": "en",
     "label": "spoof",
     "path": "audio/en_spoof_01.wav",
-    "description": "English neural vocoder deepfake voice clone"
+    "description": "Synthetic deepfake-pattern acoustic fixture (HiFi-GAN vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
   },
   {
     "id": "en_spoof_02",
     "language": "en",
     "label": "spoof",
     "path": "audio/en_spoof_02.wav",
-    "description": "English voice conversion clone with phase artifacts"
+    "description": "Synthetic deepfake-pattern acoustic fixture (WaveGlow vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio"
   },
   {
     "id": "ta_bonafide_01",
     "language": "ta",
     "label": "bonafide",
     "path": "audio/ta_bonafide_01.wav",
-    "description": "Tamil conversational human speech with retroflex resonance"
+    "description": "Synthetic bonafide-pattern acoustic fixture (Tamil retroflex formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
   },
   {
     "id": "ta_bonafide_02",
     "language": "ta",
     "label": "bonafide",
     "path": "audio/ta_bonafide_02.wav",
-    "description": "Tamil narrative rhythm human speech fixture"
+    "description": "Synthetic bonafide-pattern acoustic fixture (Tamil narrative cadence formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
   },
   {
     "id": "ta_spoof_01",
     "language": "ta",
     "label": "spoof",
     "path": "audio/ta_spoof_01.wav",
-    "description": "Tamil deepfake voice clone with neural vocoder artifacts"
+    "description": "Synthetic deepfake-pattern acoustic fixture (Tamil clone vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
   },
   {
     "id": "ta_spoof_02",
     "language": "ta",
     "label": "spoof",
     "path": "audio/ta_spoof_02.wav",
-    "description": "Tamil cross-lingual voice conversion clone"
+    "description": "Synthetic deepfake-pattern acoustic fixture (Tamil VC vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 45Hz frame glitch, not neural TTS audio"
   },
   {
     "id": "hi_bonafide_01",
     "language": "hi",
     "label": "bonafide",
     "path": "audio/hi_bonafide_01.wav",
-    "description": "Hindi conversational human speech fixture"
+    "description": "Synthetic bonafide-pattern acoustic fixture (Hindi dental/aspirated formant profile) \u2014 sine-harmonic synthesis with f0 micro-jitter, not recorded/TTS speech"
   },
   {
     "id": "hi_bonafide_02",
     "language": "hi",
     "label": "bonafide",
     "path": "audio/hi_bonafide_02.wav",
-    "description": "Hindi narrative human speech fixture"
+    "description": "Synthetic bonafide-pattern acoustic fixture (Hindi continuous cadence formant profile) \u2014 sine-harmonic synthesis, not recorded/TTS speech"
   },
   {
     "id": "hi_spoof_01",
     "language": "hi",
     "label": "spoof",
     "path": "audio/hi_spoof_01.wav",
-    "description": "Hindi neural vocoder voice clone"
+    "description": "Synthetic deepfake-pattern acoustic fixture (Hindi TTS vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 40Hz frame glitch, not neural TTS audio"
   },
   {
     "id": "hi_spoof_02",
     "language": "hi",
     "label": "spoof",
     "path": "audio/hi_spoof_02.wav",
-    "description": "Hindi synthetic voice conversion with vocoder glitches"
+    "description": "Synthetic deepfake-pattern acoustic fixture (Hindi VC vocoder artifact simulation) \u2014 algorithmic phase leakage (>7.5kHz) & 50Hz frame glitch, not neural TTS audio"
   }
 ]
