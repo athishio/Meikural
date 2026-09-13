@@ -801,11 +801,19 @@ def purge_expired_endpoint():
 
 
 @app.post("/score", response_model=ScoreBroadcast)
-async def score_audio_file(file: UploadFile = File(...)):
+async def score_audio_file(
+    file: Optional[UploadFile] = File(None),
+    audio: Optional[UploadFile] = File(None),
+):
     """
     HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry.
+    Accepts audio binary in either 'file' or 'audio' multipart form field.
     """
-    contents = await file.read()
+    upload = file or audio
+    if not upload:
+        raise HTTPException(status_code=422, detail="Missing audio file upload ('file' or 'audio' field required)")
+
+    contents = await upload.read()
     session_id = f"batch_{uuid.uuid4().hex[:8]}"
     ts = time.time()
 
