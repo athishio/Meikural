@@ -15,10 +15,10 @@
     :root {
       /* Obsidian Deep Palette */
       --bg-canvas: #04060B;
-      --bg-card: rgba(11, 17, 32, 0.72);
+      --bg-card: rgba(11, 17, 32, 0.75);
       --bg-card-hover: rgba(18, 26, 47, 0.85);
       --bg-card-active: rgba(22, 33, 60, 0.95);
-      --bg-elevated: rgba(15, 23, 42, 0.85);
+      --bg-elevated: rgba(15, 23, 42, 0.9);
 
       /* Glass Borders */
       --border-subtle: rgba(255, 255, 255, 0.08);
@@ -39,19 +39,19 @@
 
       /* Risk Status Colors (AASIST Backend Aligned: <=0.35 Safe, 0.35-0.65 Step-Up, >=0.65 Spoof) */
       --safe: #10B981;
-      --safe-glow: rgba(16, 185, 129, 0.25);
+      --safe-glow: rgba(16, 185, 129, 0.3);
       --safe-bg: rgba(16, 185, 129, 0.1);
-      --safe-border: rgba(16, 185, 129, 0.3);
+      --safe-border: rgba(16, 185, 129, 0.35);
 
       --caution: #F59E0B;
-      --caution-glow: rgba(245, 158, 11, 0.25);
-      --caution-bg: rgba(245, 158, 11, 0.1);
-      --caution-border: rgba(245, 158, 11, 0.3);
+      --caution-glow: rgba(245, 158, 11, 0.3);
+      --caution-bg: rgba(245, 158, 11, 0.12);
+      --caution-border: rgba(245, 158, 11, 0.35);
 
       --critical: #EF4444;
-      --critical-glow: rgba(239, 68, 68, 0.3);
-      --critical-bg: rgba(239, 68, 68, 0.12);
-      --critical-border: rgba(239, 68, 68, 0.38);
+      --critical-glow: rgba(239, 68, 68, 0.4);
+      --critical-bg: rgba(239, 68, 68, 0.15);
+      --critical-border: rgba(239, 68, 68, 0.45);
 
       /* Radii */
       --radius-sm: 6px;
@@ -79,8 +79,8 @@
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
       background-image:
-        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(56, 189, 248, 0.07), transparent 70%),
-        radial-gradient(ellipse 60% 40% at 85% 60%, rgba(99, 102, 241, 0.04), transparent 60%);
+        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(56, 189, 248, 0.08), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 85% 60%, rgba(99, 102, 241, 0.05), transparent 60%);
       background-attachment: fixed;
     }
 
@@ -89,7 +89,7 @@
       letter-spacing: -0.02em;
     }
 
-    /* Ambient Subtle Grid Pattern */
+    /* Ambient Pattern & Shield Watermark */
     .ambient-grid-overlay {
       position: fixed;
       top: 0;
@@ -104,7 +104,6 @@
       z-index: 0;
     }
 
-    /* Architectural Background Shield Watermark */
     .shield-watermark {
       position: fixed;
       right: -100px;
@@ -119,7 +118,7 @@
     }
 
     /* ==========================================================================
-       APP SHELL & LAYOUT
+       APP SHELL & SIDEBAR NAVIGATION
        ========================================================================== */
     .app-shell {
       position: relative;
@@ -131,7 +130,7 @@
     /* Sidebar Navigation */
     aside.sidebar {
       width: 250px;
-      background: rgba(7, 11, 20, 0.85);
+      background: rgba(7, 11, 20, 0.88);
       backdrop-filter: blur(20px);
       border-right: 1px solid var(--border-subtle);
       display: flex;
@@ -193,7 +192,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       font-size: 13.5px;
@@ -211,8 +210,8 @@
 
     .nav-item.active {
       color: #FFFFFF;
-      background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.03));
-      border-left: 2px solid var(--neon-blue);
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(56, 189, 248, 0.03));
+      border-left: 2.5px solid var(--neon-blue);
       border-top: 1px solid rgba(56, 189, 248, 0.15);
       border-bottom: 1px solid rgba(56, 189, 248, 0.15);
       font-weight: 600;
@@ -226,7 +225,6 @@
       fill: none;
     }
 
-    /* Sidebar Footer Meta */
     .sidebar-footer {
       padding: 16px 18px;
       border-top: 1px solid var(--border-subtle);
@@ -262,7 +260,7 @@
       50% { opacity: 0.5; transform: scale(0.9); }
     }
 
-    /* Main Viewport */
+    /* Main Viewport & Page Sections */
     main.main-viewport {
       flex: 1;
       min-width: 0;
@@ -272,8 +270,24 @@
       gap: 22px;
     }
 
+    .page-section {
+      display: none;
+      flex-direction: column;
+      gap: 22px;
+      animation: fadeIn 0.2s var(--ease);
+    }
+
+    .page-section.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* ==========================================================================
-       TOP HERO HEADER & SOC BADGES
+       HERO TOP HEADER & BADGES
        ========================================================================== */
     .hero-top-bar {
       display: flex;
@@ -344,96 +358,7 @@
     }
 
     /* ==========================================================================
-       CRITICAL SPOOF ALERT BANNER (Animated Reveal on Threat)
-       ========================================================================== */
-    .critical-banner {
-      display: none;
-      background: linear-gradient(90deg, rgba(239, 68, 68, 0.22), rgba(185, 28, 28, 0.12));
-      border: 1px solid rgba(239, 68, 68, 0.5);
-      box-shadow: 0 0 24px rgba(239, 68, 68, 0.2);
-      border-radius: var(--radius-md);
-      padding: 14px 20px;
-      animation: bannerSlide 0.25s var(--ease);
-    }
-
-    .critical-banner.visible {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    @keyframes bannerSlide {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .banner-alert-content {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .banner-icon {
-      color: #EF4444;
-      flex-shrink: 0;
-    }
-
-    .banner-headline {
-      font-size: 14px;
-      font-weight: 700;
-      color: #FEE2E2;
-    }
-
-    .banner-sub {
-      font-size: 12px;
-      color: #FCA5A5;
-      margin-top: 2px;
-    }
-
-    .banner-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .btn-freeze-danger {
-      background: #EF4444;
-      color: #FFFFFF;
-      border: none;
-      padding: 7px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-    }
-
-    .btn-freeze-danger:hover {
-      background: #DC2626;
-      transform: translateY(-1px);
-    }
-
-    .btn-reverify-outline {
-      background: transparent;
-      color: #FFFFFF;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      padding: 7px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn-reverify-outline:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    /* ==========================================================================
-       TACTILE SENTINEL TOOLBAR (Live Mic + Scenario Launchers)
+       TACTILE SENTINEL TOOLBAR
        ========================================================================== */
     .sentinel-toolbar {
       background: var(--bg-card);
@@ -475,7 +400,6 @@
       gap: 8px;
     }
 
-    /* Live Mic Button with Pulsing VU Meter */
     .btn-live-mic {
       display: inline-flex;
       align-items: center;
@@ -527,7 +451,6 @@
       transition: height 0.08s ease;
     }
 
-    /* Scenario Action Buttons */
     .btn-scen {
       display: inline-flex;
       align-items: center;
@@ -565,7 +488,7 @@
     }
 
     /* ==========================================================================
-       CENTRAL INTELLIGENCE GRID (Radial Gauge, Waveform Canvas, Threat Timeline)
+       CENTRAL INTELLIGENCE GRID
        ========================================================================== */
     .intelligence-grid {
       display: grid;
@@ -612,7 +535,7 @@
       margin-top: 2px;
     }
 
-    /* Radial Trust Gauge Container */
+    /* Radial Trust Gauge */
     .radial-gauge-container {
       display: flex;
       flex-direction: column;
@@ -710,7 +633,7 @@
       position: relative;
       height: 220px;
       width: 100%;
-      background: rgba(4, 7, 14, 0.7);
+      background: rgba(4, 7, 14, 0.75);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       overflow: hidden;
@@ -794,7 +717,6 @@
       color: var(--text-muted);
     }
 
-    /* Dynamic Countermeasure Challenge Box */
     .challenge-box {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid rgba(56, 189, 248, 0.25);
@@ -803,6 +725,13 @@
       margin-top: 12px;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .challenge-box:hover {
+      border-color: var(--neon-blue);
+      background: rgba(15, 23, 42, 0.85);
     }
 
     .challenge-box.active {
@@ -850,7 +779,7 @@
     }
 
     /* ==========================================================================
-       AUDIT LOG & RECENT ACTIVITY TABLE
+       AUDIT TABLE & CARDS
        ========================================================================== */
     .audit-section {
       background: var(--bg-card);
@@ -918,10 +847,6 @@
       border-radius: var(--radius-sm);
       outline: none;
       cursor: pointer;
-    }
-
-    .verdict-select:focus {
-      border-color: var(--neon-blue);
     }
 
     .table-shell {
@@ -1066,32 +991,395 @@
     }
 
     /* ==========================================================================
-       CRYPTO VERIFICATION MODAL
+       FULL-SCREEN TAKEOVER MODALS (BIG & COVER ENTIRE SCREEN)
        ========================================================================== */
-    .modal-backdrop {
+    .fullscreen-takeover-overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(4, 7, 14, 0.82);
-      backdrop-filter: blur(12px);
-      z-index: 100;
+      background: rgba(3, 6, 12, 0.94);
+      backdrop-filter: blur(28px);
+      z-index: 99999;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.15s ease;
+      padding: 30px;
+      animation: takeoverFadeIn 0.22s var(--ease);
+      overflow-y: auto;
     }
 
-    .modal-backdrop.open {
+    .fullscreen-takeover-overlay.active {
       display: flex;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    @keyframes takeoverFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
     }
+
+    .takeover-content-container {
+      position: relative;
+      width: 100%;
+      max-width: 880px;
+      background: rgba(11, 17, 32, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-xl);
+      padding: 42px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(239, 68, 68, 0.2);
+    }
+
+    .takeover-content-container.danger-theme {
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.95), 0 0 60px rgba(239, 68, 68, 0.35);
+    }
+
+    .takeover-content-container.caution-theme {
+      border-color: rgba(245, 158, 11, 0.6);
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.95), 0 0 60px rgba(245, 158, 11, 0.35);
+    }
+
+    .takeover-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .takeover-header-badge.danger {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #EF4444;
+      color: #FCA5A5;
+    }
+
+    .takeover-header-badge.caution {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid #F59E0B;
+      color: #FDE68A;
+    }
+
+    .takeover-beacon-icon {
+      margin-bottom: 16px;
+      animation: beaconStrobe 1.5s infinite ease-in-out;
+    }
+
+    .takeover-beacon-icon.danger { color: #EF4444; }
+    .takeover-beacon-icon.caution { color: #F59E0B; }
+
+    @keyframes beaconStrobe {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px currentColor); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 25px currentColor); }
+    }
+
+    .takeover-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+
+    .takeover-subtitle {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      max-width: 680px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .takeover-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+
+    .takeover-metric-card {
+      background: rgba(4, 7, 14, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .metric-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-top: 4px;
+    }
+
+    .metric-val.danger { color: #EF4444; }
+    .metric-val.caution { color: #F59E0B; }
+
+    /* Giant Challenge Card inside Full-Screen */
+    .challenge-giant-card {
+      width: 100%;
+      background: rgba(4, 7, 14, 0.7);
+      border: 2px solid rgba(245, 158, 11, 0.4);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .challenge-countdown-ring-wrap {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.1);
+      border: 3px solid #F59E0B;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.3);
+    }
+
+    .challenge-countdown-number {
+      font-size: 46px;
+      font-weight: 900;
+      color: #F59E0B;
+      line-height: 1;
+    }
+
+    .challenge-countdown-unit {
+      font-size: 10px;
+      font-weight: 700;
+      color: #FDE68A;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .challenge-prompt-region {
+      flex: 1;
+    }
+
+    .challenge-prompt-kicker {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .challenge-prompt-giant {
+      font-size: 34px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: 0.08em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      text-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+    }
+
+    .challenge-prompt-instruction {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .takeover-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .btn-takeover-primary {
+      padding: 13px 28px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      transition: all 0.18s var(--ease);
+      border: none;
+      color: #FFFFFF;
+    }
+
+    .btn-takeover-primary.danger {
+      background: #EF4444;
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-takeover-primary.danger:hover {
+      background: #DC2626;
+      transform: translateY(-2px);
+      box-shadow: 0 0 32px rgba(239, 68, 68, 0.7);
+    }
+
+    .btn-takeover-primary.success {
+      background: #10B981;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-takeover-primary.success:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+
+    .btn-takeover-secondary {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #FFFFFF;
+      padding: 13px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-takeover-secondary:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: var(--neon-blue);
+      transform: translateY(-1px);
+    }
+
+    .btn-takeover-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-secondary);
+      padding: 13px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-takeover-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      border-color: var(--border-medium);
+    }
+
+    /* ==========================================================================
+       PAGES 2, 3, 4 LAYOUT STYLES
+       ========================================================================== */
+    .trunks-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .trunk-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .trunk-card:hover {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+
+    .trunk-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .trunk-id {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .settings-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .setting-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #FFFFFF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .setting-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 7, 14, 0.85);
+      backdrop-filter: blur(14px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open { display: flex; }
 
     .modal-card {
       background: #0B1120;
@@ -1101,12 +1389,7 @@
       width: 100%;
       max-width: 580px;
       overflow: hidden;
-      animation: scaleIn 0.2s var(--ease);
-    }
-
-    @keyframes scaleIn {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      animation: takeoverFadeIn 0.2s var(--ease);
     }
 
     .modal-header {
@@ -1132,13 +1415,11 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 22px;
       transition: color 0.15s ease;
     }
 
-    .btn-modal-close:hover {
-      color: #FFFFFF;
-    }
+    .btn-modal-close:hover { color: #FFFFFF; }
 
     .modal-body {
       padding: 24px;
@@ -1219,7 +1500,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      z-index: 200;
+      z-index: 999999;
       pointer-events: none;
     }
 
@@ -1233,31 +1514,20 @@
       font-weight: 500;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       pointer-events: auto;
-      animation: toastIn 0.2s var(--ease);
+      animation: takeoverFadeIn 0.2s var(--ease);
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    @keyframes toastIn {
-      from { transform: translateY(12px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
     /* Responsive */
     @media (max-width: 1280px) {
-      .intelligence-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .intelligence-grid > .intel-panel:first-child {
-        grid-column: span 1;
-      }
-      .intelligence-grid > .intel-panel:nth-child(2) {
-        grid-column: span 2;
-      }
-      .intelligence-grid > .intel-panel:nth-child(3) {
-        grid-column: span 1;
-      }
+      .intelligence-grid { grid-template-columns: 1fr 1fr; }
+      .intelligence-grid > .intel-panel:first-child { grid-column: span 1; }
+      .intelligence-grid > .intel-panel:nth-child(2) { grid-column: span 2; }
+      .intelligence-grid > .intel-panel:nth-child(3) { grid-column: span 1; }
+      .trunks-grid { grid-template-columns: 1fr 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 900px) {
@@ -1266,6 +1536,9 @@
       .intelligence-grid { grid-template-columns: 1fr; }
       .intelligence-grid > .intel-panel:nth-child(2) { grid-column: span 1; }
       main.main-viewport { padding: 16px; }
+      .trunks-grid { grid-template-columns: 1fr; }
+      .takeover-metrics-grid { grid-template-columns: 1fr 1fr; }
+      .challenge-giant-card { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -1298,18 +1571,23 @@
         </div>
       </div>
 
-      <nav class="sidebar-nav">
-        <a class="nav-item active" onclick="switchTab('dashboard')">
+      <!-- Functional Navigation Routes -->
+      <nav class="sidebar-nav" id="sidebarNav">
+        <a class="nav-item active" data-page="dashboard" onclick="switchRoute('dashboard', this)">
           <svg viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
           SOC Dashboard
         </a>
-        <a class="nav-item" onclick="switchTab('live-calls')">
+        <a class="nav-item" data-page="live-calls" onclick="switchRoute('live-calls', this)">
           <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           Active Trunks
         </a>
-        <a class="nav-item" onclick="switchTab('audit-log')">
+        <a class="nav-item" data-page="audit-log" onclick="switchRoute('audit-log', this)">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           Hash-Chain Audit
+        </a>
+        <a class="nav-item" data-page="settings" onclick="switchRoute('settings', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          SOC Settings
         </a>
       </nav>
 
@@ -1324,282 +1602,583 @@
 
     <!-- Main Content Area -->
     <main class="main-viewport">
-      <!-- Top Hero Header -->
-      <header class="hero-top-bar">
-        <div class="hero-title-group">
-          <h1>
-            MEIKURAL Voice Cyber SOC
-            <span style="font-size: 12px; font-weight: 500; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(0, 242, 254, 0.25);">v2.0</span>
-          </h1>
-          <p>Real-time neural anti-spoofing, dynamic countermeasure challenges, and appendable SHA-256 tamper evidence.</p>
-        </div>
 
-        <div class="soc-badge-cluster">
-          <div class="soc-pill pill-live" id="badgeConnStatus">
-            <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
-            <span id="badgeConnText">Backend WS Live</span>
+      <!-- ==========================================================================
+           SECTION 1: SOC DASHBOARD (PRIMARY REAL-TIME TELEMETRY VIEW)
+           ========================================================================== -->
+      <section class="page-section active" id="page-dashboard">
+        <!-- Top Hero Header -->
+        <header class="hero-top-bar">
+          <div class="hero-title-group">
+            <h1>
+              MEIKURAL Voice Cyber SOC
+              <span style="font-size: 12px; font-weight: 500; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(0, 242, 254, 0.25);">v2.0</span>
+            </h1>
+            <p>Real-time neural anti-spoofing, dynamic countermeasure challenges, and appendable SHA-256 tamper evidence.</p>
           </div>
-          <div class="soc-pill pill-latency" id="badgeLatency">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span id="badgeLatencyText">INT8 Quantized (~440ms)</span>
-          </div>
-          <div class="soc-pill pill-privacy" title="Audio is never stored on disk. Caller IDs are salted and hashed. 90-day automated cron purge enforces retention policy.">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Privacy-by-Design: Salted Hashing · 90-Day Auto-Purge</span>
-          </div>
-        </div>
-      </header>
 
-      <!-- Critical Alert Banner (Revealed strictly on spoof detection) -->
-      <div class="critical-banner" id="criticalAlertBanner">
-        <div class="banner-alert-content">
-          <div class="banner-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <div>
-            <div class="banner-headline">HIGH SPOOF PROBABILITY DETECTED — STEP-UP VERIFICATION LOCKED</div>
-            <div class="banner-sub">Neural acoustic analysis identified synthetic voice clone artifacts. Account freeze or voice challenge required.</div>
-          </div>
-        </div>
-        <div class="banner-actions">
-          <button class="btn-freeze-danger" onclick="executeAccountFreeze()">Freeze SIP Trunk</button>
-          <button class="btn-reverify-outline" onclick="triggerChallengeAction()">Fire Voice Challenge</button>
-          <button class="btn-scen" onclick="dismissAlertBanner()">Dismiss</button>
-        </div>
-      </div>
-
-      <!-- Tactile Sentinel Toolbar -->
-      <section class="sentinel-toolbar">
-        <div class="toolbar-lead">
-          <div class="toolbar-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Sentinel Live Controls
-          </div>
-          <div class="toolbar-sub">Stream live microphone speech or inject calibrated threat vectors directly into AASIST.</div>
-        </div>
-
-        <div class="toolbar-actions">
-          <!-- Live Mic Button with Real-Time VU meter -->
-          <button class="btn-live-mic" id="btnLiveMic" onclick="toggleLiveMicrophone()" title="Toggle Web Audio 16kHz PCM streaming from your microphone">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-            <span id="liveMicLabel">🎙️ Live Mic</span>
-            <div class="vu-meter-bar" id="micVuMeter">
-              <div class="vu-bar" style="height: 4px;"></div>
-              <div class="vu-bar" style="height: 8px;"></div>
-              <div class="vu-bar" style="height: 12px;"></div>
+          <div class="soc-badge-cluster">
+            <div class="soc-pill pill-live" id="badgeConnStatus">
+              <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
+              <span id="badgeConnText">Backend WS Live</span>
             </div>
-          </button>
+            <div class="soc-pill pill-latency" id="badgeLatency">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span id="badgeLatencyText">INT8 Quantized (~440ms)</span>
+            </div>
+            <div class="soc-pill pill-privacy" title="Audio is never stored on disk. Caller IDs are salted and hashed. 90-day automated cron purge enforces retention policy.">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Privacy-by-Design: Salted Hashing · 90-Day Auto-Purge</span>
+            </div>
+          </div>
+        </header>
 
-          <!-- Scenario Buttons -->
-          <button class="btn-scen active" id="btnScenSafe" onclick="selectScenario('safe')" title="Stream genuine human vocal dynamics">
-            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            🟢 Human
-          </button>
-          <button class="btn-scen" id="btnScenClone" onclick="selectScenario('deepfake')" title="Stream AI voice clone (AASIST spoof spike)">
-            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            🔴 Deepfake Clone
-          </button>
-          <button class="btn-scen" id="btnScenJitter" onclick="selectScenario('caution')" title="Simulate noisy telecom packet loss / jitter">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            🟡 Telecom Jitter
-          </button>
-          <button class="btn-scen" id="btnScenChallenge" onclick="triggerChallengeAction()" title="Inject dynamic random digit prompt">
-            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            ⚡ Fire Challenge
-          </button>
-        </div>
-      </section>
+        <!-- Tactile Sentinel Toolbar -->
+        <section class="sentinel-toolbar">
+          <div class="toolbar-lead">
+            <div class="toolbar-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Sentinel Live Controls
+            </div>
+            <div class="toolbar-sub">Stream live microphone speech or inject calibrated threat vectors directly into AASIST.</div>
+          </div>
 
-      <!-- Central Intelligence Grid -->
-      <div class="intelligence-grid">
-        <!-- Panel 1: Radial Voice Trust Gauge -->
-        <section class="intel-panel">
-          <div>
-            <div class="panel-header">
-              <div>
-                <div class="panel-title">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                  Voice Trust Gauge
-                </div>
-                <div class="panel-sub">Raw model trust bound to 1.0 - P(Spoof)</div>
+          <div class="toolbar-actions">
+            <!-- Live Mic Button with Real-Time VU meter -->
+            <button class="btn-live-mic" id="btnLiveMic" onclick="toggleLiveMicrophone()" title="Toggle Web Audio 16kHz PCM streaming from your microphone">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              <span id="liveMicLabel">🎙️ Live Mic</span>
+              <div class="vu-meter-bar" id="micVuMeter">
+                <div class="vu-bar" style="height: 4px;"></div>
+                <div class="vu-bar" style="height: 8px;"></div>
+                <div class="vu-bar" style="height: 12px;"></div>
               </div>
-              <span class="soc-pill pill-live" id="gaugeVerdictPill" style="padding: 2px 8px; font-size: 11px;">ALLOW</span>
-            </div>
+            </button>
 
-            <!-- Circular Gauge -->
-            <div class="radial-gauge-container">
-              <div class="gauge-svg-wrap">
-                <svg class="gauge-svg" viewBox="0 0 200 200">
-                  <circle class="gauge-bg-ring" cx="100" cy="100" r="90" />
-                  <circle class="gauge-fill-ring" id="gaugeRing" cx="100" cy="100" r="90" />
-                </svg>
-                <div class="gauge-center-readout">
-                  <div class="gauge-score-value mono" id="heroTrustValue">0.98</div>
-                  <div class="gauge-score-label" id="heroTrustLabel">TRUST SCORE</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gauge Diagnostics -->
-          <div class="gauge-footer-meta">
-            <div class="meta-row">
-              <span>Active Session:</span>
-              <span class="meta-val mono" id="activeSessionText">call_df99fc14</span>
-            </div>
-            <div class="meta-row">
-              <span>AASIST Raw Logit:</span>
-              <span class="meta-val mono" id="rawLogitText">P(Spoof): 0.021</span>
-            </div>
-            <div class="meta-row">
-              <span>Confidence:</span>
-              <span class="meta-val" id="modelConfidenceText" style="color: var(--safe);">HIGH (Bonafide)</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Panel 2: Live 60fps Acoustic Waveform & Diagnostics Visualizer -->
-        <section class="intel-panel">
-          <div>
-            <div class="panel-header">
-              <div>
-                <div class="panel-title">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
-                  Live Acoustic Waveform & Spectral Manifold
-                </div>
-                <div class="panel-sub">Real-time Web Audio AnalyserNode (60fps rendering)</div>
-              </div>
-              <span class="soc-pill" style="font-size: 11px; padding: 2px 8px;" id="audioHealthBadge">16kHz · Mono</span>
-            </div>
-
-            <div class="canvas-viewport">
-              <canvas id="acousticWaveformCanvas"></canvas>
-              <div class="waveform-overlay-badges">
-                <span class="waveform-pill" id="wfModeTag">Synthetic Manifold</span>
-                <span class="waveform-pill mono" id="wfFpsTag">60 FPS</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Diagnostics Row -->
-          <div class="waveform-diagnostics">
-            <div class="diag-box">
-              <div class="diag-label">RMS Energy</div>
-              <div class="diag-val mono" id="diagRms">-28.4 dB</div>
-            </div>
-            <div class="diag-box">
-              <div class="diag-label">Speech VAD</div>
-              <div class="diag-val" id="diagVad" style="color: var(--safe);">ACTIVE</div>
-            </div>
-            <div class="diag-box">
-              <div class="diag-label">Inference</div>
-              <div class="diag-val mono" id="diagLatency">436 ms</div>
-            </div>
-            <div class="diag-box">
-              <div class="diag-label">Sample Rate</div>
-              <div class="diag-val mono">16,000 Hz</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Panel 3: Scrolling Threat Timeline & Active Challenge -->
-        <section class="intel-panel">
-          <div>
-            <div class="panel-header">
-              <div>
-                <div class="panel-title">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                  Threat Timeline (30s)
-                </div>
-                <div class="panel-sub">Continuous confidence trajectory</div>
-              </div>
-              <span class="soc-pill pill-live" style="font-size: 11px; padding: 2px 8px;">Rolling</span>
-            </div>
-
-            <!-- Canvas Line Chart -->
-            <div class="timeline-viewport">
-              <canvas id="riskTimelineCanvas"></canvas>
-            </div>
-
-            <!-- Risk Threshold Legend (Accurately matches audio_processor.py) -->
-            <div class="timeline-legend">
-              <span style="display: flex; align-items: center; gap: 4px;">
-                <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Safe (&ge;0.65)
-              </span>
-              <span style="display: flex; align-items: center; gap: 4px;">
-                <span class="pulse-dot warning" style="width: 6px; height: 6px;"></span> Caution (0.35–0.65)
-              </span>
-              <span style="display: flex; align-items: center; gap: 4px;">
-                <span class="pulse-dot critical" style="width: 6px; height: 6px;"></span> Alert (&le;0.35)
-              </span>
-            </div>
-          </div>
-
-          <!-- Dynamic Countermeasure Challenge Box -->
-          <div class="challenge-box" id="challengeCardBox">
-            <div class="challenge-header">
-              <span class="challenge-label">Dynamic Voice Challenge</span>
-              <span class="mono" style="font-size: 11px; color: var(--text-muted);" id="challengeTimerText">Ready</span>
-            </div>
-            <div class="challenge-prompt-text" id="challengePromptMsg">
-              System ready. Click "Fire Challenge" to inject unexpected random dynamic token.
-            </div>
-            <div class="challenge-timer-progress">
-              <div class="challenge-timer-bar" id="challengeTimerBar" style="width: 0%;"></div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Audit Trail & Hash-Chain Verification Table -->
-      <section class="audit-section">
-        <div class="audit-controls">
-          <div>
-            <div class="panel-title" style="font-size: 15px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Cryptographic Audit Log & SHA-256 Hash Chains
-            </div>
-            <div class="panel-sub">Every chunk is cryptographically chained via <code>sha256(prev_hash + session_id + timestamp + score + verdict)</code>.</div>
-          </div>
-
-          <div class="search-filter-group">
-            <div class="search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" class="search-input" id="tableSearchField" placeholder="Search session IDs or hashes..." oninput="filterAuditRecords()" />
-            </div>
-            <select class="verdict-select" id="tableVerdictSelect" onchange="filterAuditRecords()">
-              <option value="ALL">All Verdicts</option>
-              <option value="ALLOW">ALLOW (Safe)</option>
-              <option value="STEP_UP">STEP_UP / WARN</option>
-              <option value="ALERT">ALERT (Spoof)</option>
-            </select>
-            <button class="btn-scen" onclick="fetchRecentCallsFromApi()" title="Refresh records from SQLite database">
-              <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-              Refresh
+            <!-- Scenario Buttons -->
+            <button class="btn-scen active" id="btnScenSafe" onclick="selectScenario('safe')" title="Stream genuine human vocal dynamics">
+              <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              🟢 Human
+            </button>
+            <button class="btn-scen" id="btnScenClone" onclick="selectScenario('deepfake')" title="Stream AI voice clone (AASIST spoof spike)">
+              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              🔴 Deepfake Clone
+            </button>
+            <button class="btn-scen" id="btnScenJitter" onclick="selectScenario('caution')" title="Simulate noisy telecom packet loss / jitter">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              🟡 Telecom Jitter
+            </button>
+            <button class="btn-scen" id="btnScenChallenge" onclick="triggerChallengeAction()" title="Inject dynamic random digit prompt">
+              <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              ⚡ Fire Challenge
             </button>
           </div>
+        </section>
+
+        <!-- Central Intelligence Grid -->
+        <div class="intelligence-grid">
+          <!-- Panel 1: Radial Voice Trust Gauge -->
+          <section class="intel-panel">
+            <div>
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    Voice Trust Gauge
+                  </div>
+                  <div class="panel-sub">Raw model trust bound to 1.0 - P(Spoof)</div>
+                </div>
+                <span class="soc-pill pill-live" id="gaugeVerdictPill" style="padding: 2px 8px; font-size: 11px;">ALLOW</span>
+              </div>
+
+              <!-- Circular Gauge -->
+              <div class="radial-gauge-container">
+                <div class="gauge-svg-wrap">
+                  <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <circle class="gauge-bg-ring" cx="100" cy="100" r="90" />
+                    <circle class="gauge-fill-ring" id="gaugeRing" cx="100" cy="100" r="90" />
+                  </svg>
+                  <div class="gauge-center-readout">
+                    <div class="gauge-score-value mono" id="heroTrustValue">0.98</div>
+                    <div class="gauge-score-label" id="heroTrustLabel">TRUST SCORE</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gauge Diagnostics -->
+            <div class="gauge-footer-meta">
+              <div class="meta-row">
+                <span>Active Session:</span>
+                <span class="meta-val mono" id="activeSessionText">call_df99fc14</span>
+              </div>
+              <div class="meta-row">
+                <span>AASIST Raw Logit:</span>
+                <span class="meta-val mono" id="rawLogitText">P(Spoof): 0.021</span>
+              </div>
+              <div class="meta-row">
+                <span>Confidence:</span>
+                <span class="meta-val" id="modelConfidenceText" style="color: var(--safe);">HIGH (Bonafide)</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 2: Live 60fps Acoustic Waveform Visualizer -->
+          <section class="intel-panel">
+            <div>
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+                    Live Acoustic Waveform & Spectral Manifold
+                  </div>
+                  <div class="panel-sub">Real-time Web Audio AnalyserNode (60fps rendering)</div>
+                </div>
+                <span class="soc-pill" style="font-size: 11px; padding: 2px 8px;" id="audioHealthBadge">16kHz · Mono</span>
+              </div>
+
+              <div class="canvas-viewport">
+                <canvas id="acousticWaveformCanvas"></canvas>
+                <div class="waveform-overlay-badges">
+                  <span class="waveform-pill" id="wfModeTag">Synthetic Manifold</span>
+                  <span class="waveform-pill mono" id="wfFpsTag">60 FPS</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diagnostics Row -->
+            <div class="waveform-diagnostics">
+              <div class="diag-box">
+                <div class="diag-label">RMS Energy</div>
+                <div class="diag-val mono" id="diagRms">-28.4 dB</div>
+              </div>
+              <div class="diag-box">
+                <div class="diag-label">Speech VAD</div>
+                <div class="diag-val" id="diagVad" style="color: var(--safe);">ACTIVE</div>
+              </div>
+              <div class="diag-box">
+                <div class="diag-label">Inference</div>
+                <div class="diag-val mono" id="diagLatency">436 ms</div>
+              </div>
+              <div class="diag-box">
+                <div class="diag-label">Sample Rate</div>
+                <div class="diag-val mono">16,000 Hz</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 3: Scrolling Threat Timeline & Active Challenge -->
+          <section class="intel-panel">
+            <div>
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Threat Timeline (30s)
+                  </div>
+                  <div class="panel-sub">Continuous confidence trajectory</div>
+                </div>
+                <span class="soc-pill pill-live" style="font-size: 11px; padding: 2px 8px;">Rolling</span>
+              </div>
+
+              <!-- Canvas Line Chart -->
+              <div class="timeline-viewport">
+                <canvas id="riskTimelineCanvas"></canvas>
+              </div>
+
+              <!-- Legend Aligned to audio_processor.py -->
+              <div class="timeline-legend">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Safe (&ge;0.65)
+                </span>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <span class="pulse-dot warning" style="width: 6px; height: 6px;"></span> Caution (0.35–0.65)
+                </span>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <span class="pulse-dot critical" style="width: 6px; height: 6px;"></span> Alert (&le;0.35)
+                </span>
+              </div>
+            </div>
+
+            <!-- Dynamic Countermeasure Challenge Box (Clickable to open Full-Screen HUD) -->
+            <div class="challenge-box" id="challengeCardBox" onclick="openFullscreenChallengeHUD()" title="Click to open Full-Screen Dynamic Challenge HUD">
+              <div class="challenge-header">
+                <span class="challenge-label">Dynamic Voice Challenge</span>
+                <span class="mono" style="font-size: 11px; color: var(--text-muted);" id="challengeTimerText">Click to expand</span>
+              </div>
+              <div class="challenge-prompt-text" id="challengePromptMsg">
+                System ready. Click "Fire Challenge" to inject unexpected random dynamic token.
+              </div>
+              <div class="challenge-timer-progress">
+                <div class="challenge-timer-bar" id="challengeTimerBar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <div class="table-shell">
-          <table class="audit-table">
-            <thead>
-              <tr>
-                <th>Session ID</th>
-                <th>Caller Hash (Salted SHA-256)</th>
-                <th>Voice Trust</th>
-                <th>Verdict</th>
-                <th>Challenge</th>
-                <th>Recorded At</th>
-                <th>Cryptographic Integrity</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableRows">
-              <!-- Dynamically populated via SQLite API & Live Stream -->
-            </tbody>
-          </table>
+        <!-- Audit Trail & Hash-Chain Table -->
+        <section class="audit-section">
+          <div class="audit-controls">
+            <div>
+              <div class="panel-title" style="font-size: 15px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Cryptographic Audit Log & SHA-256 Hash Chains
+              </div>
+              <div class="panel-sub">Every chunk is cryptographically chained via <code>sha256(prev_hash + session_id + timestamp + score + verdict)</code>.</div>
+            </div>
+
+            <div class="search-filter-group">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="search-input" id="tableSearchField" placeholder="Search session IDs or hashes..." oninput="filterAuditRecords()" />
+              </div>
+              <select class="verdict-select" id="tableVerdictSelect" onchange="filterAuditRecords()">
+                <option value="ALL">All Verdicts</option>
+                <option value="ALLOW">ALLOW (Safe)</option>
+                <option value="STEP_UP">STEP_UP / WARN</option>
+                <option value="ALERT">ALERT (Spoof)</option>
+              </select>
+              <button class="btn-scen" onclick="fetchRecentCallsFromApi()" title="Refresh records from SQLite database">
+                <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="table-shell">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Session ID</th>
+                  <th>Caller Hash (Salted SHA-256)</th>
+                  <th>Voice Trust</th>
+                  <th>Verdict</th>
+                  <th>Challenge</th>
+                  <th>Recorded At</th>
+                  <th>Cryptographic Integrity</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableRows">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 2: ACTIVE TRUNKS & TELECOM GATEWAYS VIEW
+           ========================================================================== -->
+      <section class="page-section" id="page-live-calls">
+        <header class="hero-top-bar">
+          <div class="hero-title-group">
+            <h1>Active Telecom Trunks & Channels</h1>
+            <p>Low-latency SIP trunk ingest points, 16kHz audio stream health, and real-time neural channel monitoring.</p>
+          </div>
+          <div class="soc-pill pill-live">
+            <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
+            <span>3 Trunks Online</span>
+          </div>
+        </header>
+
+        <div class="trunks-grid">
+          <!-- Trunk 1 -->
+          <div class="trunk-card">
+            <div class="trunk-top">
+              <span class="trunk-id mono">SIP-TRUNK-01 (Primary)</span>
+              <span class="badge-verdict pass">ONLINE</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              Channel: 16kHz Mono PCM · G.711 / Opus Transcode<br>
+              Active Stream: <span class="mono" style="color: #FFFFFF;" id="trunkActiveSession1">call_df99fc14</span><br>
+              Inference Latency: <span class="mono" style="color: var(--neon-cyan);">436ms</span>
+            </div>
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; color: var(--text-muted);">Voice Trust: 0.98</span>
+              <button class="btn-action-verify" onclick="openVerifyModal('call_df99fc14')">Verify Hash</button>
+            </div>
+          </div>
+
+          <!-- Trunk 2 -->
+          <div class="trunk-card">
+            <div class="trunk-top">
+              <span class="trunk-id mono">SIP-TRUNK-02 (Backup)</span>
+              <span class="badge-verdict pass">ONLINE</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              Channel: 16kHz Mono PCM · Direct SIP Edge<br>
+              Active Stream: <span class="mono" style="color: #FFFFFF;">call_7008d5e8</span><br>
+              Inference Latency: <span class="mono" style="color: var(--neon-cyan);">441ms</span>
+            </div>
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; color: var(--text-muted);">Voice Trust: 0.99</span>
+              <button class="btn-action-verify" onclick="openVerifyModal('call_7008d5e8')">Verify Hash</button>
+            </div>
+          </div>
+
+          <!-- Trunk 3 -->
+          <div class="trunk-card">
+            <div class="trunk-top">
+              <span class="trunk-id mono">SIP-TRUNK-03 (Quarantine)</span>
+              <span class="badge-verdict alert">STEP_UP</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              Channel: 16kHz Mono PCM · Threat Isolation<br>
+              Active Stream: <span class="mono" style="color: #FFFFFF;">call_c192abd2</span><br>
+              Inference Latency: <span class="mono" style="color: var(--critical);">448ms</span>
+            </div>
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; color: var(--critical);">Voice Trust: 0.01</span>
+              <button class="btn-action-verify" onclick="openVerifyModal('call_c192abd2')">Audit Threat</button>
+            </div>
+          </div>
         </div>
       </section>
+
+      <!-- ==========================================================================
+           SECTION 3: FULL CRYPTOGRAPHIC AUDIT LOG VIEW
+           ========================================================================== -->
+      <section class="page-section" id="page-audit-log">
+        <header class="hero-top-bar">
+          <div class="hero-title-group">
+            <h1>Cryptographic Hash-Chain Audit Repository</h1>
+            <p>Sequential SHA-256 event chaining, zero-knowledge phone number salting, and automated 90-day retention enforcement.</p>
+          </div>
+          <div class="soc-badge-cluster">
+            <button class="btn-scen" onclick="openCertificate('call_df99fc14')">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Generate Certificate
+            </button>
+            <button class="btn-scen" onclick="downloadReport('call_df99fc14')">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Forensic Report
+            </button>
+          </div>
+        </header>
+
+        <!-- Audit Summary Cards -->
+        <div class="trunks-grid">
+          <div class="trunk-card">
+            <div class="metric-kicker">Sequential Integrity</div>
+            <div class="metric-val mono" style="color: var(--safe);">100% UNTAMPERED</div>
+            <div style="font-size: 11.5px; color: var(--text-muted);">Scope: Strict ORDER BY event_id ASC</div>
+          </div>
+          <div class="trunk-card">
+            <div class="metric-kicker">Data Retention Enforced</div>
+            <div class="metric-val mono">90 DAYS AUTO-PURGE</div>
+            <div style="font-size: 11.5px; color: var(--text-muted);">Purges expired call sessions automatically</div>
+          </div>
+          <div class="trunk-card">
+            <div class="metric-kicker">Raw Audio Storage</div>
+            <div class="metric-val mono" style="color: var(--safe);">0 BYTES (EPHEMERAL)</div>
+            <div style="font-size: 11.5px; color: var(--text-muted);">Audio discarded immediately post-inference</div>
+          </div>
+        </div>
+
+        <!-- Audit Log View Table Clone with Search -->
+        <div class="audit-section">
+          <div class="table-shell">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Session ID</th>
+                  <th>Caller Hash (Salted SHA-256)</th>
+                  <th>Voice Trust</th>
+                  <th>Verdict</th>
+                  <th>Challenge</th>
+                  <th>Recorded At</th>
+                  <th>Cryptographic Integrity</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableRowsFull">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           SECTION 4: SOC GATEWAY SETTINGS VIEW
+           ========================================================================== -->
+      <section class="page-section" id="page-settings">
+        <header class="hero-top-bar">
+          <div class="hero-title-group">
+            <h1>SOC Gateway & Detection Settings</h1>
+            <p>Threshold calibration, multi-channel Twilio/SMTP dispatch rules, and cryptographic retention controls.</p>
+          </div>
+          <button class="btn-scen active" onclick="showToast('✅ SOC Configuration Saved', 'safe')">Save Settings</button>
+        </header>
+
+        <div class="settings-grid">
+          <!-- Panel A: Model Thresholds -->
+          <div class="settings-panel">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              AASIST Neural Risk Thresholds
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Bonafide Allow Threshold</span>
+                <span class="mono" style="color: var(--safe);">Score &le; 0.35 (Trust &ge; 0.65)</span>
+              </div>
+              <div class="setting-desc">Vocal streams with spoof risk below 0.35 are granted immediate call pass.</div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Step-Up Challenge Threshold</span>
+                <span class="mono" style="color: var(--caution);">0.35 &lt; Score &lt; 0.65</span>
+              </div>
+              <div class="setting-desc">Streams in the uncertainty zone trigger randomized dynamic challenge prompts.</div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Critical Spoof Alert Threshold</span>
+                <span class="mono" style="color: var(--critical);">Score &ge; 0.65 (Trust &le; 0.35)</span>
+              </div>
+              <div class="setting-desc">Triggers full-screen takeover alert, freezes account actions, and dispatches Twilio SMS.</div>
+            </div>
+          </div>
+
+          <!-- Panel B: Retention & Model Profile -->
+          <div class="settings-panel">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Privacy Retention & Hardware Profile
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Retention Auto-Purge Window</span>
+                <span class="mono" style="color: var(--neon-cyan);">90 Days (Enforced)</span>
+              </div>
+              <div class="setting-desc">Automated database background thread deletes telemetry records older than 90 days.</div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Neural Hardware Inference Profile</span>
+                <span class="mono">AASIST INT8 (~440ms)</span>
+              </div>
+              <div class="setting-desc">ONNX Runtime INT8 dynamic quantization benchmarked on 13th Gen Intel Core i5.</div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-title">
+                <span>Multi-Channel Alerts</span>
+                <span class="badge-verdict pass">ACTIVE (SMS + SMTP)</span>
+              </div>
+              <div class="setting-desc">Twilio API & SMTP email dispatches automatically on critical spoof events.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
+  </div>
+
+  <!-- ==========================================================================
+       FULL-SCREEN TAKEOVER 1: CRITICAL DEEPFAKE ALERT TAKEOVER (BIG & IMMERSIVE)
+       ========================================================================== -->
+  <div class="fullscreen-takeover-overlay" id="fullscreenThreatOverlay">
+    <div class="takeover-content-container danger-theme">
+      <div class="takeover-header-badge danger">
+        <span class="pulse-dot critical" style="width: 10px; height: 10px;"></span>
+        SECURITY INCIDENT: ACTIVE SPOOF INTERCEPTION
+      </div>
+
+      <div class="takeover-beacon-icon danger">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+
+      <h2 class="takeover-title">CRITICAL VOICE CLONE DETECTED</h2>
+      <p class="takeover-subtitle">
+        AASIST neural acoustic model identified synthetic voice clone artifacts. The current caller voice exhibits synthetic glottal dynamics and lacks organic biological vocal-tract resonances.
+      </p>
+
+      <!-- Takeover Metrics -->
+      <div class="takeover-metrics-grid">
+        <div class="takeover-metric-card">
+          <div class="metric-kicker">Spoof Probability</div>
+          <div class="metric-val danger mono" id="takeoverSpoofProb">99.9%</div>
+        </div>
+        <div class="takeover-metric-card">
+          <div class="metric-kicker">Biometric Verdict</div>
+          <div class="metric-val danger mono">CRITICAL_SPOOF</div>
+        </div>
+        <div class="takeover-metric-card">
+          <div class="metric-kicker">Session ID</div>
+          <div class="metric-val mono" id="takeoverSessionId">call_df99fc14</div>
+        </div>
+        <div class="takeover-metric-card">
+          <div class="metric-kicker">Hardware Latency</div>
+          <div class="metric-val mono" id="takeoverLatency">437 ms (INT8)</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="takeover-action-row">
+        <button class="btn-takeover-primary danger" onclick="executeAccountFreeze()">
+          🔒 Freeze SIP Trunk & Terminate
+        </button>
+        <button class="btn-takeover-secondary" onclick="triggerChallengeFromTakeover()">
+          ⚡ Force Dynamic Voice Challenge
+        </button>
+        <button class="btn-takeover-ghost" onclick="closeThreatOverlay()">
+          ✕ Dismiss Warning
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       FULL-SCREEN TAKEOVER 2: DYNAMIC VOICE CHALLENGE HUD (BIG & IMMERSIVE)
+       ========================================================================== -->
+  <div class="fullscreen-takeover-overlay" id="fullscreenChallengeOverlay">
+    <div class="takeover-content-container caution-theme">
+      <div class="takeover-header-badge caution">
+        <span class="pulse-dot warning" style="width: 10px; height: 10px;"></span>
+        ACTIVE BIOMETRIC LIVENESS COUNTERMEASURE
+      </div>
+
+      <!-- Big Countdown Ring & Giant Token Prompt -->
+      <div class="challenge-giant-card">
+        <div class="challenge-countdown-ring-wrap">
+          <div class="challenge-countdown-number mono" id="takeoverCountdownNum">15</div>
+          <div class="challenge-countdown-unit">SEC REMAINING</div>
+        </div>
+
+        <div class="challenge-prompt-region">
+          <div class="challenge-prompt-kicker">DYNAMIC VOCAL LIVENESS CHALLENGE</div>
+          <div class="challenge-prompt-giant mono" id="takeoverChallengePrompt">
+            "8 — 4 — 1"
+          </div>
+          <div class="challenge-prompt-instruction">
+            Instruct the caller to repeat these randomized security digits. Voice synthesis pipelines fail to synthesize unpredictable dynamic prompt tokens within sub-second thresholds.
+          </div>
+        </div>
+      </div>
+
+      <!-- Operator Decision Actions -->
+      <div class="takeover-action-row">
+        <button class="btn-takeover-primary success" onclick="resolveChallengeAction(true)">
+          🟢 Caller Passed Liveness (Allow)
+        </button>
+        <button class="btn-takeover-primary danger" onclick="resolveChallengeAction(false)">
+          🔴 Challenge Failed (Reject)
+        </button>
+        <button class="btn-takeover-ghost" onclick="closeChallengeOverlay()">
+          ✕ Close Challenge HUD
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Cryptographic Hash-Chain Verification Modal -->
@@ -1664,35 +2243,33 @@
   <div class="toast-tray" id="toastTray"></div>
 
   <!-- ==========================================================================
-       JAVASCRIPT ARCHITECTURE & WEB AUDIO ENGINE
+       JAVASCRIPT ARCHITECTURE & REAL-TIME CONTROLLER
        ========================================================================== -->
   <script>
     // --- 1. Global State Model ---
     const appState = {
+      currentPage: 'dashboard',
       scenario: 'safe',
       sessionId: 'call_df99fc14',
-      rawSpoofScore: 0.021,  // Real model score (0.0 = human, 1.0 = deepfake)
-      trustScore: 0.979,     // 1.0 - rawSpoofScore (strictly unbound/unclamped)
-      displayedScore: 0.979,
-      verdict: 'ALLOW',
-      confidence: 'HIGH',
+      rawSpoofScore: 0.021,
+      trustScore: 0.979,
       latencyRollingAvg: 437.3,
       latencySamples: [437.3],
       challengeActive: false,
-      challengeCountdown: 0,
+      challengeCountdown: 15,
       challengeInterval: null,
       chartHistory: [],
       modalCurrentSession: null,
       ws: null
     };
 
-    // Pre-seed threat timeline (30 points)
+    // Pre-seed chart with 30 points
     const CHART_POINTS = 30;
     for (let i = 0; i < CHART_POINTS; i++) {
       appState.chartHistory.push(0.96 + Math.sin(i * 0.4) * 0.02);
     }
 
-    // Local in-memory audit rows (hydrated from /calls API)
+    // Default in-memory audit rows
     let auditRecords = [
       {
         id: 'call_df99fc14',
@@ -1732,7 +2309,94 @@
       }
     ];
 
-    // --- 2. Canvas Waveform Visualizer (Web Audio AnalyserNode + 60fps Fallback) ---
+    // --- 2. Functional Left Navigation Switcher ---
+    function switchRoute(pageId, navElement) {
+      appState.currentPage = pageId;
+
+      // Update sidebar nav link states
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      if (navElement) {
+        navElement.classList.add('active');
+      } else {
+        const link = document.querySelector(`.sidebar-nav .nav-item[data-page="${pageId}"]`);
+        if (link) link.classList.add('active');
+      }
+
+      // Hide all page sections, show targeted section
+      document.querySelectorAll('.page-section').forEach(sec => {
+        sec.classList.remove('active');
+      });
+      const activeSection = document.getElementById(`page-${pageId}`);
+      if (activeSection) {
+        activeSection.classList.add('active');
+      }
+
+      // If returning to dashboard, redraw canvases cleanly
+      if (pageId === 'dashboard') {
+        setTimeout(() => {
+          resizeWaveformCanvas();
+          resizeRiskChart();
+          renderRiskChart();
+        }, 30);
+      }
+
+      showToast(`Navigated to ${pageId.replace('-', ' ').toUpperCase()}`, 'info');
+    }
+
+    // --- 3. Full-Screen Takeover Controls (BIG & Cover Entire Screen) ---
+    function openFullscreenThreatOverlay(spoofScore, sessionId) {
+      const overlay = document.getElementById('fullscreenThreatOverlay');
+      if (!overlay) return;
+
+      const spoofPercent = (spoofScore * 100).toFixed(1) + '%';
+      const probElem = document.getElementById('takeoverSpoofProb');
+      const sessElem = document.getElementById('takeoverSessionId');
+      const latElem = document.getElementById('takeoverLatency');
+
+      if (probElem) probElem.innerText = spoofPercent;
+      if (sessElem) sessElem.innerText = sessionId || appState.sessionId;
+      if (latElem) latElem.innerText = `${appState.latencyRollingAvg.toFixed(0)} ms (INT8)`;
+
+      overlay.classList.add('active');
+    }
+
+    function closeThreatOverlay() {
+      const overlay = document.getElementById('fullscreenThreatOverlay');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    function triggerChallengeFromTakeover() {
+      closeThreatOverlay();
+      triggerChallengeAction();
+    }
+
+    function openFullscreenChallengeHUD() {
+      const overlay = document.getElementById('fullscreenChallengeOverlay');
+      if (overlay) overlay.classList.add('active');
+    }
+
+    function closeChallengeOverlay() {
+      const overlay = document.getElementById('fullscreenChallengeOverlay');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    function resolveChallengeAction(passed) {
+      closeChallengeOverlay();
+      if (passed) {
+        showToast('🟢 Liveness Verified: Caller biological voice confirmed.', 'safe');
+        updateTrustGauge(0.04);
+      } else {
+        showToast('🔴 Challenge Timeout / Failure: Caller rejected.', 'critical');
+        updateTrustGauge(0.96);
+      }
+      if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+        appState.ws.send(JSON.stringify({ action: 'resolve_challenge', liveness_passed: passed }));
+      }
+    }
+
+    // --- 4. 60fps Acoustic Waveform Visualizer ---
     const wfCanvas = document.getElementById('acousticWaveformCanvas');
     const wfCtx = wfCanvas.getContext('2d');
     let wfAnimationId = null;
@@ -1740,7 +2404,9 @@
     let audioDataArray = null;
 
     function resizeWaveformCanvas() {
+      if (!wfCanvas || !wfCanvas.parentElement) return;
       const rect = wfCanvas.parentElement.getBoundingClientRect();
+      if (rect.width === 0) return;
       const dpr = window.devicePixelRatio || 1;
       wfCanvas.width = rect.width * dpr;
       wfCanvas.height = rect.height * dpr;
@@ -1748,19 +2414,20 @@
     }
 
     function renderWaveformFrame(timestamp) {
+      if (!wfCanvas || !wfCanvas.parentElement) return;
       const rect = wfCanvas.parentElement.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
 
       wfCtx.clearRect(0, 0, w, h);
 
-      // Cyber scanline backdrop
+      // Subtle cyber grid scanlines
       wfCtx.fillStyle = 'rgba(255, 255, 255, 0.015)';
       for (let y = 0; y < h; y += 4) {
         wfCtx.fillRect(0, y, w, 1);
       }
 
-      // Center baseline
+      // Baseline center line
       wfCtx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
       wfCtx.lineWidth = 1;
       wfCtx.beginPath();
@@ -1769,7 +2436,6 @@
       wfCtx.stroke();
 
       if (isMicActive && audioAnalyser && audioDataArray) {
-        // Real microphone data from Web Audio AnalyserNode
         audioAnalyser.getByteTimeDomainData(audioDataArray);
 
         wfCtx.beginPath();
@@ -1782,7 +2448,7 @@
         let x = 0;
 
         for (let i = 0; i < audioDataArray.length; i++) {
-          const v = audioDataArray[i] / 128.0; // 0 to 2
+          const v = audioDataArray[i] / 128.0;
           const y = (v * h) / 2;
           if (i === 0) wfCtx.moveTo(x, y);
           else wfCtx.lineTo(x, y);
@@ -1791,7 +2457,7 @@
         wfCtx.stroke();
         wfCtx.shadowBlur = 0;
 
-        // Update live VU meter bars from volume
+        // RMS & VU meter updates
         let sumSquares = 0;
         for (let i = 0; i < audioDataArray.length; i++) {
           const val = (audioDataArray[i] - 128) / 128;
@@ -1799,7 +2465,8 @@
         }
         const rms = Math.sqrt(sumSquares / audioDataArray.length);
         const db = Math.max(-60, Math.round(20 * Math.log10(Math.max(0.0001, rms))));
-        document.getElementById('diagRms').innerText = `${db} dB`;
+        const rmsElem = document.getElementById('diagRms');
+        if (rmsElem) rmsElem.innerText = `${db} dB`;
 
         const vuBars = document.querySelectorAll('.vu-bar');
         if (vuBars.length === 3) {
@@ -1809,11 +2476,10 @@
         }
 
       } else {
-        // Ambient Synthetic Neural Waveform
+        // Multi-frequency harmonic wave animation
         const t = timestamp * 0.003;
         const color = (appState.trustScore >= 0.65) ? '#10B981' : (appState.trustScore >= 0.35 ? '#F59E0B' : '#EF4444');
 
-        // Draw multiple glowing harmonic waves
         const waves = [
           { freq: 0.015, speed: 1.2, amp: 26, alpha: 0.7, width: 2.2 },
           { freq: 0.025, speed: 0.8, amp: 16, alpha: 0.4, width: 1.5 },
@@ -1840,12 +2506,14 @@
       wfAnimationId = requestAnimationFrame(renderWaveformFrame);
     }
 
-    // --- 3. Canvas Threat Timeline Chart (Accurate 0.35 & 0.65 Thresholds) ---
+    // --- 5. Threat Timeline Chart (Accurate 0.35 & 0.65 Thresholds) ---
     const chartCanvas = document.getElementById('riskTimelineCanvas');
     const chartCtx = chartCanvas.getContext('2d');
 
     function resizeRiskChart() {
+      if (!chartCanvas || !chartCanvas.parentElement) return;
       const rect = chartCanvas.parentElement.getBoundingClientRect();
+      if (rect.width === 0) return;
       const dpr = window.devicePixelRatio || 1;
       chartCanvas.width = rect.width * dpr;
       chartCanvas.height = rect.height * dpr;
@@ -1853,15 +2521,14 @@
     }
 
     function renderRiskChart() {
+      if (!chartCanvas || !chartCanvas.parentElement) return;
       const rect = chartCanvas.parentElement.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
 
       chartCtx.clearRect(0, 0, w, h);
 
-      // Horizontal Threshold Lines strictly matching audio_processor.py:
-      // Safe boundary: Trust = 0.65 (Spoof = 0.35)
-      // Step-Up boundary: Trust = 0.35 (Spoof = 0.65)
+      // Risk threshold lines matching audio_processor.py
       const thresholds = [
         { val: 0.65, color: 'rgba(16, 185, 129, 0.25)', label: 'Safe 0.65' },
         { val: 0.35, color: 'rgba(239, 68, 68, 0.25)', label: 'Alert 0.35' }
@@ -1888,7 +2555,6 @@
       const step = w / (CHART_POINTS - 1);
       const latestVal = appState.chartHistory[appState.chartHistory.length - 1];
 
-      // Smooth Bezier Curve
       chartCtx.beginPath();
       chartCtx.lineWidth = 2.5;
 
@@ -1911,7 +2577,7 @@
       chartCtx.stroke();
       chartCtx.shadowBlur = 0;
 
-      // Area fill beneath curve
+      // Area fill beneath trajectory
       const lastX = (appState.chartHistory.length - 1) * step;
       chartCtx.lineTo(lastX, h);
       chartCtx.lineTo(0, h);
@@ -1931,7 +2597,7 @@
       chartCtx.fillStyle = grad;
       chartCtx.fill();
 
-      // Current pulse dot at tip
+      // Current pulse dot
       const lastY = h - (latestVal * (h - 24)) - 12;
       chartCtx.beginPath();
       chartCtx.arc(lastX, lastY, 4, 0, Math.PI * 2);
@@ -1939,9 +2605,8 @@
       chartCtx.fill();
     }
 
-    // --- 4. Radial Trust Gauge Rendering (Direct & Unclamped) ---
+    // --- 6. Radial Trust Gauge (Direct Unclamped Logic) ---
     function updateTrustGauge(rawSpoof) {
-      // Calculate true trust without artificial clamping
       const trust = Math.max(0.001, Math.min(0.999, 1.0 - rawSpoof));
       appState.trustScore = trust;
 
@@ -1954,12 +2619,10 @@
       if (scoreElem) scoreElem.innerText = trust.toFixed(2);
       if (rawLogitElem) rawLogitElem.innerText = `P(Spoof): ${rawSpoof.toFixed(3)}`;
 
-      // Circumference = 2 * PI * 90 = ~565.48
       const circumference = 565.48;
       const offset = circumference * (1 - trust);
       if (ringElem) ringElem.style.strokeDashoffset = offset;
 
-      // Color transitions based on accurate thresholds (<=0.35 Bonafide, 0.35-0.65 Step-Up, >=0.65 Spoof)
       if (rawSpoof >= 0.65) {
         // Critical Spoof (Trust <= 0.35)
         if (ringElem) {
@@ -1977,6 +2640,10 @@
           confidenceElem.innerText = 'HIGH (Synthetic Clone)';
           confidenceElem.style.color = '#EF4444';
         }
+
+        // TRIGGER FULL-SCREEN TAKEOVER OVERLAY!
+        openFullscreenThreatOverlay(rawSpoof, appState.sessionId);
+
       } else if (rawSpoof > 0.35) {
         // Step-Up / Caution (Trust 0.35 - 0.65)
         if (ringElem) {
@@ -1995,7 +2662,7 @@
           confidenceElem.style.color = '#F59E0B';
         }
       } else {
-        // Safe / Bonafide (Trust >= 0.65)
+        // Bonafide Human (Trust >= 0.65)
         if (ringElem) {
           ringElem.style.stroke = '#10B981';
           ringElem.style.filter = 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.5))';
@@ -2010,13 +2677,11 @@
         }
       }
 
-      // Update timeline
       appState.chartHistory.shift();
       appState.chartHistory.push(trust);
       renderRiskChart();
     }
 
-    // --- 5. Real-Time Hardware Latency Tracking ---
     function recordInferenceLatency(latencyMs) {
       if (typeof latencyMs !== 'number' || isNaN(latencyMs)) return;
       appState.latencySamples.push(latencyMs);
@@ -2027,22 +2692,18 @@
       appState.latencyRollingAvg = avg;
 
       const badgeText = document.getElementById('badgeLatencyText');
-      if (badgeText) {
-        badgeText.innerText = `INT8 Quantized (${avg.toFixed(0)}ms)`;
-      }
+      if (badgeText) badgeText.innerText = `INT8 Quantized (${avg.toFixed(0)}ms)`;
       const diagLatency = document.getElementById('diagLatency');
-      if (diagLatency) {
-        diagLatency.innerText = `${avg.toFixed(0)} ms`;
-      }
+      if (diagLatency) diagLatency.innerText = `${avg.toFixed(0)} ms`;
     }
 
-    // --- 6. Live Microphone Audio Streaming (Web Audio API) ---
+    // --- 7. Live Microphone Streaming ---
     let liveAudioCtx = null;
     let liveMicStream = null;
     let liveMicNode = null;
     let isMicActive = false;
     let micPcmBuffer = [];
-    const CHUNK_SAMPLE_COUNT = 32000; // ~2.0s at 16kHz
+    const CHUNK_SAMPLE_COUNT = 32000;
 
     async function toggleLiveMicrophone() {
       if (isMicActive) {
@@ -2071,13 +2732,11 @@
         liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
         const source = liveAudioCtx.createMediaStreamSource(liveMicStream);
 
-        // Web Audio Analyser for 60fps waveform
         audioAnalyser = liveAudioCtx.createAnalyser();
         audioAnalyser.fftSize = 512;
         audioDataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
         source.connect(audioAnalyser);
 
-        // ScriptProcessorNode buffers 4096 frames
         liveMicNode = liveAudioCtx.createScriptProcessor(4096, 1, 1);
         micPcmBuffer = [];
 
@@ -2088,10 +2747,9 @@
             micPcmBuffer.push(inputData[i]);
           }
 
-          // Accumulate 2.0s (32,000 samples)
           if (micPcmBuffer.length >= CHUNK_SAMPLE_COUNT) {
             const chunk = micPcmBuffer.slice(0, CHUNK_SAMPLE_COUNT);
-            micPcmBuffer = micPcmBuffer.slice(CHUNK_SAMPLE_COUNT / 2); // 50% overlap
+            micPcmBuffer = micPcmBuffer.slice(CHUNK_SAMPLE_COUNT / 2);
 
             const int16Array = new Int16Array(chunk.length);
             for (let i = 0; i < chunk.length; i++) {
@@ -2113,10 +2771,10 @@
         if (label) label.innerText = '🔴 Recording...';
         if (wfTag) wfTag.innerText = 'Live Mic Stream (16kHz)';
 
-        showToast('🎙️ Live Microphone Active. Speak in Tamil, Hindi, or English to test real-time inference!', 'safe');
+        showToast('🎙️ Live Microphone Active. Speak into mic to test AASIST!', 'safe');
       } catch (err) {
-        console.error('Error accessing microphone:', err);
-        showToast('⚠️ Microphone access error: ' + err.message, 'critical');
+        console.error('Microphone error:', err);
+        showToast('⚠️ Microphone error: ' + err.message, 'critical');
       }
     }
 
@@ -2146,13 +2804,11 @@
       if (btn) btn.classList.remove('recording');
       if (label) label.innerText = '🎙️ Live Mic';
       if (wfTag) wfTag.innerText = 'Synthetic Manifold';
-
-      // Reset VU bars
       document.querySelectorAll('.vu-bar').forEach(b => b.style.height = '4px');
-      showToast('⏹️ Microphone stream stopped.', 'info');
+      showToast('⏹️ Microphone stopped.', 'info');
     }
 
-    // --- 7. Stream Pre-Recorded Calibration Clips ---
+    // --- 8. Stream Pre-Recorded Clips ---
     async function streamDemoClip(clipName = 'deepfake_voice_clone') {
       try {
         showToast(`🔄 Streaming demo clip: ${clipName}.wav...`, 'info');
@@ -2162,67 +2818,68 @@
 
         if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
           appState.ws.send(buf);
-          showToast(`⚡ Dispatched ${clipName}.wav to AASIST model!`, 'safe');
+          showToast(`⚡ Streamed ${clipName}.wav into model!`, 'safe');
         } else {
           showToast('⚠️ WebSocket connecting...', 'warning');
         }
       } catch (e) {
-        console.error('Clip streaming failed:', e);
+        console.error('Streaming clip failed:', e);
         showToast(`❌ Audio stream error: ${e.message}`, 'critical');
       }
     }
 
-    // --- 8. Scenario Selector ---
     function selectScenario(type) {
       document.querySelectorAll('.btn-scen').forEach(b => b.classList.remove('active'));
-      const banner = document.getElementById('criticalAlertBanner');
 
       if (type === 'safe') {
         document.getElementById('btnScenSafe').classList.add('active');
-        if (banner) banner.classList.remove('visible');
+        closeThreatOverlay();
         streamDemoClip('bonafide_human_speech');
       } else if (type === 'deepfake') {
         document.getElementById('btnScenClone').classList.add('active');
-        if (banner) banner.classList.add('visible');
+        // Open full screen takeover alert immediately
+        openFullscreenThreatOverlay(0.999, appState.sessionId);
         streamDemoClip('deepfake_voice_clone');
       } else if (type === 'caution') {
         document.getElementById('btnScenJitter').classList.add('active');
-        if (banner) banner.classList.remove('visible');
+        closeThreatOverlay();
         streamDemoClip('caution_noisy_telecom');
       }
     }
 
-    function dismissAlertBanner() {
-      const banner = document.getElementById('criticalAlertBanner');
-      if (banner) banner.classList.remove('visible');
-    }
-
     function executeAccountFreeze() {
-      showToast('🔒 SOC Command: SIP Trunk frozen. Out-of-band verification SMS/Email dispatched.', 'critical');
-      dismissAlertBanner();
+      showToast('🔒 SOC Command: SIP Trunk frozen. Threat isolated.', 'critical');
+      closeThreatOverlay();
     }
 
-    // --- 9. Dynamic Countermeasure Challenge Trigger ---
+    // --- 9. Dynamic Challenge Action (Full-Screen HUD) ---
     function triggerChallengeAction() {
       if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
         appState.ws.send(JSON.stringify({ action: 'trigger_challenge', challenge_type: 'digit_repeat' }));
       }
 
       const digits = [Math.floor(Math.random() * 9) + 1, Math.floor(Math.random() * 9) + 1, Math.floor(Math.random() * 9) + 1];
-      const promptText = `Please repeat dynamic security token: "${digits.join(' - ')}"`;
+      const promptFormatted = `"${digits.join(' — ')}"`;
 
+      // Update both inline box and full-screen HUD
       const promptElem = document.getElementById('challengePromptMsg');
+      const giantPrompt = document.getElementById('takeoverChallengePrompt');
       const box = document.getElementById('challengeCardBox');
       const timerText = document.getElementById('challengeTimerText');
       const timerBar = document.getElementById('challengeTimerBar');
+      const countdownNum = document.getElementById('takeoverCountdownNum');
 
-      if (promptElem) promptElem.innerText = promptText;
+      if (promptElem) promptElem.innerText = `Dynamic Token: ${promptFormatted}`;
+      if (giantPrompt) giantPrompt.innerText = promptFormatted;
       if (box) box.classList.add('active');
 
-      // 15-second countdown timer
+      // Open Full-Screen Challenge HUD
+      openFullscreenChallengeHUD();
+
       let timeLeft = 15;
       appState.challengeCountdown = timeLeft;
-      if (timerText) timerText.innerText = `${timeLeft}s remaining`;
+      if (countdownNum) countdownNum.innerText = timeLeft;
+      if (timerText) timerText.innerText = `${timeLeft}s left`;
       if (timerBar) timerBar.style.width = '100%';
 
       if (appState.challengeInterval) clearInterval(appState.challengeInterval);
@@ -2230,23 +2887,22 @@
         timeLeft--;
         if (timeLeft <= 0) {
           clearInterval(appState.challengeInterval);
-          if (timerText) timerText.innerText = 'Completed';
+          if (countdownNum) countdownNum.innerText = '0';
+          if (timerText) timerText.innerText = 'Expired';
           if (timerBar) timerBar.style.width = '0%';
           if (box) box.classList.remove('active');
         } else {
-          if (timerText) timerText.innerText = `${timeLeft}s remaining`;
+          if (countdownNum) countdownNum.innerText = timeLeft;
+          if (timerText) timerText.innerText = `${timeLeft}s left`;
           if (timerBar) timerBar.style.width = `${(timeLeft / 15) * 100}%`;
         }
       }, 1000);
 
-      showToast(`⚡ Dynamic Challenge Injected: "${digits.join(' - ')}"`, 'warning');
+      showToast(`⚡ Dynamic Challenge Active: ${promptFormatted}`, 'warning');
     }
 
-    // --- 10. Audit Table & Verification Handlers ---
+    // --- 10. Audit Table Row Rendering ---
     function renderAuditTableRows() {
-      const tbody = document.getElementById('auditTableRows');
-      if (!tbody) return;
-
       const query = (document.getElementById('tableSearchField')?.value || '').toLowerCase();
       const verdictFilter = document.getElementById('tableVerdictSelect')?.value || 'ALL';
 
@@ -2256,7 +2912,7 @@
         return matchesQuery && matchesVerdict;
       });
 
-      tbody.innerHTML = filtered.map(row => {
+      const html = filtered.map(row => {
         let badgeClass = 'pass';
         if (row.verdict === 'STEP_UP' || row.verdict === 'WARN') badgeClass = 'step-up';
         if (row.verdict === 'ALERT' || row.verdict === 'CRITICAL SPOOF') badgeClass = 'alert';
@@ -2277,7 +2933,7 @@
             <td>
               <div class="action-btn-group">
                 <button class="btn-action-verify" onclick="openVerifyModal('${row.id}')" title="Cryptographically verify SHA-256 sequential chain">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   Verify
                 </button>
                 <button class="btn-action-sec" onclick="openCertificate('${row.id}')" title="View official certificate">
@@ -2291,6 +2947,11 @@
           </tr>
         `;
       }).join('');
+
+      const tbody1 = document.getElementById('auditTableRows');
+      if (tbody1) tbody1.innerHTML = html;
+      const tbody2 = document.getElementById('auditTableRowsFull');
+      if (tbody2) tbody2.innerHTML = html;
     }
 
     function filterAuditRecords() {
@@ -2313,7 +2974,6 @@
       showToast(`📄 Downloaded SOC Report for ${sessionId}`, 'safe');
     }
 
-    // --- 11. Fetch Recent Calls From Server API ---
     async function fetchRecentCallsFromApi() {
       try {
         const resp = await fetch('/calls?limit=20');
@@ -2344,7 +3004,7 @@
       }
     }
 
-    // --- 12. Real-Time Cryptographic Hash-Chain Verification Modal ---
+    // --- 11. Cryptographic Hash-Chain Verification Modal ---
     async function openVerifyModal(sessionId) {
       appState.modalCurrentSession = sessionId;
       const modal = document.getElementById('verifyModal');
@@ -2406,7 +3066,7 @@
       }
     }
 
-    // --- 13. Backend WebSocket Real-Time Telemetry Pipeline ---
+    // --- 12. WebSocket Backend Telemetry ---
     function connectBackendWebSocket() {
       const host = window.location.host || '127.0.0.1:8000';
       const wsUrl = `ws://${host}/ws/audio`;
@@ -2449,45 +3109,34 @@
     }
 
     function handleIncomingPacket(data) {
-      // 1. Extract raw passive spoof score
       const rawSpoof = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
         ? data.anti_spoofing.passive_score
         : (typeof data.score === 'number' ? data.score : 0.0);
 
       appState.rawSpoofScore = rawSpoof;
 
-      // 2. Latency measurement
       if (data.metadata && data.metadata.inference_latency_ms) {
         recordInferenceLatency(data.metadata.inference_latency_ms);
       }
 
-      // 3. Active Session ID
       const sessionId = (data.metadata && data.metadata.session_id) || data.session_id || appState.sessionId;
       appState.sessionId = sessionId;
       const sessElem = document.getElementById('activeSessionText');
       if (sessElem) sessElem.innerText = sessionId;
 
-      // 4. Update Trust Gauge
       updateTrustGauge(rawSpoof);
 
-      // 5. Check if challenge fired
       if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
         const prompt = data.challenge_state.prompt_text || 'Please repeat dynamic token: 9 - 2 - 5';
         const promptElem = document.getElementById('challengePromptMsg');
         if (promptElem) promptElem.innerText = prompt;
-        showToast(`⚡ Challenge Injected: "${prompt}"`, 'warning');
-      }
-
-      // 6. Handle alert banner
-      const banner = document.getElementById('criticalAlertBanner');
-      if (rawSpoof >= 0.65) {
-        if (banner) banner.classList.add('visible');
-      } else {
-        if (banner) banner.classList.remove('visible');
+        const giantPrompt = document.getElementById('takeoverChallengePrompt');
+        if (giantPrompt) giantPrompt.innerText = `"${prompt}"`;
+        openFullscreenChallengeHUD();
+        showToast(`⚡ Dynamic Challenge Injected: "${prompt}"`, 'warning');
       }
     }
 
-    // --- 14. Toast Notification Engine ---
     function showToast(message, type = 'info') {
       const tray = document.getElementById('toastTray');
       if (!tray) return;
@@ -2505,22 +3154,15 @@
       }, 3500);
     }
 
-    function switchTab(tabId) {
-      showToast(`Navigating to ${tabId.toUpperCase()} view`, 'info');
-    }
-
-    // --- 15. Lifecycle Bootstrap ---
+    // --- 13. Lifecycle Startup ---
     window.addEventListener('DOMContentLoaded', () => {
       resizeWaveformCanvas();
       resizeRiskChart();
-      updateTrustGauge(0.021); // Genuine human baseline
+      updateTrustGauge(0.021);
       renderAuditTableRows();
       fetchRecentCallsFromApi();
 
-      // Start 60fps waveform loop
       requestAnimationFrame(renderWaveformFrame);
-
-      // Connect Native Backend WebSocket
       connectBackendWebSocket();
     });
 
