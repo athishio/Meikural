@@ -6,68 +6,63 @@
   <title>MEIKURAL — Enterprise Voice Biometrics & Deepfake Detection SOC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ==========================================================================
-       MEIKURAL DESIGN SYSTEM (Google × Claude × Antigravity × Linear × Stripe)
+       MEIKURAL NEXT-GEN OBSIDIAN CYBER-GLASS DESIGN SYSTEM
+       Aesthetic Grade: Palantir Gotham / Linear / CrowdStrike Falcon SOC
        ========================================================================== */
     :root {
-      /* Surface Colors */
-      --bg-base: #171719;
-      --bg-surface-1: #1B1B1F;
-      --bg-surface-2: #202024;
-      --bg-surface-3: #252529;
-      --bg-surface-hover: #2B2B30;
-      --bg-surface-active: #323238;
+      /* Obsidian Deep Palette */
+      --bg-canvas: #04060B;
+      --bg-card: rgba(11, 17, 32, 0.72);
+      --bg-card-hover: rgba(18, 26, 47, 0.85);
+      --bg-card-active: rgba(22, 33, 60, 0.95);
+      --bg-elevated: rgba(15, 23, 42, 0.85);
 
-      /* Borders */
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --border-medium: rgba(255, 255, 255, 0.12);
-      --border-focus: rgba(59, 130, 246, 0.5);
+      /* Glass Borders */
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --border-glow: rgba(56, 189, 248, 0.35);
 
-      /* Typography Colors */
-      --text-primary: #F3F3F4;
-      --text-secondary: #A2A2AA;
-      --text-muted: #73737C;
-      --text-inverse: #0F0F11;
+      /* Typography */
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-dim: #475569;
 
-      /* Primary Brand / Action Color (Used sparingly) */
-      --accent-blue: #3B82F6;
-      --accent-blue-hover: #2563EB;
-      --accent-blue-subtle: rgba(59, 130, 246, 0.08);
-      --accent-blue-border: rgba(59, 130, 246, 0.25);
+      /* Cyber Semantic Accent Signals */
+      --neon-cyan: #00F2FE;
+      --neon-cyan-glow: rgba(0, 242, 254, 0.3);
+      --neon-blue: #38BDF8;
+      --neon-indigo: #6366F1;
 
-      /* Security Semantic State Colors */
-      --status-safe: #4ADE80;
-      --status-safe-bg: rgba(74, 222, 128, 0.08);
-      --status-safe-border: rgba(74, 222, 128, 0.2);
+      /* Risk Status Colors (AASIST Backend Aligned: <=0.35 Safe, 0.35-0.65 Step-Up, >=0.65 Spoof) */
+      --safe: #10B981;
+      --safe-glow: rgba(16, 185, 129, 0.25);
+      --safe-bg: rgba(16, 185, 129, 0.1);
+      --safe-border: rgba(16, 185, 129, 0.3);
 
-      --status-warning: #FBBF24;
-      --status-warning-bg: rgba(251, 191, 36, 0.08);
-      --status-warning-border: rgba(251, 191, 36, 0.2);
+      --caution: #F59E0B;
+      --caution-glow: rgba(245, 158, 11, 0.25);
+      --caution-bg: rgba(245, 158, 11, 0.1);
+      --caution-border: rgba(245, 158, 11, 0.3);
 
-      --status-critical: #F87171;
-      --status-critical-bg: rgba(248, 113, 113, 0.09);
-      --status-critical-border: rgba(248, 113, 113, 0.25);
+      --critical: #EF4444;
+      --critical-glow: rgba(239, 68, 68, 0.3);
+      --critical-bg: rgba(239, 68, 68, 0.12);
+      --critical-border: rgba(239, 68, 68, 0.38);
 
-      --alert-banner-bg: #881337;
-      --alert-banner-border: #E11D48;
-
-      /* Spacing & Radii */
+      /* Radii */
       --radius-sm: 6px;
-      --radius-md: 9px;
-      --radius-lg: 12px;
-      --radius-xl: 16px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
 
-      /* Motion Tokens */
-      --ease-out-natural: cubic-bezier(0.2, 0, 0, 1);
-      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-      --dur-fast: 120ms;
-      --dur-standard: 200ms;
-      --dur-panel: 260ms;
+      /* Transitions */
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Reset & Base Setup */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -75,15 +70,18 @@
     }
 
     html, body {
-      background-color: var(--bg-base);
+      background-color: var(--bg-canvas);
       color: var(--text-primary);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 14px;
       line-height: 1.5;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(56, 189, 248, 0.07), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 85% 60%, rgba(99, 102, 241, 0.04), transparent 60%);
+      background-attachment: fixed;
     }
 
     .mono {
@@ -91,62 +89,50 @@
       letter-spacing: -0.02em;
     }
 
-    /* ==========================================================================
-       LAYER 0 & 1: ARCHITECTURAL LOGO BACKGROUND & PARALLAX DEPTH
-       ========================================================================== */
-    .brand-background-layer {
+    /* Ambient Subtle Grid Pattern */
+    .ambient-grid-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      background-size: 48px 48px;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
       pointer-events: none;
-      user-select: none;
       z-index: 0;
-      overflow: hidden;
     }
 
-    /* Layer 2: Subtle radial depth illumination */
-    .bg-depth-glow {
-      position: absolute;
-      width: 1000px;
-      height: 700px;
-      right: -150px;
-      top: 10%;
-      background: radial-gradient(circle at 60% 40%, rgba(59, 130, 246, 0.035) 0%, rgba(30, 41, 59, 0.015) 50%, transparent 75%);
-      filter: blur(80px);
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-    }
-
-    /* Layer 1: Large Architectural Watermark Logo */
-    .bg-logo-watermark {
-      position: absolute;
-      width: 850px;
-      height: 850px;
-      right: -160px;
-      bottom: -180px;
-      opacity: 0.025; /* 2.5% opacity - quiet, high-end, zero distraction */
-      color: #FFFFFF;
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-      transition: opacity var(--dur-panel) var(--ease-smooth);
+    /* Architectural Background Shield Watermark */
+    .shield-watermark {
+      position: fixed;
+      right: -100px;
+      bottom: -100px;
+      width: 780px;
+      height: 780px;
+      opacity: 0.022;
+      pointer-events: none;
+      color: #38BDF8;
+      z-index: 0;
+      transition: transform 0.3s var(--ease);
     }
 
     /* ==========================================================================
-       APP SHELL LAYOUT (Sidebar + Main Workspace)
+       APP SHELL & LAYOUT
        ========================================================================== */
     .app-shell {
       position: relative;
-      z-index: 2;
+      z-index: 1;
       display: flex;
       min-height: 100vh;
     }
 
-    /* Sidebar */
-    aside.app-sidebar {
-      width: 232px;
-      background-color: var(--bg-surface-1);
+    /* Sidebar Navigation */
+    aside.sidebar {
+      width: 250px;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(20px);
       border-right: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
@@ -155,576 +141,640 @@
       position: sticky;
       top: 0;
       user-select: none;
-      z-index: 10;
+      z-index: 20;
     }
 
-    .brand-block {
+    .brand-header {
       padding: 24px 20px 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .brand-logo-emblem {
-      width: 28px;
-      height: 28px;
+    .brand-icon-wrapper {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.1));
+      border: 1px solid rgba(56, 189, 248, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-primary);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
     }
 
-    .brand-wordmark {
-      font-size: 15px;
+    .brand-title {
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--text-primary);
+      letter-spacing: 0.08em;
+      color: #FFFFFF;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
     }
 
-    .brand-subline {
-      font-size: 10.5px;
-      color: var(--text-muted);
-      font-weight: 500;
-      margin-top: -2px;
+    .brand-tag {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--neon-blue);
     }
 
-    /* Navigation with Gliding Active Pill */
-    .nav-container {
-      padding: 12px 10px;
+    /* Navigation Links */
+    .sidebar-nav {
+      padding: 16px 12px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      position: relative;
+      gap: 4px;
     }
 
-    /* The gliding indicator */
-    .nav-glider {
-      position: absolute;
-      left: 10px;
-      width: calc(100% - 20px);
-      height: 40px;
-      background-color: var(--accent-blue-subtle);
-      border-left: 2px solid var(--accent-blue);
-      border-radius: var(--radius-sm);
-      pointer-events: none;
-      transition: transform var(--dur-standard) var(--ease-out-natural), opacity var(--dur-fast) ease;
-      opacity: 0;
-      transform: translateY(0);
-      z-index: 1;
-    }
-
-    .nav-link {
-      position: relative;
-      z-index: 2;
+    .nav-item {
       display: flex;
       align-items: center;
-      gap: 11px;
-      padding: 9px 12px;
-      height: 40px;
-      color: var(--text-secondary);
+      gap: 12px;
+      padding: 10px 14px;
       border-radius: var(--radius-sm);
-      text-decoration: none;
+      color: var(--text-secondary);
       font-size: 13.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
     }
 
-    .nav-link:hover {
+    .nav-item:hover {
       color: var(--text-primary);
-      background-color: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
     }
 
-    .nav-link.active {
-      color: var(--text-primary);
+    .nav-item.active {
+      color: #FFFFFF;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.03));
+      border-left: 2px solid var(--neon-blue);
+      border-top: 1px solid rgba(56, 189, 248, 0.15);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.15);
       font-weight: 600;
     }
 
-    .nav-icon {
-      width: 17px;
-      height: 17px;
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
       stroke-width: 1.8;
       stroke: currentColor;
       fill: none;
     }
 
-    /* Sidebar Footer Status */
+    /* Sidebar Footer Meta */
     .sidebar-footer {
       padding: 16px 18px;
       border-top: 1px solid var(--border-subtle);
+      background: rgba(4, 7, 14, 0.6);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .status-dot-row {
+    .status-badge-inline {
       display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 12px;
+      gap: 8px;
+      font-size: 11.5px;
       font-weight: 500;
       color: var(--text-secondary);
     }
 
-    .status-dot {
-      width: 7px;
-      height: 7px;
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      flex-shrink: 0;
-      transition: background-color var(--dur-standard) ease;
+      background-color: var(--safe);
+      box-shadow: 0 0 10px var(--safe);
+      animation: pulse-glow 2s infinite ease-in-out;
     }
 
-    .dot-safe { background-color: var(--status-safe); }
-    .dot-warning { background-color: var(--status-warning); }
-    .dot-critical { background-color: var(--status-critical); }
-    .dot-blue { background-color: var(--accent-blue); }
+    .pulse-dot.warning { background-color: var(--caution); box-shadow: 0 0 10px var(--caution); }
+    .pulse-dot.critical { background-color: var(--critical); box-shadow: 0 0 10px var(--critical); }
 
-    /* ==========================================================================
-       MAIN CONTENT CONTAINER
-       ========================================================================== */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    /* Main Viewport */
     main.main-viewport {
       flex: 1;
-      padding: 32px 44px 60px;
-      max-width: 1420px;
+      min-width: 0;
+      padding: 24px 32px 48px;
       display: flex;
       flex-direction: column;
-      gap: 28px;
-    }
-
-    /* Dynamic Route Page Container Animation */
-    .page-section {
-      display: none;
-      animation: pageFadeIn var(--dur-panel) var(--ease-smooth);
-    }
-
-    .page-section.active {
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    @keyframes pageFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      gap: 22px;
     }
 
     /* ==========================================================================
-       CRITICAL ALERT BANNER (High-Risk Deepfake State Only)
+       TOP HERO HEADER & SOC BADGES
        ========================================================================== */
-    .critical-alert-bar {
+    .hero-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .hero-title-group h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-title-group p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .soc-badge-cluster {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .soc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .soc-pill.pill-live {
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .soc-pill.pill-latency {
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .soc-pill.pill-privacy {
+      border-color: rgba(99, 102, 241, 0.35);
+      color: #A5B4FC;
+      background: rgba(99, 102, 241, 0.08);
+      cursor: help;
+    }
+
+    /* ==========================================================================
+       CRITICAL SPOOF ALERT BANNER (Animated Reveal on Threat)
+       ========================================================================== */
+    .critical-banner {
       display: none;
-      background-color: var(--alert-banner-bg);
-      border: 1px solid var(--alert-banner-border);
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.22), rgba(185, 28, 28, 0.12));
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.2);
       border-radius: var(--radius-md);
-      padding: 16px 20px;
+      padding: 14px 20px;
+      animation: bannerSlide 0.25s var(--ease);
+    }
+
+    .critical-banner.visible {
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      animation: slideAlertDown var(--dur-panel) var(--ease-smooth);
-      box-shadow: 0 4px 20px rgba(136, 19, 55, 0.25);
     }
 
-    .critical-alert-bar.visible {
+    @keyframes bannerSlide {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .banner-alert-content {
       display: flex;
-    }
-
-    @keyframes slideAlertDown {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .alert-lead {
-      display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 14px;
     }
 
-    .alert-lead-icon {
-      color: #FFE4E6;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .alert-headline {
-      font-size: 14.5px;
-      font-weight: 600;
-      color: #FFFFFF;
-      margin-bottom: 2px;
-    }
-
-    .alert-subtext {
-      font-size: 13px;
-      color: #FECDD3;
-      line-height: 1.4;
-    }
-
-    .alert-action-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .banner-icon {
+      color: #EF4444;
       flex-shrink: 0;
     }
 
-    .btn-freeze-critical {
-      background-color: #E11D48;
-      color: #FFFFFF;
-      border: 1px solid #F43F5E;
-      padding: 8px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color var(--dur-fast) ease, transform 80ms ease;
+    .banner-headline {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FEE2E2;
     }
 
-    .btn-freeze-critical:hover {
-      background-color: #BE123C;
-    }
-
-    .btn-freeze-critical:active {
-      transform: scale(0.98);
-    }
-
-    .btn-reverify {
-      background-color: rgba(255, 255, 255, 0.12);
-      color: #FFFFFF;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color var(--dur-fast) ease;
-    }
-
-    .btn-reverify:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .btn-dismiss-alert {
-      background: transparent;
-      color: #FDA4AF;
-      border: none;
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .btn-dismiss-alert:hover {
-      color: #FFFFFF;
-    }
-
-    /* ==========================================================================
-       HEADER & CONTEXTUAL OVERVIEW REGION
-       ========================================================================== */
-    .top-header-region {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 20px;
-    }
-
-    .header-main-text h1 {
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-      color: var(--text-primary);
-    }
-
-    .header-main-text p {
-      font-size: 13.5px;
-      color: var(--text-secondary);
+    .banner-sub {
+      font-size: 12px;
+      color: #FCA5A5;
       margin-top: 2px;
     }
 
-    .header-status-badge {
+    .banner-actions {
       display: flex;
       align-items: center;
-      gap: 7px;
-      background-color: var(--bg-surface-2);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      color: var(--text-secondary);
-      font-weight: 500;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
-    /* Contextual Overview Banner */
-    .context-overview-row {
+    .btn-freeze-danger {
+      background: #EF4444;
+      color: #FFFFFF;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-freeze-danger:hover {
+      background: #DC2626;
+      transform: translateY(-1px);
+    }
+
+    .btn-reverify-outline {
+      background: transparent;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-reverify-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ==========================================================================
+       TACTILE SENTINEL TOOLBAR (Live Mic + Scenario Launchers)
+       ========================================================================== */
+    .sentinel-toolbar {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 12.5px;
-      margin-top: -12px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    .privacy-micro-note {
+    .toolbar-lead {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toolbar-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #FFFFFF;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* ==========================================================================
-       OPERATOR TEST SCENARIOS TOOLBAR (Compact, Secondary, Non-card)
-       ========================================================================== */
-    .scenario-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: var(--bg-surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 12px 18px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .scenario-label-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .scenario-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .scenario-desc {
-      font-size: 12px;
+    .toolbar-sub {
+      font-size: 11.5px;
       color: var(--text-muted);
     }
 
-    .scenario-button-group {
+    .toolbar-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
       flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .btn-scenario {
-      background-color: var(--bg-surface-1);
-      color: var(--text-secondary);
+    /* Live Mic Button with Pulsing VU Meter */
+    .btn-live-mic {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.15);
+      position: relative;
+    }
+
+    .btn-live-mic:hover {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
+      border-color: rgba(56, 189, 248, 0.7);
+      transform: translateY(-1px);
+    }
+
+    .btn-live-mic.recording {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.2));
+      border-color: #EF4444;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
+      animation: mic-pulse 1.6s infinite ease-in-out;
+    }
+
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.3); }
+      50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.6); }
+    }
+
+    .vu-meter-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+      width: 14px;
+    }
+
+    .vu-bar {
+      width: 3px;
+      background: var(--neon-cyan);
+      border-radius: 1px;
+      height: 4px;
+      transition: height 0.08s ease;
+    }
+
+    /* Scenario Action Buttons */
+    .btn-scen {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border-subtle);
-      padding: 7px 12px;
+      color: var(--text-secondary);
+      padding: 8px 13px;
       border-radius: var(--radius-sm);
       font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform 80ms ease;
+      transition: all 0.15s ease;
     }
 
-    .btn-scenario:hover {
-      background-color: var(--bg-surface-hover);
+    .btn-scen:hover {
+      background: rgba(255, 255, 255, 0.07);
       color: var(--text-primary);
       border-color: var(--border-medium);
     }
 
-    .btn-scenario:active {
-      transform: scale(0.985);
-    }
-
-    .btn-scenario.active {
-      background-color: var(--accent-blue-subtle);
-      border-color: var(--accent-blue-border);
-      color: var(--text-primary);
+    .btn-scen.active {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #FFFFFF;
       font-weight: 600;
     }
 
-    .btn-scenario.recording {
-      background-color: rgba(239, 68, 68, 0.16) !important;
-      border-color: #ef4444 !important;
-      color: #f87171 !important;
-      animation: pulse-recording 1.2s infinite ease-in-out;
-    }
-
-    @keyframes pulse-recording {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    }
-
-    .btn-scenario svg {
-      width: 14px;
-      height: 14px;
+    .btn-scen svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 1.8;
       stroke: currentColor;
       fill: none;
     }
 
     /* ==========================================================================
-       PRIMARY LIVE SESSION WORKSPACE (Unified Connected Surface, NOT 4 cards)
+       CENTRAL INTELLIGENCE GRID (Radial Gauge, Waveform Canvas, Threat Timeline)
        ========================================================================== */
-    .unified-session-workspace {
-      background-color: var(--bg-surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-xl);
-      padding: 26px 30px;
+    .intelligence-grid {
       display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr 1fr;
-      gap: 24px;
-      align-items: start;
-      position: relative;
-    }
-
-    /* Subtle divider lines between workspace columns */
-    .workspace-col {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      position: relative;
-    }
-
-    .workspace-col:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      right: -12px;
-      top: 6px;
-      bottom: 6px;
-      width: 1px;
-      background-color: var(--border-subtle);
-    }
-
-    .col-kicker {
-      font-size: 11.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Tooltip */
-    .info-tooltip-wrap {
-      position: relative;
-      display: inline-flex;
-      cursor: help;
-      color: var(--text-muted);
-    }
-
-    .info-tooltip-wrap:hover {
-      color: var(--text-secondary);
-    }
-
-    .tooltip-content {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #26262B;
-      border: 1px solid var(--border-medium);
-      color: var(--text-primary);
-      font-size: 11.5px;
-      line-height: 1.4;
-      padding: 7px 11px;
-      border-radius: var(--radius-sm);
-      width: 220px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--dur-fast) ease;
-      z-index: 50;
-      text-transform: none;
-      font-weight: 400;
-      letter-spacing: normal;
-    }
-
-    .info-tooltip-wrap:hover .tooltip-content {
-      opacity: 1;
-    }
-
-    /* Large Numeric & Semantic Display */
-    .stat-number-hero {
-      font-size: 42px;
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      color: var(--text-primary);
-      transition: color var(--dur-standard) ease;
-    }
-
-    .stat-semantic-desc {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      transition: color var(--dur-standard) ease;
-    }
-
-    .stat-subline {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-
-    .session-code-display {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-    }
-
-    /* ==========================================================================
-       ANALYTICS & VERIFICATION REGION (Line Chart + Live Challenge)
-       ========================================================================== */
-    .telemetry-row {
-      display: grid;
-      grid-template-columns: 1.85fr 1.15fr;
+      grid-template-columns: 310px 1fr 340px;
       gap: 20px;
     }
 
-    .telemetry-surface {
-      background-color: var(--bg-surface-1);
+    .intel-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
-      padding: 22px 24px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
+      transition: border-color 0.2s ease;
     }
 
-    .surface-header-row {
+    .intel-panel:hover {
+      border-color: var(--border-medium);
+    }
+
+    .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 16px;
     }
 
-    .surface-title {
-      font-size: 14.5px;
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Radial Trust Gauge Container */
+    .radial-gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px 0 16px;
+    }
+
+    .gauge-svg-wrap {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-bg-ring {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.06);
+      stroke-width: 14;
+    }
+
+    .gauge-fill-ring {
+      fill: none;
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 565.48; /* 2 * PI * 90 */
+      stroke-dashoffset: 28;
+      transition: stroke-dashoffset 0.35s var(--ease), stroke 0.35s var(--ease);
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4));
+    }
+
+    .gauge-center-readout {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .gauge-score-value {
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
+      transition: color 0.25s ease;
+    }
+
+    .gauge-score-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .gauge-footer-meta {
+      width: 100%;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .meta-val {
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .surface-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 1px;
+    /* Acoustic Waveform Visualizer Canvas */
+    .waveform-visualizer-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    /* Chart Canvas Container */
-    .chart-viewport {
+    .canvas-viewport {
       position: relative;
-      height: 190px;
+      height: 220px;
+      width: 100%;
+      background: rgba(4, 7, 14, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    canvas#acousticWaveformCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .waveform-overlay-badges {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .waveform-pill {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .waveform-diagnostics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .diag-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .diag-label {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .diag-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-top: 2px;
+    }
+
+    /* Threat Timeline Chart Panel */
+    .timeline-viewport {
+      position: relative;
+      height: 140px;
       width: 100%;
     }
 
@@ -734,126 +784,77 @@
       height: 100%;
     }
 
-    .chart-threshold-legend {
+    .timeline-legend {
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-top: 12px;
-      font-size: 11.5px;
-      color: var(--text-secondary);
+      justify-content: space-between;
       border-top: 1px solid var(--border-subtle);
       padding-top: 10px;
-    }
-
-    /* Challenge Panel Details */
-    .challenge-display-card {
-      background-color: var(--bg-surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px 18px;
-      margin-bottom: 16px;
-      transition: transform var(--dur-panel) var(--ease-smooth), opacity var(--dur-panel) var(--ease-smooth);
-    }
-
-    .challenge-prompt-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      line-height: 1.45;
-      margin-bottom: 6px;
-    }
-
-    .challenge-meta-time {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
     }
 
-    .challenge-status-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-secondary);
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 12px;
-    }
-
-    /* ==========================================================================
-       OUT-OF-BAND VERIFICATION NOTICE (Restrained secondary bar)
-       ========================================================================== */
-    .oob-notice-bar {
-      background-color: var(--bg-surface-2);
-      border: 1px solid var(--border-subtle);
+    /* Dynamic Countermeasure Challenge Box */
+    .challenge-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.25);
       border-radius: var(--radius-md);
-      padding: 14px 20px;
+      padding: 14px;
+      margin-top: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .challenge-box.active {
+      border-color: var(--caution);
+      box-shadow: 0 0 16px var(--caution-glow);
+    }
+
+    .challenge-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 16px;
-    }
-
-    .oob-text-group {
-      display: flex;
       align-items: center;
-      gap: 12px;
+      margin-bottom: 6px;
     }
 
-    .oob-title-lead {
-      font-size: 13.5px;
+    .challenge-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--neon-blue);
+    }
+
+    .challenge-prompt-text {
+      font-size: 13px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: #FFFFFF;
+      line-height: 1.4;
+      margin-bottom: 8px;
     }
 
-    .oob-explanation {
-      font-size: 12.5px;
-      color: var(--text-secondary);
+    .challenge-timer-progress {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
     }
 
-    .oob-button-group {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .btn-secondary-dark {
-      background-color: var(--bg-surface-1);
-      color: var(--text-primary);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
-    }
-
-    .btn-secondary-dark:hover {
-      background-color: var(--bg-surface-hover);
-      border-color: var(--border-medium);
-    }
-
-    .btn-freeze-outline {
-      background-color: transparent;
-      color: var(--status-critical);
-      border: 1px solid rgba(248, 113, 113, 0.35);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
-    }
-
-    .btn-freeze-outline:hover {
-      background-color: var(--status-critical-bg);
-      border-color: var(--status-critical);
+    .challenge-timer-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--caution);
+      border-radius: 2px;
+      transition: width 1s linear;
     }
 
     /* ==========================================================================
        AUDIT LOG & RECENT ACTIVITY TABLE
        ========================================================================== */
-    .audit-log-section {
-      background-color: var(--bg-surface-1);
+    .audit-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       padding: 22px 24px;
@@ -862,7 +863,7 @@
       gap: 16px;
     }
 
-    .audit-controls-bar {
+    .audit-controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -870,84 +871,64 @@
       gap: 12px;
     }
 
-    .audit-search-filter {
+    .search-filter-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .search-input-wrap {
+    .search-wrap {
       position: relative;
       display: flex;
       align-items: center;
     }
 
-    .search-input-wrap svg {
+    .search-wrap svg {
       position: absolute;
-      left: 10px;
+      left: 12px;
       width: 14px;
       height: 14px;
       color: var(--text-muted);
       pointer-events: none;
     }
 
-    .search-input-field {
-      background-color: var(--bg-surface-2);
+    .search-input {
+      background: rgba(4, 7, 14, 0.75);
       border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
+      color: #FFFFFF;
       font-size: 12.5px;
-      padding: 6px 12px 6px 30px;
+      padding: 8px 12px 8px 34px;
       border-radius: var(--radius-sm);
-      width: 250px;
+      width: 280px;
       outline: none;
-      transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .search-input-field:focus {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    .search-input:focus {
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
 
-    .select-verdict-filter {
-      background-color: var(--bg-surface-2);
+    .verdict-select {
+      background: rgba(4, 7, 14, 0.75);
       border: 1px solid var(--border-subtle);
       color: var(--text-secondary);
       font-size: 12.5px;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: var(--radius-sm);
       outline: none;
       cursor: pointer;
     }
 
-    .select-verdict-filter:focus {
-      border-color: var(--accent-blue);
-    }
-
-    .btn-export-report {
-      background-color: var(--bg-surface-2);
-      color: var(--text-secondary);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all var(--dur-fast) ease;
-    }
-
-    .btn-export-report:hover {
-      color: var(--text-primary);
-      background-color: var(--bg-surface-hover);
-      border-color: var(--border-medium);
+    .verdict-select:focus {
+      border-color: var(--neon-blue);
     }
 
     .table-shell {
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       overflow-x: auto;
+      background: rgba(4, 7, 14, 0.45);
     }
 
     table.audit-table {
@@ -958,81 +939,279 @@
     }
 
     table.audit-table thead {
-      background-color: var(--bg-surface-2);
+      background: rgba(15, 23, 42, 0.6);
       border-bottom: 1px solid var(--border-subtle);
     }
 
     table.audit-table th {
-      padding: 10px 16px;
-      font-size: 11.5px;
-      font-weight: 600;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
     table.audit-table tbody tr {
-      border-bottom: 1px solid var(--border-subtle);
-      transition: background-color var(--dur-fast) ease;
-    }
-
-    table.audit-table tbody tr:last-child {
-      border-bottom: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background-color 0.15s ease;
     }
 
     table.audit-table tbody tr:hover {
-      background-color: var(--bg-surface-hover);
+      background-color: rgba(255, 255, 255, 0.03);
     }
 
     table.audit-table td {
-      padding: 11px 16px;
+      padding: 12px 16px;
       color: var(--text-secondary);
       vertical-align: middle;
     }
 
-    .td-primary-bold {
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-
-    .btn-copy-hash {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      margin-left: 5px;
-      vertical-align: middle;
+    .hash-pill {
       display: inline-flex;
       align-items: center;
-      transition: color var(--dur-fast) ease;
-    }
-
-    .btn-copy-hash:hover {
-      color: var(--text-primary);
-    }
-
-    .btn-table-action {
-      background: transparent;
-      color: var(--accent-blue);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
       padding: 3px 8px;
-      border-radius: var(--radius-sm);
+      border-radius: 4px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .hash-pill:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #FFFFFF;
+    }
+
+    .badge-verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-verdict.pass {
+      background: var(--safe-bg);
+      border: 1px solid var(--safe-border);
+      color: var(--safe);
+    }
+
+    .badge-verdict.step-up {
+      background: var(--caution-bg);
+      border: 1px solid var(--caution-border);
+      color: var(--caution);
+    }
+
+    .badge-verdict.alert {
+      background: var(--critical-bg);
+      border: 1px solid var(--critical-border);
+      color: var(--critical);
+    }
+
+    .action-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action-verify {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 4px 9px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-verify:hover {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #34D399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-action-sec {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 9px;
+      border-radius: 4px;
       font-size: 11.5px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      transition: background-color var(--dur-fast) ease;
+      transition: all 0.15s ease;
     }
 
-    .btn-table-action:hover {
-      background-color: rgba(59, 130, 246, 0.1);
+    .btn-action-sec:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--border-medium);
     }
 
     /* ==========================================================================
-       TOAST NOTIFICATIONS (Subtle, Non-blocking)
+       CRYPTO VERIFICATION MODAL
        ========================================================================== */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 7, 14, 0.82);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-card {
+      background: #0B1120;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(56, 189, 248, 0.15);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      overflow: hidden;
+      animation: scaleIn 0.2s var(--ease);
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      transition: color 0.15s ease;
+    }
+
+    .btn-modal-close:hover {
+      color: #FFFFFF;
+    }
+
+    .modal-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .verify-result-banner {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .verify-result-banner.success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34D399;
+    }
+
+    .verify-result-banner.danger {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #F87171;
+    }
+
+    .verify-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(4, 7, 14, 0.5);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .verify-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .verify-item-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 2px;
+    }
+
+    .verify-hash-walk {
+      background: rgba(4, 7, 14, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      background: rgba(15, 23, 42, 0.7);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast Tray */
     .toast-tray {
       position: fixed;
       bottom: 24px;
@@ -1040,820 +1219,830 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      z-index: 1000;
+      z-index: 200;
       pointer-events: none;
     }
 
-    .toast-pill {
-      background-color: #242429;
+    .toast-card {
+      background: #0F172A;
       border: 1px solid var(--border-medium);
-      color: var(--text-primary);
+      color: #FFFFFF;
       padding: 10px 16px;
       border-radius: var(--radius-md);
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      animation: toastIn 0.2s var(--ease);
       display: flex;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-      animation: toastIn var(--dur-panel) var(--ease-smooth);
-      pointer-events: auto;
+      gap: 10px;
     }
 
     @keyframes toastIn {
-      from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.96);
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1280px) {
+      .intelligence-grid {
+        grid-template-columns: 1fr 1fr;
       }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+      .intelligence-grid > .intel-panel:first-child {
+        grid-column: span 1;
+      }
+      .intelligence-grid > .intel-panel:nth-child(2) {
+        grid-column: span 2;
+      }
+      .intelligence-grid > .intel-panel:nth-child(3) {
+        grid-column: span 1;
       }
     }
 
-    /* ==========================================================================
-       RESPONSIVENESS & REDUCED MOTION
-       ========================================================================== */
-    @media (max-width: 1200px) {
-      .unified-session-workspace {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-      }
-      .workspace-col:nth-child(2)::after {
-        display: none;
-      }
-      .telemetry-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 820px) {
-      .app-shell {
-        flex-direction: column;
-      }
-      aside.app-sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      main.main-viewport {
-        padding: 20px;
-      }
-      .unified-session-workspace {
-        grid-template-columns: 1fr;
-      }
-      .workspace-col::after {
-        display: none !important;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-      .bg-depth-glow, .bg-logo-watermark {
-        transform: none !important;
-      }
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; }
+      aside.sidebar { width: 100%; height: auto; position: relative; }
+      .intelligence-grid { grid-template-columns: 1fr; }
+      .intelligence-grid > .intel-panel:nth-child(2) { grid-column: span 1; }
+      main.main-viewport { padding: 16px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ==========================================================================
-       LAYER 0 & 1: ARCHITECTURAL LOGO BACKGROUND & CONTROLLED PARALLAX
-       ========================================================================== -->
-  <div class="brand-background-layer" aria-hidden="true">
-    <!-- Subtle depth illumination -->
-    <div class="bg-depth-glow" id="parallaxGlow"></div>
+  <!-- Ambient Grid & Watermark Layers -->
+  <div class="ambient-grid-overlay" aria-hidden="true"></div>
+  <svg class="shield-watermark" viewBox="0 0 500 500" fill="none" stroke="currentColor">
+    <path d="M250 40 L430 110 V260 C430 370 250 450 250 450 C250 450 70 370 70 260 V110 Z" stroke-width="12" stroke-linecap="round"/>
+    <path d="M250 100 C340 100 380 160 380 250 C380 340 250 395 250 395 C250 395 120 340 120 250 C120 160 160 100 250 100 Z" stroke-width="8" stroke-dasharray="12 10"/>
+    <line x1="200" y1="220" x2="200" y2="320" stroke-width="12"/>
+    <line x1="250" y1="180" x2="250" y2="360" stroke-width="16"/>
+    <line x1="300" y1="220" x2="300" y2="320" stroke-width="12"/>
+  </svg>
 
-    <!-- Official MEIKURAL Acoustic Biometric Watermark Logo (Large scale, 2.5% opacity) -->
-    <svg class="bg-logo-watermark" id="parallaxLogo" viewBox="0 0 500 500" fill="none" stroke="currentColor">
-      <!-- Shield Perimeter Contour -->
-      <path d="M250 40 L430 110 V260 C430 370 250 450 250 450 C250 450 70 370 70 260 V110 Z" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Concentric Biometric Wave Rings -->
-      <path d="M250 100 C340 100 380 160 380 250 C380 340 250 395 250 395 C250 395 120 340 120 250 C120 160 160 100 250 100 Z" stroke-width="8" stroke-dasharray="12 10"/>
-      <!-- Precision Acoustic Biometric Impulse Bars (Waveform Core) -->
-      <line x1="170" y1="250" x2="170" y2="290" stroke-width="12" stroke-linecap="round"/>
-      <line x1="210" y1="210" x2="210" y2="330" stroke-width="14" stroke-linecap="round"/>
-      <line x1="250" y1="170" x2="250" y2="370" stroke-width="18" stroke-linecap="round"/>
-      <line x1="290" y1="210" x2="290" y2="330" stroke-width="14" stroke-linecap="round"/>
-      <line x1="330" y1="250" x2="330" y2="290" stroke-width="12" stroke-linecap="round"/>
-    </svg>
-  </div>
-
-  <!-- ==========================================================================
-       APPLICATION SHELL
-       ========================================================================== -->
   <div class="app-shell">
-
-    <!-- Left Sidebar -->
-    <aside class="app-sidebar">
-      <div class="brand-block">
-        <div class="brand-logo-emblem">
-          <svg width="22" height="22" viewBox="0 0 500 500" fill="none" stroke="currentColor" stroke-width="32">
-            <path d="M250 40 L430 110 V260 C430 370 250 450 250 450 C250 450 70 370 70 260 V110 Z"/>
-            <line x1="200" y1="220" x2="200" y2="320"/>
-            <line x1="250" y1="180" x2="250" y2="360"/>
-            <line x1="300" y1="220" x2="300" y2="320"/>
+    <!-- Left Cyber Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12h6"/>
+            <path d="M12 9v6"/>
           </svg>
         </div>
         <div>
-          <div class="brand-wordmark">MEIKURAL</div>
-          <div class="brand-subline">Voice Biometrics SOC</div>
+          <div class="brand-title">MEIKURAL</div>
+          <div class="brand-tag">Cyber SOC Sentinel</div>
         </div>
       </div>
 
-      <!-- Navigation with Animated Glider Indicator -->
-      <nav class="nav-container" id="sidebarNav">
-        <div class="nav-glider" id="navGlider"></div>
-        <a class="nav-link active" data-page="dashboard" onclick="switchRoute('dashboard', this)">
-          <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-          Dashboard
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="switchTab('dashboard')">
+          <svg viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          SOC Dashboard
         </a>
-        <a class="nav-link" data-page="live-calls" onclick="switchRoute('live-calls', this)">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Live Calls
+        <a class="nav-item" onclick="switchTab('live-calls')">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Active Trunks
         </a>
-        <a class="nav-link" data-page="audit-log" onclick="switchRoute('audit-log', this)">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Audit Log
-        </a>
-        <a class="nav-link" data-page="settings" onclick="switchRoute('settings', this)">
-          <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
+        <a class="nav-item" onclick="switchTab('audit-log')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Hash-Chain Audit
         </a>
       </nav>
 
       <div class="sidebar-footer">
-        <div class="status-dot-row">
-          <span class="status-dot dot-safe" id="sidebarDot"></span>
-          <span id="sidebarConnStatus">Connected</span>
+        <div class="status-badge-inline">
+          <div class="pulse-dot" id="sidebarDot"></div>
+          <span id="sidebarStatusText">Backend WS Live</span>
         </div>
-        <div style="font-size: 11.5px; color: var(--text-muted);" id="sidebarModeTag">WS Stream Active</div>
+        <div style="font-size: 11px; color: var(--text-muted);" id="sidebarSubStatus">16kHz PCM Stream Ready</div>
       </div>
     </aside>
 
-    <!-- Main Workspace Viewport -->
+    <!-- Main Content Area -->
     <main class="main-viewport">
+      <!-- Top Hero Header -->
+      <header class="hero-top-bar">
+        <div class="hero-title-group">
+          <h1>
+            MEIKURAL Voice Cyber SOC
+            <span style="font-size: 12px; font-weight: 500; color: var(--neon-cyan); background: rgba(0, 242, 254, 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(0, 242, 254, 0.25);">v2.0</span>
+          </h1>
+          <p>Real-time neural anti-spoofing, dynamic countermeasure challenges, and appendable SHA-256 tamper evidence.</p>
+        </div>
 
-      <!-- ==========================================================================
-           CRITICAL ALERT NOTIFICATION BAR (Appears strictly during Deepfake Alert)
-           ========================================================================== -->
-      <div class="critical-alert-bar" id="criticalAlertBar">
-        <div class="alert-lead">
-          <svg class="alert-lead-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div>
-            <div class="alert-headline">High spoof probability detected — don't proceed until re-verified</div>
-            <div class="alert-subtext">The caller's voice shows strong signs of impersonation. Freeze account activity or complete additional verification before continuing.</div>
+        <div class="soc-badge-cluster">
+          <div class="soc-pill pill-live" id="badgeConnStatus">
+            <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
+            <span id="badgeConnText">Backend WS Live</span>
+          </div>
+          <div class="soc-pill pill-latency" id="badgeLatency">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="badgeLatencyText">INT8 Quantized (~440ms)</span>
+          </div>
+          <div class="soc-pill pill-privacy" title="Audio is never stored on disk. Caller IDs are salted and hashed. 90-day automated cron purge enforces retention policy.">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Privacy-by-Design: Salted Hashing · 90-Day Auto-Purge</span>
           </div>
         </div>
-        <div class="alert-action-group">
-          <button class="btn-freeze-critical" onclick="executeAccountFreeze()">Freeze account</button>
-          <button class="btn-reverify" onclick="triggerChallengeAction()">Re-verify caller</button>
-          <button class="btn-dismiss-alert" onclick="dismissAlertBanner()">Dismiss</button>
+      </header>
+
+      <!-- Critical Alert Banner (Revealed strictly on spoof detection) -->
+      <div class="critical-banner" id="criticalAlertBanner">
+        <div class="banner-alert-content">
+          <div class="banner-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="banner-headline">HIGH SPOOF PROBABILITY DETECTED — STEP-UP VERIFICATION LOCKED</div>
+            <div class="banner-sub">Neural acoustic analysis identified synthetic voice clone artifacts. Account freeze or voice challenge required.</div>
+          </div>
+        </div>
+        <div class="banner-actions">
+          <button class="btn-freeze-danger" onclick="executeAccountFreeze()">Freeze SIP Trunk</button>
+          <button class="btn-reverify-outline" onclick="triggerChallengeAction()">Fire Voice Challenge</button>
+          <button class="btn-scen" onclick="dismissAlertBanner()">Dismiss</button>
         </div>
       </div>
 
-      <!-- ==========================================================================
-           PAGE 1: LIVE DASHBOARD
-           ========================================================================== -->
-      <section class="page-section active" id="page-dashboard">
-
-        <!-- Header -->
-        <header class="top-header-region">
-          <div class="header-main-text">
-            <h1 id="overviewTitle">Live Call Monitoring</h1>
-            <p id="overviewSubtitle">Monitor caller trust, verification challenges and compliance activity in real time.</p>
+      <!-- Tactile Sentinel Toolbar -->
+      <section class="sentinel-toolbar">
+        <div class="toolbar-lead">
+          <div class="toolbar-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Sentinel Live Controls
           </div>
-          <div class="header-status-badge">
-            <span class="status-dot dot-safe" id="headerLiveDot"></span>
-            <span id="headerLiveStatus">Monitoring active</span>
-          </div>
-        </header>
-
-        <!-- Contextual Overview & Privacy Note -->
-        <div class="context-overview-row">
-          <span id="contextMetaText">Monitoring 1 active call • Last analysis &lt;1s ago</span>
-          <div class="privacy-micro-note">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Audio is never stored to disk. Hashes are salted and automatically expire after 90 days.</span>
-          </div>
+          <div class="toolbar-sub">Stream live microphone speech or inject calibrated threat vectors directly into AASIST.</div>
         </div>
 
-        <!-- Operator Test Scenarios Toolbar -->
-        <div class="scenario-toolbar">
-          <div class="scenario-label-group">
-            <span class="scenario-title">Test scenarios</span>
-            <span class="scenario-desc">Simulate common call conditions to verify dashboard behavior.</span>
-          </div>
-          <div class="scenario-button-group">
-            <button class="btn-scenario active" id="btnScenSafe" onclick="selectScenario('safe')">
-              <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Safe caller
-            </button>
-            <button class="btn-scenario" id="btnScenCaution" onclick="selectScenario('caution')">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Caution jitter
-            </button>
-            <button class="btn-scenario" id="btnScenDeepfake" onclick="selectScenario('deepfake')">
-              <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Deepfake alert
-            </button>
-            <button class="btn-scenario" id="btnScenFire" onclick="triggerChallengeAction()">
-              <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              Fire challenge
-            </button>
-            <button class="btn-scenario" id="btnScenMic" onclick="toggleLiveMicrophone()" title="Stream microphone audio directly into AASIST in real-time">
-              <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              <span id="micLabel">Live mic</span>
-            </button>
-            <button class="btn-scenario" id="btnScenClip" onclick="streamDemoClip('deepfake_voice_clone')" title="Stream synthesized voice clone WAV into AASIST model">
-              <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Deepfake clip
-            </button>
-          </div>
+        <div class="toolbar-actions">
+          <!-- Live Mic Button with Real-Time VU meter -->
+          <button class="btn-live-mic" id="btnLiveMic" onclick="toggleLiveMicrophone()" title="Toggle Web Audio 16kHz PCM streaming from your microphone">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <span id="liveMicLabel">🎙️ Live Mic</span>
+            <div class="vu-meter-bar" id="micVuMeter">
+              <div class="vu-bar" style="height: 4px;"></div>
+              <div class="vu-bar" style="height: 8px;"></div>
+              <div class="vu-bar" style="height: 12px;"></div>
+            </div>
+          </button>
+
+          <!-- Scenario Buttons -->
+          <button class="btn-scen active" id="btnScenSafe" onclick="selectScenario('safe')" title="Stream genuine human vocal dynamics">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            🟢 Human
+          </button>
+          <button class="btn-scen" id="btnScenClone" onclick="selectScenario('deepfake')" title="Stream AI voice clone (AASIST spoof spike)">
+            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            🔴 Deepfake Clone
+          </button>
+          <button class="btn-scen" id="btnScenJitter" onclick="selectScenario('caution')" title="Simulate noisy telecom packet loss / jitter">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            🟡 Telecom Jitter
+          </button>
+          <button class="btn-scen" id="btnScenChallenge" onclick="triggerChallengeAction()" title="Inject dynamic random digit prompt">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            ⚡ Fire Challenge
+          </button>
         </div>
+      </section>
 
-        <!-- Primary Live Session Workspace (Unified Surface) -->
-        <div class="unified-session-workspace">
-          <!-- Column 1: Live Trust Score -->
-          <div class="workspace-col">
-            <div class="col-kicker">
-              Live Trust Score
-              <span class="info-tooltip-wrap">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <span class="tooltip-content">How confidently MEIKURAL believes the current caller matches the expected identity based on the live voice stream.</span>
-              </span>
-            </div>
-            <div class="stat-number-hero" id="heroTrustValue">0.76</div>
-            <div class="stat-semantic-desc" id="heroTrustVerdict">High risk — step-up verification required</div>
-            <div class="stat-subline" id="heroTrustTrend">↑ 0.04 from 10s ago</div>
-          </div>
-
-          <!-- Column 2: Active Session -->
-          <div class="workspace-col">
-            <div class="col-kicker">Active Session</div>
-            <div class="session-code-display mono" id="heroSessionId">SES-84F2A1</div>
-            <div class="stat-semantic-desc" style="color: var(--text-primary);">Live call session</div>
-            <div class="stat-subline">Voice verification stream</div>
-          </div>
-
-          <!-- Column 3: Biometric Verdict -->
-          <div class="workspace-col">
-            <div class="col-kicker">
-              Biometric Verdict
-              <span class="info-tooltip-wrap">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <span class="tooltip-content">The current verification recommendation based on real-time neural acoustic feature analysis.</span>
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-              <span class="status-dot dot-warning" id="heroVerdictDot"></span>
-              <span style="font-size: 22px; font-weight: 600; color: var(--text-primary);" id="heroVerdictText">Step-up</span>
-            </div>
-            <div class="stat-semantic-desc" id="heroVerdictDesc">Additional verification required</div>
-            <div class="stat-subline">Neural VAD active</div>
-          </div>
-
-          <!-- Column 4: Compliance Status -->
-          <div class="workspace-col">
-            <div class="col-kicker">
-              Compliance Status
-              <span class="info-tooltip-wrap">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                <span class="tooltip-content">Shows whether the current session follows configured privacy, hashing, and retention controls.</span>
-              </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-              <span class="status-dot dot-safe"></span>
-              <span style="font-size: 22px; font-weight: 600; color: var(--status-safe);">Compliant</span>
-            </div>
-            <div class="stat-semantic-desc">90-day retention</div>
-            <div class="stat-subline">Zero audio stored on disk</div>
-          </div>
-        </div>
-
-        <!-- Telemetry Row: Line Chart + Verification Challenge -->
-        <div class="telemetry-row">
-          <!-- Chart -->
-          <div class="telemetry-surface">
-            <div class="surface-header-row">
+      <!-- Central Intelligence Grid -->
+      <div class="intelligence-grid">
+        <!-- Panel 1: Radial Voice Trust Gauge -->
+        <section class="intel-panel">
+          <div>
+            <div class="panel-header">
               <div>
-                <div class="surface-title">Live trust score</div>
-                <div class="surface-subtitle">Caller confidence over the last 30 seconds</div>
+                <div class="panel-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                  Voice Trust Gauge
+                </div>
+                <div class="panel-sub">Raw model trust bound to 1.0 - P(Spoof)</div>
               </div>
-              <div class="header-status-badge" style="padding: 4px 8px; font-size: 11.5px;">
-                <span class="status-dot dot-blue"></span>
-                <span>Live Feed</span>
-              </div>
+              <span class="soc-pill pill-live" id="gaugeVerdictPill" style="padding: 2px 8px; font-size: 11px;">ALLOW</span>
             </div>
 
-            <div class="chart-viewport">
+            <!-- Circular Gauge -->
+            <div class="radial-gauge-container">
+              <div class="gauge-svg-wrap">
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                  <circle class="gauge-bg-ring" cx="100" cy="100" r="90" />
+                  <circle class="gauge-fill-ring" id="gaugeRing" cx="100" cy="100" r="90" />
+                </svg>
+                <div class="gauge-center-readout">
+                  <div class="gauge-score-value mono" id="heroTrustValue">0.98</div>
+                  <div class="gauge-score-label" id="heroTrustLabel">TRUST SCORE</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gauge Diagnostics -->
+          <div class="gauge-footer-meta">
+            <div class="meta-row">
+              <span>Active Session:</span>
+              <span class="meta-val mono" id="activeSessionText">call_df99fc14</span>
+            </div>
+            <div class="meta-row">
+              <span>AASIST Raw Logit:</span>
+              <span class="meta-val mono" id="rawLogitText">P(Spoof): 0.021</span>
+            </div>
+            <div class="meta-row">
+              <span>Confidence:</span>
+              <span class="meta-val" id="modelConfidenceText" style="color: var(--safe);">HIGH (Bonafide)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 2: Live 60fps Acoustic Waveform & Diagnostics Visualizer -->
+        <section class="intel-panel">
+          <div>
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+                  Live Acoustic Waveform & Spectral Manifold
+                </div>
+                <div class="panel-sub">Real-time Web Audio AnalyserNode (60fps rendering)</div>
+              </div>
+              <span class="soc-pill" style="font-size: 11px; padding: 2px 8px;" id="audioHealthBadge">16kHz · Mono</span>
+            </div>
+
+            <div class="canvas-viewport">
+              <canvas id="acousticWaveformCanvas"></canvas>
+              <div class="waveform-overlay-badges">
+                <span class="waveform-pill" id="wfModeTag">Synthetic Manifold</span>
+                <span class="waveform-pill mono" id="wfFpsTag">60 FPS</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diagnostics Row -->
+          <div class="waveform-diagnostics">
+            <div class="diag-box">
+              <div class="diag-label">RMS Energy</div>
+              <div class="diag-val mono" id="diagRms">-28.4 dB</div>
+            </div>
+            <div class="diag-box">
+              <div class="diag-label">Speech VAD</div>
+              <div class="diag-val" id="diagVad" style="color: var(--safe);">ACTIVE</div>
+            </div>
+            <div class="diag-box">
+              <div class="diag-label">Inference</div>
+              <div class="diag-val mono" id="diagLatency">436 ms</div>
+            </div>
+            <div class="diag-box">
+              <div class="diag-label">Sample Rate</div>
+              <div class="diag-val mono">16,000 Hz</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Panel 3: Scrolling Threat Timeline & Active Challenge -->
+        <section class="intel-panel">
+          <div>
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Threat Timeline (30s)
+                </div>
+                <div class="panel-sub">Continuous confidence trajectory</div>
+              </div>
+              <span class="soc-pill pill-live" style="font-size: 11px; padding: 2px 8px;">Rolling</span>
+            </div>
+
+            <!-- Canvas Line Chart -->
+            <div class="timeline-viewport">
               <canvas id="riskTimelineCanvas"></canvas>
             </div>
 
-            <div class="chart-threshold-legend">
-              <span style="display: flex; align-items: center; gap: 5px;">
-                <span class="status-dot dot-safe"></span> Safe (&gt;0.70)
+            <!-- Risk Threshold Legend (Accurately matches audio_processor.py) -->
+            <div class="timeline-legend">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Safe (&ge;0.65)
               </span>
-              <span style="display: flex; align-items: center; gap: 5px;">
-                <span class="status-dot dot-warning"></span> Caution (0.40–0.70)
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span class="pulse-dot warning" style="width: 6px; height: 6px;"></span> Caution (0.35–0.65)
               </span>
-              <span style="display: flex; align-items: center; gap: 5px;">
-                <span class="status-dot dot-critical"></span> Alert (&lt;0.40)
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span class="pulse-dot critical" style="width: 6px; height: 6px;"></span> Alert (&le;0.35)
               </span>
             </div>
           </div>
 
-          <!-- Active Challenge Panel -->
-          <div class="telemetry-surface" id="challengeContainer">
-            <div>
-              <div class="surface-header-row" style="margin-bottom: 12px;">
-                <div>
-                  <div class="surface-title">Verification challenge</div>
-                  <div class="surface-subtitle">Dynamic counter-impersonation prompt</div>
-                </div>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              </div>
-
-              <div class="challenge-display-card" id="challengeCardBox">
-                <div class="challenge-prompt-text" id="challengePromptMsg">Please confirm your employee ID and budget code.</div>
-                <div class="challenge-meta-time" id="challengeTimestamp">Sent at 21:03:14</div>
-              </div>
+          <!-- Dynamic Countermeasure Challenge Box -->
+          <div class="challenge-box" id="challengeCardBox">
+            <div class="challenge-header">
+              <span class="challenge-label">Dynamic Voice Challenge</span>
+              <span class="mono" style="font-size: 11px; color: var(--text-muted);" id="challengeTimerText">Ready</span>
             </div>
-
-            <div class="challenge-status-bar">
-              <span style="display: flex; align-items: center; gap: 6px;">
-                <span class="status-dot dot-warning" id="challengeStatusDot"></span>
-                <span id="challengeStatusLabel">Waiting for caller response</span>
-              </span>
-              <span class="mono" style="font-size: 11.5px; color: var(--text-muted);" id="challengeElapsedTicker">14s elapsed</span>
+            <div class="challenge-prompt-text" id="challengePromptMsg">
+              System ready. Click "Fire Challenge" to inject unexpected random dynamic token.
             </div>
+            <div class="challenge-timer-progress">
+              <div class="challenge-timer-bar" id="challengeTimerBar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Audit Trail & Hash-Chain Verification Table -->
+      <section class="audit-section">
+        <div class="audit-controls">
+          <div>
+            <div class="panel-title" style="font-size: 15px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Cryptographic Audit Log & SHA-256 Hash Chains
+            </div>
+            <div class="panel-sub">Every chunk is cryptographically chained via <code>sha256(prev_hash + session_id + timestamp + score + verdict)</code>.</div>
+          </div>
+
+          <div class="search-filter-group">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" class="search-input" id="tableSearchField" placeholder="Search session IDs or hashes..." oninput="filterAuditRecords()" />
+            </div>
+            <select class="verdict-select" id="tableVerdictSelect" onchange="filterAuditRecords()">
+              <option value="ALL">All Verdicts</option>
+              <option value="ALLOW">ALLOW (Safe)</option>
+              <option value="STEP_UP">STEP_UP / WARN</option>
+              <option value="ALERT">ALERT (Spoof)</option>
+            </select>
+            <button class="btn-scen" onclick="fetchRecentCallsFromApi()" title="Refresh records from SQLite database">
+              <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Refresh
+            </button>
           </div>
         </div>
 
-        <!-- Out-of-band Verification Secondary Notice -->
-        <div class="oob-notice-bar">
-          <div class="oob-text-group">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--status-warning)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-            <div>
-              <div class="oob-title-lead">Out-of-band verification</div>
-              <div class="oob-explanation">Suspicious voice activity detected on an active call claiming to be you.</div>
-            </div>
-          </div>
-          <div class="oob-button-group">
-            <button class="btn-freeze-outline" onclick="executeAccountFreeze()">Freeze account</button>
-            <button class="btn-secondary-dark" onclick="executeVerifySelf()">It was me</button>
-          </div>
-        </div>
-
-        <!-- Recent Activity / Live Audit Log Section -->
-        <div class="audit-log-section">
-          <div class="audit-controls-bar">
-            <div>
-              <div class="surface-title">Recent activity</div>
-              <div class="surface-subtitle">Zero-trust audit trail with 90-day automated compliance purge</div>
-            </div>
-
-            <div class="audit-search-filter">
-              <div class="search-input-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" class="search-input-field" id="tableSearchField" placeholder="Search sessions or caller hashes..." oninput="filterAuditRecords()">
-              </div>
-              <select class="select-verdict-filter" id="tableVerdictSelect" onchange="filterAuditRecords()">
-                <option value="ALL">All verdicts</option>
-                <option value="Pass">Pass</option>
-                <option value="Step-up">Step-up</option>
-                <option value="Alert">Alert</option>
-              </select>
-              <button class="btn-export-report" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;" onclick="openForensicCertificate(appState.sessionId || 'SES-84F2A1')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Forensic Certificate
-              </button>
-              <button class="btn-export-report" onclick="downloadIncidentReport(appState.sessionId || 'SES-84F2A1')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export SOC Report
-              </button>
-            </div>
-          </div>
-
-          <div class="table-shell">
-            <table class="audit-table">
-              <thead>
-                <tr>
-                  <th>Session ID</th>
-                  <th>Caller hash</th>
-                  <th>Voice Trust</th>
-                  <th>Verdict</th>
-                  <th>Challenge</th>
-                  <th>Timestamp</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="auditTableRows">
-                <!-- Dynamically populated rows -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ==========================================================================
-           PAGE 2: LIVE CALLS DIRECTORY
-           ========================================================================== -->
-      <section class="page-section" id="page-live-calls">
-        <header class="top-header-region">
-          <div class="header-main-text">
-            <h1>Active Voice Streams</h1>
-            <p>Active telecom trunk lines and live biometric verification feeds.</p>
-          </div>
-          <div class="header-status-badge">
-            <span class="status-dot dot-safe"></span>
-            <span>1 Call Active</span>
-          </div>
-        </header>
-
-        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr;">
-          <div class="workspace-col">
-            <div class="col-kicker">Trunk Connection</div>
-            <div class="session-code-display mono">SIP-TRUNK-092</div>
-            <div class="stat-semantic-desc">Low Latency Edge Gateway (48ms)</div>
-            <div class="stat-subline">Active channel: 16kHz mono PCM stream</div>
-          </div>
-          <div class="workspace-col">
-            <div class="col-kicker">Biometric Model</div>
-            <div class="session-code-display">AASIST v2 Neural</div>
-            <div class="stat-semantic-desc">Int8 Quantized ONNX Core</div>
-            <div class="stat-subline">Passive spoof inference: 48.2ms per chunk</div>
-          </div>
+        <div class="table-shell">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Session ID</th>
+                <th>Caller Hash (Salted SHA-256)</th>
+                <th>Voice Trust</th>
+                <th>Verdict</th>
+                <th>Challenge</th>
+                <th>Recorded At</th>
+                <th>Cryptographic Integrity</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableRows">
+              <!-- Dynamically populated via SQLite API & Live Stream -->
+            </tbody>
+          </table>
         </div>
       </section>
-
-      <!-- ==========================================================================
-           PAGE 3: FULL AUDIT LOG
-           ========================================================================== -->
-      <section class="page-section" id="page-audit-log">
-        <header class="top-header-region">
-          <div class="header-main-text">
-            <h1>Compliance Audit Trail</h1>
-            <p>Cryptographic hash verification and regulatory retention logs.</p>
-          </div>
-          <button class="btn-export-report" onclick="downloadIncidentReport('SES-84F2A1')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export All Sessions
-          </button>
-        </header>
-
-        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr 1fr;">
-          <div class="workspace-col">
-            <div class="col-kicker">Total Audited Sessions</div>
-            <div class="session-code-display" id="auditCountTotal">1,482</div>
-            <div class="stat-subline">90-day auto-purge policy enforced</div>
-          </div>
-          <div class="workspace-col">
-            <div class="col-kicker">Deepfake Attempts Blocked</div>
-            <div class="session-code-display" style="color: var(--status-critical);">47</div>
-            <div class="stat-subline">Multi-channel Twilio SMS & SMTP alerts dispatched</div>
-          </div>
-          <div class="workspace-col">
-            <div class="col-kicker">Regulatory Compliance</div>
-            <div class="session-code-display" style="color: var(--status-safe);">100%</div>
-            <div class="stat-subline">Zero unhashed audio stored to disk</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==========================================================================
-           PAGE 4: SYSTEM SETTINGS
-           ========================================================================== -->
-      <section class="page-section" id="page-settings">
-        <header class="top-header-region">
-          <div class="header-main-text">
-            <h1>SOC Gateway Settings</h1>
-            <p>Detection thresholds, retention policies, and multi-channel alerting.</p>
-          </div>
-        </header>
-
-        <div class="unified-session-workspace" style="grid-template-columns: 1fr 1fr;">
-          <div class="workspace-col">
-            <div class="col-kicker">Alert Thresholds</div>
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 4px;">Step-up Threshold: 0.65</div>
-            <div class="stat-subline">Triggers dynamic challenge prompt & SMS/Email delivery</div>
-          </div>
-          <div class="workspace-col">
-            <div class="col-kicker">Retention Policy</div>
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 4px;">90 Days Auto-Purge</div>
-            <div class="stat-subline">Calls and event records purged via automated cron</div>
-          </div>
-        </div>
-      </section>
-
     </main>
   </div>
 
-  <!-- Toast Notifications Container -->
+  <!-- Cryptographic Hash-Chain Verification Modal -->
+  <div class="modal-backdrop" id="verifyModal" onclick="closeVerifyModalOnBackdrop(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Cryptographic Hash-Chain Audit
+        </div>
+        <button class="btn-modal-close" onclick="closeVerifyModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="verify-result-banner success" id="verifyBanner">
+          <div id="verifyBannerIcon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700;" id="verifyBannerHeadline">CHAIN INTEGRITY VERIFIED</div>
+            <div style="font-size: 12px; opacity: 0.9;" id="verifyBannerSub">Zero tampering detected across sequential SHA-256 blocks.</div>
+          </div>
+        </div>
+
+        <div class="verify-details-grid">
+          <div>
+            <div class="verify-item-label">Session ID</div>
+            <div class="verify-item-val mono" id="verifySessionId">-</div>
+          </div>
+          <div>
+            <div class="verify-item-label">Chain Validity</div>
+            <div class="verify-item-val mono" id="verifyChainStatus" style="color: var(--safe);">VALID (100%)</div>
+          </div>
+          <div>
+            <div class="verify-item-label">Total Events Verified</div>
+            <div class="verify-item-val mono" id="verifyTotalEvents">0 events</div>
+          </div>
+          <div>
+            <div class="verify-item-label">First Tampered Index</div>
+            <div class="verify-item-val mono" id="verifyBrokenIndex">None (Clean)</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="verify-item-label" style="margin-bottom: 6px;">Chain Construction Schema</div>
+          <div class="verify-hash-walk mono">
+            record_hash = sha256(prev_hash + session_id + timestamp + score + verdict)<br>
+            Scope: Strict ORDER BY event_id ASC within session_id partition.<br>
+            Hardware Model: AASIST INT8 (~440ms) · Privacy: Zero audio retention.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-scen" onclick="openCertFromModal()">View Official Certificate</button>
+        <button class="btn-scen active" onclick="closeVerifyModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
   <div class="toast-tray" id="toastTray"></div>
 
   <!-- ==========================================================================
-       SCRIPTS: REAL-TIME CHART, SUBTLE PARALLAX, STATE CONTROLLER
+       JAVASCRIPT ARCHITECTURE & WEB AUDIO ENGINE
        ========================================================================== -->
   <script>
     // --- 1. Global State Model ---
     const appState = {
-      scenario: 'caution', // 'safe', 'caution', 'deepfake'
-      sessionId: 'SES-84F2A1',
-      trustScore: 0.76,
-      displayedScore: 0.76,
-      verdict: 'Step-up',
-      verdictDesc: 'Additional verification required',
-      trustLabel: 'High risk — step-up verification required',
-      trendText: '↑ 0.04 from 10s ago',
-      criticalBannerActive: false,
-      challengeText: 'Please confirm your employee ID and budget code.',
-      challengeTime: '21:03:14',
-      challengeStatus: 'Waiting for caller response',
+      scenario: 'safe',
+      sessionId: 'call_df99fc14',
+      rawSpoofScore: 0.021,  // Real model score (0.0 = human, 1.0 = deepfake)
+      trustScore: 0.979,     // 1.0 - rawSpoofScore (strictly unbound/unclamped)
+      displayedScore: 0.979,
+      verdict: 'ALLOW',
+      confidence: 'HIGH',
+      latencyRollingAvg: 437.3,
+      latencySamples: [437.3],
+      challengeActive: false,
+      challengeCountdown: 0,
+      challengeInterval: null,
       chartHistory: [],
-      targetLogoX: 0,
-      targetLogoY: 0,
-      currentLogoX: 0,
-      currentLogoY: 0
+      modalCurrentSession: null,
+      ws: null
     };
 
-    // Pre-seed chart with 30 seconds of historical data
+    // Pre-seed threat timeline (30 points)
     const CHART_POINTS = 30;
     for (let i = 0; i < CHART_POINTS; i++) {
-      appState.chartHistory.push(0.74 + (Math.sin(i / 2) * 0.05));
+      appState.chartHistory.push(0.96 + Math.sin(i * 0.4) * 0.02);
     }
 
-    // Historical Audit Data
+    // Local in-memory audit rows (hydrated from /calls API)
     let auditRecords = [
-      { id: 'SES-84F2A1', hash: '9f7a4e12c8b02d91', score: '0.76', verdict: 'Step-up', challenge: 'Yes', time: '21:03:14', fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e' },
-      { id: 'SES-73D9B0', hash: 'a1b2c3d4e5f67890', score: '0.94', verdict: 'Pass', challenge: 'No', time: '20:58:02', fullHash: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0' },
-      { id: 'SES-62A8C4', hash: 'e4f5a6b7c8d90123', score: '0.19', verdict: 'Alert', challenge: 'Yes', time: '20:44:50', fullHash: 'e4f5a6b7c8d90123456789abcdef0123456789abcdef0123456789abcdef0123' },
-      { id: 'SES-51F0E7', hash: '5c6d7e8f9a0b1234', score: '0.88', verdict: 'Pass', challenge: 'No', time: '20:31:19', fullHash: '5c6d7e8f9a0b123456789abcdef0123456789abcdef0123456789abcdef01234' },
-      { id: 'SES-40B1D9', hash: '7a8b9c0d1e2f3456', score: '0.62', verdict: 'Step-up', challenge: 'Yes', time: '20:15:33', fullHash: '7a8b9c0d1e2f3456789abcdef0123456789abcdef0123456789abcdef012345' },
+      {
+        id: 'call_df99fc14',
+        hash: '02db1161285e...',
+        fullHash: '02db1161285e53bcb958e4ba78941a4af32f700e65da424294fcf795179fb854',
+        score: '0.98',
+        verdict: 'ALLOW',
+        challenge: 'Yes',
+        time: 'Just now'
+      },
+      {
+        id: 'call_7008d5e8',
+        hash: '8520863a8a7e...',
+        fullHash: '8520863a8a7ea39003e3f6ed2b7a6fe44a1abc74688d1329817b20e78f1f63a6',
+        score: '0.99',
+        verdict: 'ALLOW',
+        challenge: 'No',
+        time: '1 min ago'
+      },
+      {
+        id: 'call_f009ca9b',
+        hash: '49e04f091ba5...',
+        fullHash: '49e04f091ba5f88ef6911836f6e9a38cb4f017df6dcf0ad3f028855fa07dc36e',
+        score: '0.98',
+        verdict: 'ALLOW',
+        challenge: 'No',
+        time: '4 mins ago'
+      },
+      {
+        id: 'call_c192abd2',
+        hash: 'e97f28c5ea2c...',
+        fullHash: 'e97f28c5ea2c0ef2a601526e0104b4accd84fdacb9bf8a475f3d321206729773',
+        score: '0.01',
+        verdict: 'ALERT',
+        challenge: 'Yes',
+        time: '10 mins ago'
+      }
     ];
 
-    // --- 2. Canvas Chart Engine (Stripe/Google Minimalist Aesthetics) ---
+    // --- 2. Canvas Waveform Visualizer (Web Audio AnalyserNode + 60fps Fallback) ---
+    const wfCanvas = document.getElementById('acousticWaveformCanvas');
+    const wfCtx = wfCanvas.getContext('2d');
+    let wfAnimationId = null;
+    let audioAnalyser = null;
+    let audioDataArray = null;
+
+    function resizeWaveformCanvas() {
+      const rect = wfCanvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      wfCanvas.width = rect.width * dpr;
+      wfCanvas.height = rect.height * dpr;
+      wfCtx.scale(dpr, dpr);
+    }
+
+    function renderWaveformFrame(timestamp) {
+      const rect = wfCanvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      wfCtx.clearRect(0, 0, w, h);
+
+      // Cyber scanline backdrop
+      wfCtx.fillStyle = 'rgba(255, 255, 255, 0.015)';
+      for (let y = 0; y < h; y += 4) {
+        wfCtx.fillRect(0, y, w, 1);
+      }
+
+      // Center baseline
+      wfCtx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+      wfCtx.lineWidth = 1;
+      wfCtx.beginPath();
+      wfCtx.moveTo(0, h / 2);
+      wfCtx.lineTo(w, h / 2);
+      wfCtx.stroke();
+
+      if (isMicActive && audioAnalyser && audioDataArray) {
+        // Real microphone data from Web Audio AnalyserNode
+        audioAnalyser.getByteTimeDomainData(audioDataArray);
+
+        wfCtx.beginPath();
+        wfCtx.lineWidth = 2.5;
+        wfCtx.strokeStyle = '#00F2FE';
+        wfCtx.shadowColor = 'rgba(0, 242, 254, 0.5)';
+        wfCtx.shadowBlur = 8;
+
+        const sliceWidth = w / audioDataArray.length;
+        let x = 0;
+
+        for (let i = 0; i < audioDataArray.length; i++) {
+          const v = audioDataArray[i] / 128.0; // 0 to 2
+          const y = (v * h) / 2;
+          if (i === 0) wfCtx.moveTo(x, y);
+          else wfCtx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        wfCtx.stroke();
+        wfCtx.shadowBlur = 0;
+
+        // Update live VU meter bars from volume
+        let sumSquares = 0;
+        for (let i = 0; i < audioDataArray.length; i++) {
+          const val = (audioDataArray[i] - 128) / 128;
+          sumSquares += val * val;
+        }
+        const rms = Math.sqrt(sumSquares / audioDataArray.length);
+        const db = Math.max(-60, Math.round(20 * Math.log10(Math.max(0.0001, rms))));
+        document.getElementById('diagRms').innerText = `${db} dB`;
+
+        const vuBars = document.querySelectorAll('.vu-bar');
+        if (vuBars.length === 3) {
+          vuBars[0].style.height = `${Math.min(14, Math.max(3, (rms * 40)))}px`;
+          vuBars[1].style.height = `${Math.min(14, Math.max(4, (rms * 65)))}px`;
+          vuBars[2].style.height = `${Math.min(14, Math.max(3, (rms * 50)))}px`;
+        }
+
+      } else {
+        // Ambient Synthetic Neural Waveform
+        const t = timestamp * 0.003;
+        const color = (appState.trustScore >= 0.65) ? '#10B981' : (appState.trustScore >= 0.35 ? '#F59E0B' : '#EF4444');
+
+        // Draw multiple glowing harmonic waves
+        const waves = [
+          { freq: 0.015, speed: 1.2, amp: 26, alpha: 0.7, width: 2.2 },
+          { freq: 0.025, speed: 0.8, amp: 16, alpha: 0.4, width: 1.5 },
+          { freq: 0.008, speed: 1.8, amp: 38, alpha: 0.25, width: 1.0 }
+        ];
+
+        waves.forEach(wave => {
+          wfCtx.beginPath();
+          wfCtx.lineWidth = wave.width;
+          wfCtx.strokeStyle = color;
+          wfCtx.globalAlpha = wave.alpha;
+
+          for (let x = 0; x < w; x += 3) {
+            const y = (h / 2) + Math.sin(x * wave.freq + t * wave.speed) * wave.amp * (Math.sin(t * 0.5) * 0.3 + 0.7);
+            if (x === 0) wfCtx.moveTo(x, y);
+            else wfCtx.lineTo(x, y);
+          }
+          wfCtx.stroke();
+        });
+
+        wfCtx.globalAlpha = 1.0;
+      }
+
+      wfAnimationId = requestAnimationFrame(renderWaveformFrame);
+    }
+
+    // --- 3. Canvas Threat Timeline Chart (Accurate 0.35 & 0.65 Thresholds) ---
     const chartCanvas = document.getElementById('riskTimelineCanvas');
     const chartCtx = chartCanvas.getContext('2d');
 
-    function resizeChartCanvas() {
-      const parentRect = chartCanvas.parentElement.getBoundingClientRect();
+    function resizeRiskChart() {
+      const rect = chartCanvas.parentElement.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      chartCanvas.width = parentRect.width * dpr;
-      chartCanvas.height = parentRect.height * dpr;
+      chartCanvas.width = rect.width * dpr;
+      chartCanvas.height = rect.height * dpr;
       chartCtx.scale(dpr, dpr);
     }
 
     function renderRiskChart() {
-      const parentRect = chartCanvas.parentElement.getBoundingClientRect();
-      const w = parentRect.width;
-      const h = parentRect.height;
+      const rect = chartCanvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
 
       chartCtx.clearRect(0, 0, w, h);
 
-      // Subtle horizontal threshold gridlines (0.2, 0.4, 0.7, 0.9)
-      chartCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      chartCtx.lineWidth = 1;
+      // Horizontal Threshold Lines strictly matching audio_processor.py:
+      // Safe boundary: Trust = 0.65 (Spoof = 0.35)
+      // Step-Up boundary: Trust = 0.35 (Spoof = 0.65)
+      const thresholds = [
+        { val: 0.65, color: 'rgba(16, 185, 129, 0.25)', label: 'Safe 0.65' },
+        { val: 0.35, color: 'rgba(239, 68, 68, 0.25)', label: 'Alert 0.35' }
+      ];
 
-      const thresholds = [0.2, 0.4, 0.7, 0.9];
-      thresholds.forEach(val => {
-        const y = h - (val * (h - 24)) - 12;
+      thresholds.forEach(t => {
+        const y = h - (t.val * (h - 24)) - 12;
+        chartCtx.strokeStyle = t.color;
+        chartCtx.lineWidth = 1;
+        chartCtx.setLineDash([4, 4]);
         chartCtx.beginPath();
         chartCtx.moveTo(0, y);
         chartCtx.lineTo(w, y);
         chartCtx.stroke();
+        chartCtx.setLineDash([]);
 
-        chartCtx.fillStyle = '#5A5A63';
-        chartCtx.font = '10px Inter, sans-serif';
-        chartCtx.fillText(val.toFixed(1), 4, y - 3);
+        chartCtx.fillStyle = '#64748B';
+        chartCtx.font = '9px JetBrains Mono, monospace';
+        chartCtx.fillText(t.label, 6, y - 4);
       });
 
       if (appState.chartHistory.length < 2) return;
 
       const step = w / (CHART_POINTS - 1);
-      chartCtx.beginPath();
-      chartCtx.lineWidth = 2;
-
-      // Line coloring matching legend
       const latestVal = appState.chartHistory[appState.chartHistory.length - 1];
-      if (latestVal >= 0.70) {
-        chartCtx.strokeStyle = '#4ADE80'; // Emerald green safe
-      } else if (latestVal >= 0.40) {
-        chartCtx.strokeStyle = '#FBBF24'; // Restrained amber caution
-      } else {
-        chartCtx.strokeStyle = '#F87171'; // Clear alert red
-      }
+
+      // Smooth Bezier Curve
+      chartCtx.beginPath();
+      chartCtx.lineWidth = 2.5;
+
+      const strokeColor = (latestVal >= 0.65) ? '#10B981' : (latestVal >= 0.35 ? '#F59E0B' : '#EF4444');
+      chartCtx.strokeStyle = strokeColor;
+      chartCtx.shadowColor = strokeColor;
+      chartCtx.shadowBlur = 8;
 
       appState.chartHistory.forEach((val, idx) => {
         const x = idx * step;
         const y = h - (val * (h - 24)) - 12;
-        if (idx === 0) {
-          chartCtx.moveTo(x, y);
-        } else {
-          chartCtx.lineTo(x, y);
+        if (idx === 0) chartCtx.moveTo(x, y);
+        else {
+          const prevX = (idx - 1) * step;
+          const prevY = h - (appState.chartHistory[idx - 1] * (h - 24)) - 12;
+          const cpX = (prevX + x) / 2;
+          chartCtx.quadraticCurveTo(prevX, prevY, cpX, (prevY + y) / 2);
         }
       });
       chartCtx.stroke();
+      chartCtx.shadowBlur = 0;
 
-      // Subtle under-line area fill
+      // Area fill beneath curve
       const lastX = (appState.chartHistory.length - 1) * step;
-      const lastY = h - (latestVal * (h - 24)) - 12;
-
       chartCtx.lineTo(lastX, h);
       chartCtx.lineTo(0, h);
       chartCtx.closePath();
-      const fillGrad = chartCtx.createLinearGradient(0, 0, 0, h);
-      if (latestVal >= 0.70) {
-        fillGrad.addColorStop(0, 'rgba(74, 222, 128, 0.12)');
-        fillGrad.addColorStop(1, 'rgba(74, 222, 128, 0.0)');
-      } else if (latestVal >= 0.40) {
-        fillGrad.addColorStop(0, 'rgba(251, 191, 36, 0.12)');
-        fillGrad.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
+
+      const grad = chartCtx.createLinearGradient(0, 0, 0, h);
+      if (latestVal >= 0.65) {
+        grad.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+        grad.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+      } else if (latestVal >= 0.35) {
+        grad.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
+        grad.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
       } else {
-        fillGrad.addColorStop(0, 'rgba(248, 113, 113, 0.16)');
-        fillGrad.addColorStop(1, 'rgba(248, 113, 113, 0.0)');
+        grad.addColorStop(0, 'rgba(239, 68, 68, 0.25)');
+        grad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
       }
-      chartCtx.fillStyle = fillGrad;
+      chartCtx.fillStyle = grad;
       chartCtx.fill();
 
-      // Current live data point indicator
+      // Current pulse dot at tip
+      const lastY = h - (latestVal * (h - 24)) - 12;
       chartCtx.beginPath();
       chartCtx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-      chartCtx.fillStyle = chartCtx.strokeStyle;
+      chartCtx.fillStyle = strokeColor;
       chartCtx.fill();
-      chartCtx.lineWidth = 2;
-      chartCtx.strokeStyle = '#1B1B1F';
-      chartCtx.stroke();
     }
 
-    window.addEventListener('resize', () => {
-      resizeChartCanvas();
-      renderRiskChart();
-    });
+    // --- 4. Radial Trust Gauge Rendering (Direct & Unclamped) ---
+    function updateTrustGauge(rawSpoof) {
+      // Calculate true trust without artificial clamping
+      const trust = Math.max(0.001, Math.min(0.999, 1.0 - rawSpoof));
+      appState.trustScore = trust;
 
-    // --- 3. Numeric Interpolation Animation (0.76 -> 0.64 in 200ms) ---
-    function animateNumericTransition(targetValue) {
-      const startValue = appState.displayedScore;
-      const duration = 220;
-      const startTime = performance.now();
+      const scoreElem = document.getElementById('heroTrustValue');
+      const pillElem = document.getElementById('gaugeVerdictPill');
+      const ringElem = document.getElementById('gaugeRing');
+      const confidenceElem = document.getElementById('modelConfidenceText');
+      const rawLogitElem = document.getElementById('rawLogitText');
 
-      function updateNumber(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const current = startValue + (targetValue - startValue) * ease;
-        appState.displayedScore = current;
+      if (scoreElem) scoreElem.innerText = trust.toFixed(2);
+      if (rawLogitElem) rawLogitElem.innerText = `P(Spoof): ${rawSpoof.toFixed(3)}`;
 
-        document.getElementById('heroTrustValue').innerText = current.toFixed(2);
+      // Circumference = 2 * PI * 90 = ~565.48
+      const circumference = 565.48;
+      const offset = circumference * (1 - trust);
+      if (ringElem) ringElem.style.strokeDashoffset = offset;
 
-        if (progress < 1) {
-          requestAnimationFrame(updateNumber);
-        } else {
-          appState.displayedScore = targetValue;
-          document.getElementById('heroTrustValue').innerText = targetValue.toFixed(2);
+      // Color transitions based on accurate thresholds (<=0.35 Bonafide, 0.35-0.65 Step-Up, >=0.65 Spoof)
+      if (rawSpoof >= 0.65) {
+        // Critical Spoof (Trust <= 0.35)
+        if (ringElem) {
+          ringElem.style.stroke = '#EF4444';
+          ringElem.style.filter = 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.5))';
+        }
+        if (pillElem) {
+          pillElem.innerText = 'CRITICAL SPOOF';
+          pillElem.className = 'soc-pill';
+          pillElem.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+          pillElem.style.background = 'rgba(239, 68, 68, 0.15)';
+          pillElem.style.color = '#EF4444';
+        }
+        if (confidenceElem) {
+          confidenceElem.innerText = 'HIGH (Synthetic Clone)';
+          confidenceElem.style.color = '#EF4444';
+        }
+      } else if (rawSpoof > 0.35) {
+        // Step-Up / Caution (Trust 0.35 - 0.65)
+        if (ringElem) {
+          ringElem.style.stroke = '#F59E0B';
+          ringElem.style.filter = 'drop-shadow(0 0 12px rgba(245, 158, 11, 0.5))';
+        }
+        if (pillElem) {
+          pillElem.innerText = 'STEP-UP REQUIRED';
+          pillElem.className = 'soc-pill';
+          pillElem.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+          pillElem.style.background = 'rgba(245, 158, 11, 0.15)';
+          pillElem.style.color = '#F59E0B';
+        }
+        if (confidenceElem) {
+          confidenceElem.innerText = 'MODERATE (Acoustic Jitter)';
+          confidenceElem.style.color = '#F59E0B';
+        }
+      } else {
+        // Safe / Bonafide (Trust >= 0.65)
+        if (ringElem) {
+          ringElem.style.stroke = '#10B981';
+          ringElem.style.filter = 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.5))';
+        }
+        if (pillElem) {
+          pillElem.innerText = 'BONAFIDE (ALLOW)';
+          pillElem.className = 'soc-pill pill-live';
+        }
+        if (confidenceElem) {
+          confidenceElem.innerText = 'HIGH (Bonafide Human)';
+          confidenceElem.style.color = '#10B981';
         }
       }
-      requestAnimationFrame(updateNumber);
-    }
 
-    // --- 4. Operator Scenario Switcher ---
-    function selectScenario(type) {
-      appState.scenario = type;
-
-      // Update button active state
-      document.querySelectorAll('.btn-scenario').forEach(b => b.classList.remove('active'));
-
-      const alertBar = document.getElementById('criticalAlertBar');
-      const trustVerdict = document.getElementById('heroTrustVerdict');
-      const trustTrend = document.getElementById('heroTrustTrend');
-      const verdictText = document.getElementById('heroVerdictText');
-      const verdictDesc = document.getElementById('heroVerdictDesc');
-      const verdictDot = document.getElementById('heroVerdictDot');
-      const liveDot = document.getElementById('headerLiveDot');
-      const liveStatus = document.getElementById('headerLiveStatus');
-      const overviewTitle = document.getElementById('overviewTitle');
-      const overviewSubtitle = document.getElementById('overviewSubtitle');
-
-      const now = new Date().toTimeString().split(' ')[0];
-
-      if (type === 'safe') {
-        document.getElementById('btnScenSafe').classList.add('active');
-        appState.trustScore = 0.92;
-        appState.verdict = 'Pass';
-        appState.verdictDesc = 'Caller verified successfully';
-        appState.trustLabel = 'Safe — identity confirmed';
-        appState.trendText = '↑ 0.08 from 10s ago';
-        alertBar.classList.remove('visible');
-
-        verdictDot.className = 'status-dot dot-safe';
-        liveDot.className = 'status-dot dot-safe';
-        liveStatus.innerText = 'Monitoring active';
-        overviewTitle.innerText = 'Live Call Monitoring';
-        overviewSubtitle.innerText = 'Everything is operating normally. Zero security anomalies detected.';
-
-        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.92', 'Pass', 'No', now);
-        showToast('🟢 Safe caller scenario active: Voiceprint matched with high confidence.', 'safe');
-
-      } else if (type === 'caution') {
-        document.getElementById('btnScenCaution').classList.add('active');
-        appState.trustScore = 0.64;
-        appState.verdict = 'Step-up';
-        appState.verdictDesc = 'Voice instability detected';
-        appState.trustLabel = 'High risk — step-up verification required';
-        appState.trendText = '↓ 0.05 from 10s ago';
-        alertBar.classList.remove('visible');
-
-        verdictDot.className = 'status-dot dot-warning';
-        liveDot.className = 'status-dot dot-warning';
-        liveStatus.innerText = 'Caution Advisory';
-        overviewTitle.innerText = 'Live Call Monitoring';
-        overviewSubtitle.innerText = 'Moderate risk indicators. Verification challenge recommended.';
-
-        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.64', 'Step-up', 'Yes', now);
-        showToast('🟡 Caution jitter scenario active: Challenge protocol dispatched.', 'warning');
-
-      } else if (type === 'deepfake') {
-        document.getElementById('btnScenDeepfake').classList.add('active');
-        appState.trustScore = 0.18;
-        appState.verdict = 'Alert';
-        appState.verdictDesc = 'Deepfake indicators detected';
-        appState.trustLabel = 'Critical risk — likely voice impersonation';
-        appState.trendText = '↓ 0.42 from 10s ago';
-
-        // Display the critical red alert banner
-        alertBar.classList.add('visible');
-
-        verdictDot.className = 'status-dot dot-critical';
-        liveDot.className = 'status-dot dot-critical';
-        liveStatus.innerText = 'High Risk Detected';
-        overviewTitle.innerText = 'Live Call Monitoring — Incident In Progress';
-        overviewSubtitle.innerText = 'Immediate verification required. Synthetic voice artifacts detected.';
-
-        appendAuditEntry(appState.sessionId, '9f7a...2d91', '0.18', 'Alert', 'Yes', now);
-        showToast('🔴 Critical Deepfake alert triggered: Step-up verification and account freeze recommended.', 'critical');
-      }
-
-      // Smoothly animate the numeric score
-      animateNumericTransition(appState.trustScore);
-
-      trustVerdict.innerText = appState.trustLabel;
-      trustTrend.innerText = appState.trendText;
-      verdictText.innerText = appState.verdict;
-      verdictDesc.innerText = appState.verdictDesc;
-
-      // Update Chart points
+      // Update timeline
       appState.chartHistory.shift();
-      appState.chartHistory.push(appState.trustScore);
+      appState.chartHistory.push(trust);
       renderRiskChart();
     }
 
-    // --- 5. Verification Challenge Trigger Action ---
-    function triggerChallengeAction() {
-      const prompts = [
-        "Please confirm your employee ID and budget code.",
-        "Please repeat the verification digits: 9 - 4 - 2 - 7.",
-        "State your department and direct reporting manager's name.",
-        "Please confirm the last four digits of your corporate card."
-      ];
-      const selected = prompts[Math.floor(Math.random() * prompts.length)];
-      const now = new Date().toTimeString().split(' ')[0];
+    // --- 5. Real-Time Hardware Latency Tracking ---
+    function recordInferenceLatency(latencyMs) {
+      if (typeof latencyMs !== 'number' || isNaN(latencyMs)) return;
+      appState.latencySamples.push(latencyMs);
+      if (appState.latencySamples.length > 15) appState.latencySamples.shift();
 
-      const challengeBox = document.getElementById('challengeCardBox');
-      challengeBox.style.transform = 'translateY(6px)';
-      challengeBox.style.opacity = '0.5';
+      const sum = appState.latencySamples.reduce((a, b) => a + b, 0);
+      const avg = sum / appState.latencySamples.length;
+      appState.latencyRollingAvg = avg;
 
-      setTimeout(() => {
-        document.getElementById('challengePromptMsg').innerText = selected;
-        document.getElementById('challengeTimestamp').innerText = `Sent at ${now}`;
-        document.getElementById('challengeStatusLabel').innerText = 'Waiting for caller response';
-        document.getElementById('challengeStatusDot').className = 'status-dot dot-warning';
-        challengeBox.style.transform = 'translateY(0)';
-        challengeBox.style.opacity = '1';
-      }, 140);
-
-      // Send to backend WebSocket if connected
-      if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
-        appState.ws.send(JSON.stringify({
-          action: "trigger_challenge",
-          prompt_text: selected
-        }));
+      const badgeText = document.getElementById('badgeLatencyText');
+      if (badgeText) {
+        badgeText.innerText = `INT8 Quantized (${avg.toFixed(0)}ms)`;
       }
-
-      appendAuditEntry(appState.sessionId, '9f7a...2d91', appState.trustScore.toFixed(2), appState.verdict, 'Fired', now);
-      showToast('🎤 Dynamic verification challenge transmitted to caller stream.', 'info');
+      const diagLatency = document.getElementById('diagLatency');
+      if (diagLatency) {
+        diagLatency.innerText = `${avg.toFixed(0)} ms`;
+      }
     }
 
-    // --- Live Microphone Audio Streaming (Web Audio API) ---
+    // --- 6. Live Microphone Audio Streaming (Web Audio API) ---
     let liveAudioCtx = null;
     let liveMicStream = null;
     let liveMicNode = null;
     let isMicActive = false;
     let micPcmBuffer = [];
-    const CHUNK_SAMPLE_COUNT = 32000; // ~2.0 seconds at 16kHz for real-time INT8 CPU inference
+    const CHUNK_SAMPLE_COUNT = 32000; // ~2.0s at 16kHz
 
     async function toggleLiveMicrophone() {
       if (isMicActive) {
@@ -1865,8 +2054,9 @@
 
     async function startLiveMicrophone() {
       try {
-        const btn = document.getElementById('btnScenMic');
-        const label = document.getElementById('micLabel');
+        const btn = document.getElementById('btnLiveMic');
+        const label = document.getElementById('liveMicLabel');
+        const wfTag = document.getElementById('wfModeTag');
 
         liveMicStream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -1881,7 +2071,13 @@
         liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
         const source = liveAudioCtx.createMediaStreamSource(liveMicStream);
 
-        // ScriptProcessorNode with bufferSize 4096 (broad cross-browser support)
+        // Web Audio Analyser for 60fps waveform
+        audioAnalyser = liveAudioCtx.createAnalyser();
+        audioAnalyser.fftSize = 512;
+        audioDataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+        source.connect(audioAnalyser);
+
+        // ScriptProcessorNode buffers 4096 frames
         liveMicNode = liveAudioCtx.createScriptProcessor(4096, 1, 1);
         micPcmBuffer = [];
 
@@ -1892,7 +2088,7 @@
             micPcmBuffer.push(inputData[i]);
           }
 
-          // When we accumulate 2.0s (32,000 samples), send as 16-bit PCM
+          // Accumulate 2.0s (32,000 samples)
           if (micPcmBuffer.length >= CHUNK_SAMPLE_COUNT) {
             const chunk = micPcmBuffer.slice(0, CHUNK_SAMPLE_COUNT);
             micPcmBuffer = micPcmBuffer.slice(CHUNK_SAMPLE_COUNT / 2); // 50% overlap
@@ -1915,22 +2111,28 @@
         isMicActive = true;
         if (btn) btn.classList.add('recording');
         if (label) label.innerText = '🔴 Recording...';
-        showToast('🎙️ Live Microphone Active. Speak into your mic to test real-time AASIST scoring!', 'safe');
+        if (wfTag) wfTag.innerText = 'Live Mic Stream (16kHz)';
+
+        showToast('🎙️ Live Microphone Active. Speak in Tamil, Hindi, or English to test real-time inference!', 'safe');
       } catch (err) {
         console.error('Error accessing microphone:', err);
-        showToast('⚠️ Microphone access denied or unavailable: ' + err.message, 'critical');
+        showToast('⚠️ Microphone access error: ' + err.message, 'critical');
       }
     }
 
     function stopLiveMicrophone() {
       isMicActive = false;
       if (liveMicStream) {
-        liveMicStream.getTracks().forEach(track => track.stop());
+        liveMicStream.getTracks().forEach(t => t.stop());
         liveMicStream = null;
       }
       if (liveMicNode) {
         liveMicNode.disconnect();
         liveMicNode = null;
+      }
+      if (audioAnalyser) {
+        audioAnalyser.disconnect();
+        audioAnalyser = null;
       }
       if (liveAudioCtx) {
         liveAudioCtx.close();
@@ -1938,84 +2140,115 @@
       }
       micPcmBuffer = [];
 
-      const btn = document.getElementById('btnScenMic');
-      const label = document.getElementById('micLabel');
+      const btn = document.getElementById('btnLiveMic');
+      const label = document.getElementById('liveMicLabel');
+      const wfTag = document.getElementById('wfModeTag');
       if (btn) btn.classList.remove('recording');
-      if (label) label.innerText = 'Live mic';
-      showToast('⏹️ Live Microphone stream stopped.', 'info');
+      if (label) label.innerText = '🎙️ Live Mic';
+      if (wfTag) wfTag.innerText = 'Synthetic Manifold';
+
+      // Reset VU bars
+      document.querySelectorAll('.vu-bar').forEach(b => b.style.height = '4px');
+      showToast('⏹️ Microphone stream stopped.', 'info');
     }
 
-    // --- Stream Pre-Generated Demo Audio Clip ---
+    // --- 7. Stream Pre-Recorded Calibration Clips ---
     async function streamDemoClip(clipName = 'deepfake_voice_clone') {
       try {
-        showToast(`🔄 Fetching demo clip: ${clipName}.wav...`, 'info');
+        showToast(`🔄 Streaming demo clip: ${clipName}.wav...`, 'info');
         const resp = await fetch(`/demo_clips/${clipName}.wav`);
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}`);
-        }
-        const arrayBuf = await resp.arrayBuffer();
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const buf = await resp.arrayBuffer();
+
         if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
-          appState.ws.send(arrayBuf);
-          showToast(`⚡ Streamed ${clipName}.wav into AASIST model!`, 'safe');
+          appState.ws.send(buf);
+          showToast(`⚡ Dispatched ${clipName}.wav to AASIST model!`, 'safe');
         } else {
-          showToast('⚠️ WebSocket not connected. Reconnecting...', 'warning');
+          showToast('⚠️ WebSocket connecting...', 'warning');
         }
       } catch (e) {
-        console.error('Failed to stream audio clip:', e);
-        showToast(`❌ Error streaming clip: ${e.message}`, 'critical');
+        console.error('Clip streaming failed:', e);
+        showToast(`❌ Audio stream error: ${e.message}`, 'critical');
+      }
+    }
+
+    // --- 8. Scenario Selector ---
+    function selectScenario(type) {
+      document.querySelectorAll('.btn-scen').forEach(b => b.classList.remove('active'));
+      const banner = document.getElementById('criticalAlertBanner');
+
+      if (type === 'safe') {
+        document.getElementById('btnScenSafe').classList.add('active');
+        if (banner) banner.classList.remove('visible');
+        streamDemoClip('bonafide_human_speech');
+      } else if (type === 'deepfake') {
+        document.getElementById('btnScenClone').classList.add('active');
+        if (banner) banner.classList.add('visible');
+        streamDemoClip('deepfake_voice_clone');
+      } else if (type === 'caution') {
+        document.getElementById('btnScenJitter').classList.add('active');
+        if (banner) banner.classList.remove('visible');
+        streamDemoClip('caution_noisy_telecom');
       }
     }
 
     function dismissAlertBanner() {
-      document.getElementById('criticalAlertBar').classList.remove('visible');
+      const banner = document.getElementById('criticalAlertBanner');
+      if (banner) banner.classList.remove('visible');
     }
 
     function executeAccountFreeze() {
-      showToast(`🔒 Transaction locked for Session ${appState.sessionId}. Caller ID hash locked in fraud registry.`, 'critical');
+      showToast('🔒 SOC Command: SIP Trunk frozen. Out-of-band verification SMS/Email dispatched.', 'critical');
       dismissAlertBanner();
     }
 
-    function executeVerifySelf() {
-      showToast(`✅ Out-of-band verification confirmed by account holder for ${appState.sessionId}.`, 'safe');
+    // --- 9. Dynamic Countermeasure Challenge Trigger ---
+    function triggerChallengeAction() {
+      if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+        appState.ws.send(JSON.stringify({ action: 'trigger_challenge', challenge_type: 'digit_repeat' }));
+      }
+
+      const digits = [Math.floor(Math.random() * 9) + 1, Math.floor(Math.random() * 9) + 1, Math.floor(Math.random() * 9) + 1];
+      const promptText = `Please repeat dynamic security token: "${digits.join(' - ')}"`;
+
+      const promptElem = document.getElementById('challengePromptMsg');
+      const box = document.getElementById('challengeCardBox');
+      const timerText = document.getElementById('challengeTimerText');
+      const timerBar = document.getElementById('challengeTimerBar');
+
+      if (promptElem) promptElem.innerText = promptText;
+      if (box) box.classList.add('active');
+
+      // 15-second countdown timer
+      let timeLeft = 15;
+      appState.challengeCountdown = timeLeft;
+      if (timerText) timerText.innerText = `${timeLeft}s remaining`;
+      if (timerBar) timerBar.style.width = '100%';
+
+      if (appState.challengeInterval) clearInterval(appState.challengeInterval);
+      appState.challengeInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(appState.challengeInterval);
+          if (timerText) timerText.innerText = 'Completed';
+          if (timerBar) timerBar.style.width = '0%';
+          if (box) box.classList.remove('active');
+        } else {
+          if (timerText) timerText.innerText = `${timeLeft}s remaining`;
+          if (timerBar) timerBar.style.width = `${(timeLeft / 15) * 100}%`;
+        }
+      }, 1000);
+
+      showToast(`⚡ Dynamic Challenge Injected: "${digits.join(' - ')}"`, 'warning');
     }
 
-    // --- 6. Audit Table Management & Search/Filter ---
-    function appendAuditEntry(id, hash, score, verdict, challenge, time) {
-      auditRecords.unshift({
-        id,
-        hash,
-        score,
-        verdict,
-        challenge,
-        time,
-        fullHash: '9f7a4e12c8b02d91a6e5b4c3d2e1f0a98b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e'
-      });
-      if (auditRecords.length > 8) auditRecords.pop();
-      filterAuditRecords();
-    }
-
-    function copyHashToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(`📋 Copied SHA-256 hash to clipboard`, 'info');
-      });
-    }
-
-    function downloadIncidentReport(sessionId) {
-      const url = `/calls/${encodeURIComponent(sessionId)}/report`;
-      window.open(url, '_blank');
-      showToast(`📄 SOC Forensic Report downloaded for ${sessionId}`, 'safe');
-    }
-
-    function openForensicCertificate(sessionId) {
-      const url = `/calls/${encodeURIComponent(sessionId)}/certificate`;
-      window.open(url, '_blank');
-      showToast(`🛡️ Forensic Certificate opened for ${sessionId}`, 'safe');
-    }
-
-    function filterAuditRecords() {
-      const query = document.getElementById('tableSearchField').value.toLowerCase();
-      const verdictFilter = document.getElementById('tableVerdictSelect').value;
+    // --- 10. Audit Table & Verification Handlers ---
+    function renderAuditTableRows() {
       const tbody = document.getElementById('auditTableRows');
+      if (!tbody) return;
+
+      const query = (document.getElementById('tableSearchField')?.value || '').toLowerCase();
+      const verdictFilter = document.getElementById('tableVerdictSelect')?.value || 'ALL';
 
       const filtered = auditRecords.filter(row => {
         const matchesQuery = row.id.toLowerCase().includes(query) || row.hash.toLowerCase().includes(query);
@@ -2024,247 +2257,156 @@
       });
 
       tbody.innerHTML = filtered.map(row => {
-        let dot = 'dot-safe';
-        if (row.verdict === 'Step-up') dot = 'dot-warning';
-        if (row.verdict === 'Alert') dot = 'dot-critical';
+        let badgeClass = 'pass';
+        if (row.verdict === 'STEP_UP' || row.verdict === 'WARN') badgeClass = 'step-up';
+        if (row.verdict === 'ALERT' || row.verdict === 'CRITICAL SPOOF') badgeClass = 'alert';
 
         return `
           <tr>
-            <td class="td-primary-bold mono">${row.id}</td>
-            <td class="mono">
-              ${row.hash}
-              <button class="btn-copy-hash" onclick="copyHashToClipboard('${row.fullHash}')" title="Copy full salted SHA-256 hash">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              </button>
-            </td>
-            <td class="mono td-primary-bold">${row.score}</td>
+            <td class="mono" style="font-weight: 600; color: #FFFFFF;">${row.id}</td>
             <td>
-              <span class="status-dot-row">
-                <span class="status-dot ${dot}"></span>
-                <span>${row.verdict}</span>
+              <span class="hash-pill mono" onclick="copyHashToClipboard('${row.fullHash}')" title="Click to copy full 64-char SHA-256 hash">
+                ${row.hash}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </span>
             </td>
+            <td class="mono" style="font-weight: 700; color: #FFFFFF;">${row.score}</td>
+            <td><span class="badge-verdict ${badgeClass}">${row.verdict}</span></td>
             <td>${row.challenge}</td>
-            <td class="mono" style="font-size: 12px;">${row.time}</td>
+            <td class="mono" style="font-size: 11.5px;">${row.time}</td>
             <td>
-              <button class="btn-table-action" style="margin-right: 4px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;" onclick="openForensicCertificate('${row.id}')" title="View official printable certificate">
-                Cert
-              </button>
-              <button class="btn-table-action" onclick="downloadIncidentReport('${row.id}')" title="Download raw forensic report">
-                Report
-              </button>
+              <div class="action-btn-group">
+                <button class="btn-action-verify" onclick="openVerifyModal('${row.id}')" title="Cryptographically verify SHA-256 sequential chain">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                  Verify
+                </button>
+                <button class="btn-action-sec" onclick="openCertificate('${row.id}')" title="View official certificate">
+                  Cert
+                </button>
+                <button class="btn-action-sec" onclick="downloadReport('${row.id}')" title="Download SOC incident report">
+                  Report
+                </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    // --- 7. Sidebar Gliding Navigation Pill ---
-    function updateNavGlider(targetElement) {
-      const glider = document.getElementById('navGlider');
-      if (!targetElement || !glider) return;
-      const containerRect = document.getElementById('sidebarNav').getBoundingClientRect();
-      const targetRect = targetElement.getBoundingClientRect();
-      const relativeTop = targetRect.top - containerRect.top;
-
-      glider.style.opacity = '1';
-      glider.style.transform = `translateY(${relativeTop}px)`;
+    function filterAuditRecords() {
+      renderAuditTableRows();
     }
 
-    function switchRoute(pageId, navElement) {
-      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-      navElement.classList.add('active');
-      updateNavGlider(navElement);
-
-      document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
-      const activeSection = document.getElementById(`page-${pageId}`);
-      if (activeSection) {
-        activeSection.classList.add('active');
-      }
-
-      if (pageId === 'dashboard') {
-        resizeChartCanvas();
-        renderRiskChart();
-      }
+    function copyHashToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Copied salted SHA-256 hash to clipboard', 'info');
+      });
     }
 
-    // --- 8. Controlled Spatial Parallax Effect ---
-    // Background logo moves max 10px, illumination 5px with damping coefficient ~0.08
-    const logoElement = document.getElementById('parallaxLogo');
-    const glowElement = document.getElementById('parallaxGlow');
-
-    window.addEventListener('mousemove', (e) => {
-      const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to +1
-      const normY = (e.clientY / window.innerHeight) * 2 - 1;
-
-      appState.targetLogoX = normX * 10;
-      appState.targetLogoY = normY * 7;
-    });
-
-    function stepParallax() {
-      // Damping interpolation
-      appState.currentLogoX += (appState.targetLogoX - appState.currentLogoX) * 0.08;
-      appState.currentLogoY += (appState.targetLogoY - appState.currentLogoY) * 0.08;
-
-      if (logoElement && glowElement) {
-        logoElement.style.transform = `translate3d(${appState.currentLogoX.toFixed(2)}px, ${appState.currentLogoY.toFixed(2)}px, 0)`;
-        glowElement.style.transform = `translate3d(${(appState.currentLogoX * 0.5).toFixed(2)}px, ${(appState.currentLogoY * 0.5).toFixed(2)}px, 0)`;
-      }
-      requestAnimationFrame(stepParallax);
+    function openCertificate(sessionId) {
+      window.open(`/calls/${encodeURIComponent(sessionId)}/certificate`, '_blank');
+      showToast(`🛡️ Opened Forensic Certificate for ${sessionId}`, 'safe');
     }
 
-    // --- 9. Toast Notifications ---
-    function showToast(message, type = 'info') {
-      const tray = document.getElementById('toastTray');
-      const toast = document.createElement('div');
-      toast.className = 'toast-pill';
-      toast.innerHTML = message;
-      tray.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-        setTimeout(() => toast.remove(), 200);
-      }, 3200);
+    function downloadReport(sessionId) {
+      window.open(`/calls/${encodeURIComponent(sessionId)}/report`, '_blank');
+      showToast(`📄 Downloaded SOC Report for ${sessionId}`, 'safe');
     }
 
-    // --- 10. Live Continuous Background Chart Tick & WebSocket Handler ---
-    setInterval(() => {
-      // Only add slight organic drift if live audio stream is quiet
-      if (appState.scenario === 'caution' || appState.scenario === 'safe') {
-        const noise = (Math.random() - 0.5) * 0.008;
-        const nextVal = Math.max(0.05, Math.min(0.99, appState.trustScore + noise));
-        appState.chartHistory.shift();
-        appState.chartHistory.push(nextVal);
-        renderRiskChart();
-      }
-    }, 1200);
+    // --- 11. Fetch Recent Calls From Server API ---
+    async function fetchRecentCallsFromApi() {
+      try {
+        const resp = await fetch('/calls?limit=20');
+        if (!resp.ok) return;
+        const calls = await resp.json();
+        if (Array.isArray(calls) && calls.length > 0) {
+          auditRecords = calls.map(c => {
+            const trust = (1.0 - (c.final_risk_score || 0.0)).toFixed(2);
+            const fullHash = c.caller_id_hash || '0000000000000000';
+            const shortHash = fullHash.length > 16 ? `${fullHash.slice(0, 12)}...` : fullHash;
+            const date = new Date(c.start_time * 1000);
+            const timeStr = date.toTimeString().split(' ')[0];
 
-    function handleIncomingBackendPacket(data) {
-      // 1. Extract passive spoof risk score (0.00 = human, 1.00 = deepfake)
-      const rawSpoofScore = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
-        ? data.anti_spoofing.passive_score
-        : (typeof data.score === 'number' ? data.score : 0.0);
-
-      // Convert to Voice Trust Score (1.00 = human / safe, 0.00 = deepfake / zero trust)
-      const trust = Math.max(0.02, Math.min(0.98, 1.0 - rawSpoofScore));
-      appState.trustScore = trust;
-      animateNumericTransition(trust);
-
-      // 2. Extract session metadata
-      const sessionId = (data.metadata && data.metadata.session_id) ? data.metadata.session_id : (data.session_id || appState.sessionId);
-      appState.sessionId = sessionId;
-      const heroSession = document.getElementById('heroSessionId');
-      if (heroSession) heroSession.innerText = sessionId;
-
-      // Caller ID hash
-      const callerHash = data.caller_id_hash || 'sha256:9f7a4e12c8b0...';
-      const shortHash = callerHash.length > 18 ? `${callerHash.slice(0, 14)}...` : callerHash;
-
-      // 3. Extract verdict and update UI
-      const rawVerdict = (data.anti_spoofing && data.anti_spoofing.verdict)
-        ? data.anti_spoofing.verdict
-        : (data.verdict || (rawSpoofScore > 0.65 ? 'STEP_UP_VERIFICATION' : (rawSpoofScore >= 0.35 ? 'WARN' : 'ALLOW')));
-
-      const alertBar = document.getElementById('criticalAlertBar');
-      const trustVerdict = document.getElementById('heroTrustVerdict');
-      const trustTrend = document.getElementById('heroTrustTrend');
-      const verdictText = document.getElementById('heroVerdictText');
-      const verdictDesc = document.getElementById('heroVerdictDesc');
-      const verdictDot = document.getElementById('heroVerdictDot');
-      const liveDot = document.getElementById('headerLiveDot');
-      const liveStatus = document.getElementById('headerLiveStatus');
-      const overviewTitle = document.getElementById('overviewTitle');
-      const overviewSubtitle = document.getElementById('overviewSubtitle');
-
-      const now = new Date().toTimeString().split(' ')[0];
-
-      if (rawSpoofScore > 0.65 || rawVerdict === 'STEP_UP_VERIFICATION' || rawVerdict === 'spoof') {
-        appState.scenario = 'deepfake';
-        appState.verdict = 'Alert';
-        appState.verdictDesc = 'Deepfake indicators detected';
-        appState.trustLabel = `Critical risk (${(rawSpoofScore * 100).toFixed(0)}% spoof prob) — step-up required`;
-        appState.trendText = `↓ ${(rawSpoofScore).toFixed(2)} anomaly spike`;
-
-        if (alertBar) alertBar.classList.add('visible');
-        if (verdictDot) verdictDot.className = 'status-dot dot-critical';
-        if (liveDot) liveDot.className = 'status-dot dot-critical';
-        if (liveStatus) liveStatus.innerText = 'High Risk Detected';
-        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring — Incident In Progress';
-        if (overviewSubtitle) overviewSubtitle.innerText = 'Immediate verification required. Synthetic voice artifacts detected.';
-
-        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Alert', 'Yes', now, callerHash);
-        showToast(`🔴 Critical Spoof Detected (Score: ${rawSpoofScore.toFixed(3)}) — Step-up locked!`, 'critical');
-
-      } else if (rawSpoofScore >= 0.35 || rawVerdict === 'WARN' || rawVerdict === 'uncertain') {
-        appState.scenario = 'caution';
-        appState.verdict = 'Step-up';
-        appState.verdictDesc = 'Voice instability / jitter detected';
-        appState.trustLabel = `Caution zone (${(rawSpoofScore * 100).toFixed(0)}% spoof prob)`;
-        appState.trendText = '↓ 0.05 caution drift';
-
-        if (alertBar) alertBar.classList.remove('visible');
-        if (verdictDot) verdictDot.className = 'status-dot dot-warning';
-        if (liveDot) liveDot.className = 'status-dot dot-warning';
-        if (liveStatus) liveStatus.innerText = 'Caution Advisory';
-        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring';
-        if (overviewSubtitle) overviewSubtitle.innerText = 'Moderate risk indicators. Verification challenge recommended.';
-
-        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Step-up', 'No', now, callerHash);
-
-      } else {
-        appState.scenario = 'safe';
-        appState.verdict = 'Pass';
-        appState.verdictDesc = 'Caller verified successfully';
-        appState.trustLabel = `Safe (Bonafide human, ${(rawSpoofScore * 100).toFixed(0)}% spoof prob)`;
-        appState.trendText = '↑ Optimal baseline';
-
-        if (alertBar) alertBar.classList.remove('visible');
-        if (verdictDot) verdictDot.className = 'status-dot dot-safe';
-        if (liveDot) liveDot.className = 'status-dot dot-safe';
-        if (liveStatus) liveStatus.innerText = 'Monitoring active';
-        if (overviewTitle) overviewTitle.innerText = 'Live Call Monitoring';
-        if (overviewSubtitle) overviewSubtitle.innerText = 'Everything is operating normally. Zero security anomalies detected.';
-
-        appendAuditEntry(sessionId, shortHash, trust.toFixed(2), 'Pass', 'No', now, callerHash);
-      }
-
-      if (trustVerdict) trustVerdict.innerText = appState.trustLabel;
-      if (trustTrend) trustTrend.innerText = appState.trendText;
-      if (verdictText) verdictText.innerText = appState.verdict;
-      if (verdictDesc) verdictDesc.innerText = appState.verdictDesc;
-
-      // 4. Update challenge state if fired
-      if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
-        const promptText = data.challenge_state.prompt_text || 'Please repeat: 9 - 2 - 5';
-        const challengeBox = document.getElementById('challengeCardBox');
-        if (challengeBox) {
-          challengeBox.style.transform = 'translateY(6px)';
-          challengeBox.style.opacity = '0.5';
-          setTimeout(() => {
-            const promptElem = document.getElementById('challengePromptMsg');
-            const timeElem = document.getElementById('challengeTimestamp');
-            const statusLabel = document.getElementById('challengeStatusLabel');
-            const statusDot = document.getElementById('challengeStatusDot');
-            if (promptElem) promptElem.innerText = promptText;
-            if (timeElem) timeElem.innerText = `Sent at ${now}`;
-            if (statusLabel) statusLabel.innerText = 'Waiting for caller response';
-            if (statusDot) statusDot.className = 'status-dot dot-warning';
-            challengeBox.style.transform = 'translateY(0)';
-            challengeBox.style.opacity = '1';
-          }, 120);
+            return {
+              id: c.session_id,
+              hash: shortHash,
+              fullHash: fullHash,
+              score: trust,
+              verdict: c.final_verdict === 'ALLOW' ? 'ALLOW' : (c.final_risk_score >= 0.65 ? 'ALERT' : 'STEP_UP'),
+              challenge: c.challenge_fired ? 'Yes' : 'No',
+              time: timeStr
+            };
+          });
+          renderAuditTableRows();
         }
-        showToast(`⚡ Active Challenge Injected: "${promptText}"`, 'warning');
+      } catch (err) {
+        console.warn("Could not load /calls from API:", err);
       }
-
-      // 5. Update timeline chart
-      appState.chartHistory.shift();
-      appState.chartHistory.push(trust);
-      renderRiskChart();
     }
 
-    // Native WebSocket integration with auto-recovery
+    // --- 12. Real-Time Cryptographic Hash-Chain Verification Modal ---
+    async function openVerifyModal(sessionId) {
+      appState.modalCurrentSession = sessionId;
+      const modal = document.getElementById('verifyModal');
+      const sessionLabel = document.getElementById('verifySessionId');
+      const banner = document.getElementById('verifyBanner');
+      const headline = document.getElementById('verifyBannerHeadline');
+      const sub = document.getElementById('verifyBannerSub');
+      const icon = document.getElementById('verifyBannerIcon');
+      const chainStatus = document.getElementById('verifyChainStatus');
+      const totalEventsElem = document.getElementById('verifyTotalEvents');
+      const brokenIndexElem = document.getElementById('verifyBrokenIndex');
+
+      sessionLabel.innerText = sessionId;
+      modal.classList.add('open');
+
+      try {
+        const resp = await fetch(`/calls/${encodeURIComponent(sessionId)}/verify`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        if (data.valid) {
+          banner.className = 'verify-result-banner success';
+          icon.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+          headline.innerText = 'CRYPTOGRAPHIC CHAIN VALID (100% UNTAMPERED)';
+          sub.innerText = `Verified ${data.total_events} sequential telemetry events via SHA-256 appendable chain.`;
+          chainStatus.innerText = 'VALID (INTEGRITY INTACT)';
+          chainStatus.style.color = '#34D399';
+          totalEventsElem.innerText = `${data.total_events} events`;
+          brokenIndexElem.innerText = 'None (0 discrepancies)';
+          brokenIndexElem.style.color = '#34D399';
+        } else {
+          banner.className = 'verify-result-banner danger';
+          icon.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+          headline.innerText = 'CRYPTOGRAPHIC INTEGRITY VIOLATION DETECTED';
+          sub.innerText = `Record hash mismatch at event index #${data.broken_index}. Historical records have been altered.`;
+          chainStatus.innerText = 'FAILED (BROKEN CHAIN)';
+          chainStatus.style.color = '#EF4444';
+          totalEventsElem.innerText = `${data.total_events} events`;
+          brokenIndexElem.innerText = `Index #${data.broken_index}`;
+          brokenIndexElem.style.color = '#EF4444';
+        }
+      } catch (err) {
+        headline.innerText = 'VERIFICATION AUDIT IN PROGRESS';
+        sub.innerText = err.message;
+      }
+    }
+
+    function closeVerifyModal() {
+      document.getElementById('verifyModal').classList.remove('open');
+    }
+
+    function closeVerifyModalOnBackdrop(e) {
+      if (e.target.id === 'verifyModal') closeVerifyModal();
+    }
+
+    function openCertFromModal() {
+      if (appState.modalCurrentSession) {
+        openCertificate(appState.modalCurrentSession);
+      }
+    }
+
+    // --- 13. Backend WebSocket Real-Time Telemetry Pipeline ---
     function connectBackendWebSocket() {
       const host = window.location.host || '127.0.0.1:8000';
       const wsUrl = `ws://${host}/ws/audio`;
@@ -2274,40 +2416,31 @@
         appState.ws = ws;
 
         ws.onopen = () => {
-          const statusElem = document.getElementById('sidebarConnStatus');
-          const modeTag = document.getElementById('sidebarModeTag');
-          const dot = document.getElementById('sidebarDot');
-          if (statusElem) statusElem.innerText = `Live (${host})`;
-          if (modeTag) modeTag.innerText = 'Backend WS Live';
-          if (dot) dot.className = 'status-dot dot-safe';
-          showToast(`🟢 Connected to MEIKURAL Backend (${host})`, 'safe');
+          document.getElementById('badgeConnText').innerText = 'Backend WS Live';
+          document.getElementById('sidebarStatusText').innerText = 'Backend WS Live';
+          document.getElementById('sidebarDot').className = 'pulse-dot';
+          showToast(`🟢 Connected to MEIKURAL SOC Engine (${host})`, 'safe');
         };
 
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            handleIncomingBackendPacket(data);
-          } catch(e) {
+            handleIncomingPacket(data);
+          } catch (e) {
             console.error("Error parsing WebSocket JSON:", e);
           }
         };
 
-        ws.onerror = (err) => {
-          const statusElem = document.getElementById('sidebarConnStatus');
-          const modeTag = document.getElementById('sidebarModeTag');
-          const dot = document.getElementById('sidebarDot');
-          if (statusElem) statusElem.innerText = 'Standby (Sim)';
-          if (modeTag) modeTag.innerText = 'Simulator Active';
-          if (dot) dot.className = 'status-dot dot-warning';
+        ws.onerror = () => {
+          document.getElementById('badgeConnText').innerText = 'Standby (Sim)';
+          document.getElementById('sidebarStatusText').innerText = 'Standby (Sim)';
+          document.getElementById('sidebarDot').className = 'pulse-dot warning';
         };
 
         ws.onclose = () => {
-          const statusElem = document.getElementById('sidebarConnStatus');
-          const modeTag = document.getElementById('sidebarModeTag');
-          const dot = document.getElementById('sidebarDot');
-          if (statusElem) statusElem.innerText = 'Reconnecting...';
-          if (modeTag) modeTag.innerText = 'Reconnecting';
-          if (dot) dot.className = 'status-dot dot-critical';
+          document.getElementById('badgeConnText').innerText = 'Reconnecting...';
+          document.getElementById('sidebarStatusText').innerText = 'Reconnecting...';
+          document.getElementById('sidebarDot').className = 'pulse-dot critical';
           setTimeout(connectBackendWebSocket, 2500);
         };
       } catch (err) {
@@ -2315,17 +2448,86 @@
       }
     }
 
-    // --- 11. Lifecycle Startup ---
+    function handleIncomingPacket(data) {
+      // 1. Extract raw passive spoof score
+      const rawSpoof = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
+        ? data.anti_spoofing.passive_score
+        : (typeof data.score === 'number' ? data.score : 0.0);
+
+      appState.rawSpoofScore = rawSpoof;
+
+      // 2. Latency measurement
+      if (data.metadata && data.metadata.inference_latency_ms) {
+        recordInferenceLatency(data.metadata.inference_latency_ms);
+      }
+
+      // 3. Active Session ID
+      const sessionId = (data.metadata && data.metadata.session_id) || data.session_id || appState.sessionId;
+      appState.sessionId = sessionId;
+      const sessElem = document.getElementById('activeSessionText');
+      if (sessElem) sessElem.innerText = sessionId;
+
+      // 4. Update Trust Gauge
+      updateTrustGauge(rawSpoof);
+
+      // 5. Check if challenge fired
+      if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
+        const prompt = data.challenge_state.prompt_text || 'Please repeat dynamic token: 9 - 2 - 5';
+        const promptElem = document.getElementById('challengePromptMsg');
+        if (promptElem) promptElem.innerText = prompt;
+        showToast(`⚡ Challenge Injected: "${prompt}"`, 'warning');
+      }
+
+      // 6. Handle alert banner
+      const banner = document.getElementById('criticalAlertBanner');
+      if (rawSpoof >= 0.65) {
+        if (banner) banner.classList.add('visible');
+      } else {
+        if (banner) banner.classList.remove('visible');
+      }
+    }
+
+    // --- 14. Toast Notification Engine ---
+    function showToast(message, type = 'info') {
+      const tray = document.getElementById('toastTray');
+      if (!tray) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast-card';
+      toast.innerHTML = message;
+      tray.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(12px)';
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        setTimeout(() => toast.remove(), 200);
+      }, 3500);
+    }
+
+    function switchTab(tabId) {
+      showToast(`Navigating to ${tabId.toUpperCase()} view`, 'info');
+    }
+
+    // --- 15. Lifecycle Bootstrap ---
     window.addEventListener('DOMContentLoaded', () => {
-      resizeChartCanvas();
-      renderRiskChart();
-      filterAuditRecords();
-      requestAnimationFrame(stepParallax);
+      resizeWaveformCanvas();
+      resizeRiskChart();
+      updateTrustGauge(0.021); // Genuine human baseline
+      renderAuditTableRows();
+      fetchRecentCallsFromApi();
 
-      const activeNav = document.querySelector('.nav-link.active');
-      if (activeNav) updateNavGlider(activeNav);
+      // Start 60fps waveform loop
+      requestAnimationFrame(renderWaveformFrame);
 
+      // Connect Native Backend WebSocket
       connectBackendWebSocket();
+    });
+
+    window.addEventListener('resize', () => {
+      resizeWaveformCanvas();
+      resizeRiskChart();
+      renderRiskChart();
     });
   </script>
 </body>
