@@ -8,7 +8,7 @@
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start Guide (1-Click Evaluation)
 
 ### 1. Clone & Setup Environment
 ```bash
@@ -21,55 +21,60 @@ python -m venv .venv
 
 # On Windows (PowerShell):
 .\.venv\Scripts\Activate.ps1
-# On Windows (Git Bash) / Linux / Mac:
-source .venv/Scripts/activate
+# On Linux / macOS / Git Bash:
+source .venv/bin/activate  # or source .venv/Scripts/activate
 
 # Install dependencies
 pip install --upgrade pip
 pip install -r aasist/requirements.txt
-pip install fastapi "uvicorn[standard]" websockets scipy python-multipart
+pip install fastapi "uvicorn[standard]" websockets scipy python-multipart soundfile
 ```
 
-### 2. Run the Streaming Server & Live Dashboard
-```bash
-# Start the FastAPI Server (WebSocket + REST + Swagger Docs + Static UI)
-uvicorn app:app --host 0.0.0.0 --port 8000
-
-# Open the Live Operator Dashboard:
-# http://localhost:8000/static/index.html (or double-click run_dashboard.bat)
-
-# In a second terminal, run verification tests:
-python test_client.py
-python test_backend_pair.py
-
-# Run the Edge INT8 Quantization Benchmark:
-python quantize_and_benchmark.py
+### 2. Run the 1-Click Interactive Demo (Recommended for Hackathons & Juries)
+```powershell
+.\.venv\Scripts\python.exe run_demo.py
 ```
+This automatically launches the FastAPI server, opens the **Operations Dashboard** in your default browser, and launches an interactive terminal menu:
+- **`[1]` 🟢 Stream Bonafide Human Speech Clip** — Watch the dashboard turn green (Safe).
+- **`[2]` 🔴 Stream Deepfake Voice Clone Attack** — Watch real-time AASIST spike >0.65, trigger Step-up Alert, and dispatch multi-channel simulated alerts.
+- **`[3]` 🟡 Stream Cautionary Telecom Jitter** — Ambiguous telecom line hum provoking active verification.
+- **`[4]` ⚡ Fire Active Dynamic Micro-Challenge** — Generates unscripted security prompt on the dashboard.
+- **`[5]` ✅ Verify Spoken Challenge Response** — Executes multi-modal score fusion (`fusion.py`) and recovers trust score.
+- **`[6]` 📜 Generate & Open Branded Forensic Certificate** — Opens tamper-evident HMAC-SHA256 certificate (print-to-PDF ready).
+- **`[7]` 🧪 Run Full Automated Backend Test Suite** — Tests zero-trust privacy, 90-day auto-purge, and alert channels.
+- **`[8]` 🌐 Open SOC Operations Dashboard** — Opens `http://localhost:8000/dashboard`.
 
 ---
 
-## 🛡️ Live Operator Dashboard (`static/index.html` - Bavi)
+### 3. Live Microphone Streaming (Web Audio API)
+1. Start the server:
+   ```powershell
+   uvicorn app:app --host 0.0.0.0 --port 8000
+   ```
+2. Open **`http://localhost:8000/dashboard`** in Chrome / Edge / Brave.
+3. Click the **`🎙️ Live mic`** button in the top test scenarios toolbar.
+4. Allow browser microphone access when prompted.
+5. Speak into your microphone — the browser captures 16kHz audio, converts it into 16-bit PCM binary chunks, and streams directly into the quantized AASIST model on CPU in real time (~441.9ms inference latency).
+
+---
+
+## 🛡️ Live Operator Dashboard (`dashboard.html` / `http://localhost:8000/dashboard`)
 
 The live cybersecurity operator interface connects directly to `ws://localhost:8000/ws/audio` with:
-- **Dark Navy Theme (`#0F172A`)**: Slate card containers with Emerald (`#10B981`), Amber (`#F59E0B`), and Coral (`#F43F5E`) indicators.
-- **Top Header & Privacy Badge**:
-  > `🔒 PRIVACY ENFORCED: Zero Disk Audio · Salted SHA-256 Hashing · 90-Day Auto Expiry`
-- **Real-Time Scrolling Chart (Chart.js)**:
-  - 3 Distinct Colored Risk Background Zones:
-    * 🟢 **Green Zone (0.00 – 0.35)**: Safe / Bonafide
-    * 🟡 **Yellow Zone (0.35 – 0.65)**: Caution / Elevated Suspicion
-    * 🔴 **Red Zone (0.65 – 1.00)**: Deepfake Alert
-  - Dynamic line shift to glowing Coral on risk spikes $> 0.65$.
-- **Active Challenge Modal & Card**: Triggered on `challenge_state.event == "challenge_fired"`.
-- **Pre-Transaction Warning Banner**: *"⚠️ CRITICAL WARNING: High Spoof Probability. DO NOT proceed with wire transfer until out-of-band re-verified."*
-- **Simulated Customer SMS Alert Card**: Smartphone push alert preview for out-of-band account freezing.
-- **Live Audit Table**: Real-time incident logs with **"Export Report"** forensic JSON download.
+- **Unified Glassmorphism Surface (`#090D16`)**: Seamless single-surface workspace with high-contrast status pills (Emerald `#10B981`, Amber `#F59E0B`, Crimson `#EF4444`).
+- **Live In-Browser Microphone Streaming (`🎙️ Live mic`)**: Streams evaluator speech directly into the PyTorch AASIST model via Web Audio API.
+- **Real-Time Scrolling Canvas Risk Chart**:
+  - Inverted Voice Trust Score: $1.0 - \text{SpoofRisk}$ ($1.00 = \text{Safe Human}, 0.00 = \text{Synthetic Spoof}$).
+  - Dynamic gradient shifts from deep cyan to warning amber to critical crimson on deepfake detection.
+- **Active Micro-Challenge Display & Provocation**: Shows unscripted digit/phoneme challenges to break pre-rendered deepfakes.
+- **Cryptographic Forensic Incident Certificate**: Direct 1-click generation of official audit certificates (`GET /calls/{session_id}/certificate`) with print-to-PDF styles.
+- **Live Audit Table**: Real-time incident logs with **"Cert"** and **"Report"** forensic exports.
 
 ---
 
 ## 📊 Measured Model Performance & Edge Quantization Benchmark
 
-To prove to evaluators that Meikural is lightweight and deployable directly on edge devices, PBX gateways, and contact center hardware (Component 4), we apply dynamic INT8 quantization to the AASIST neural network:
+To prove to evaluators that Meikural is lightweight and deployable directly on edge devices, PBX gateways, and contact center hardware, we apply dynamic INT8 quantization to the AASIST neural network:
 
 | Metric | Baseline FP32 Model | Quantized INT8 Model | Real Measured Improvement |
 | :--- | :---: | :---: | :---: |
@@ -87,13 +92,17 @@ To prove to evaluators that Meikural is lightweight and deployable directly on e
 
 | Protocol | Endpoint | Description |
 | :--- | :--- | :--- |
-| **WebSocket** | `ws://localhost:8000/ws/audio` | Real-time 16kHz audio stream scoring & score broadcasting. |
-| **Dashboard** | `http://localhost:8000/static/index.html` | Live Operator Dashboard with risk zones & active challenge alerts. |
-| **REST** | `POST /score` | Standalone audio scoring endpoint for banking/telecom integration. |
+| **WebSocket** | `ws://localhost:8000/ws/audio` | Real-time 16kHz audio stream scoring, VAD gating, & telemetry broadcast. |
+| **Dashboard** | `http://localhost:8000/dashboard` | Live Operator SOC Dashboard with mic streaming, risk zones, & audit trail. |
+| **REST** | `GET /calls/{session_id}/certificate` | Official Forensic Incident Certificate with HMAC-SHA256 signature (Print to PDF). |
+| **REST** | `POST /calls/{session_id}/challenge/trigger` | Manually triggers unscripted conversational micro-challenge. |
+| **REST** | `POST /calls/{session_id}/challenge/verify` | Submits challenge response & executes multi-modal score fusion. |
+| **REST** | `POST /score` | Standalone audio scoring endpoint for uploaded WAV/FLAC files. |
 | **REST** | `POST /calls` | Creates call session with salted SHA-256 caller ID hashing. |
 | **REST** | `GET /calls/{session_id}` | Retrieves session metadata and retention expiry. |
-| **REST** | `GET /calls/{session_id}/report` | Downloads structured incident security report for flagged calls. |
+| **REST** | `GET /calls/{session_id}/report` | Downloads structured text incident report for flagged calls. |
 | **REST** | `POST /alerts/trigger` | Dispatches multi-channel Twilio SMS & SMTP security alerts. |
+| **REST** | `POST /purge-expired` | Executes 90-day automated compliance purge for expired records. |
 | **REST** | `GET /health` | Health & model warmup verification. |
 | **Docs** | `http://localhost:8000/docs` | Interactive OpenAPI / Swagger UI documentation. |
 
