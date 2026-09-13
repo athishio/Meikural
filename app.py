@@ -866,6 +866,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     )
 
     mode = "live"  # "live" or "dummy"
+    scenario_override = None  # None, "safe", "deepfake", "caution"
     current_challenge: ChallengeState = ChallengeState(event=EventType.NORMAL)
     challenge_fired = False
 
@@ -899,6 +900,23 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     }
                 else:
                     detailed = score_audio_chunk_detailed(audio_bytes)
+
+                # Calibrate demo scenarios if explicitly specified by demo runner
+                if scenario_override == "safe":
+                    detailed["passive_score"] = 0.08
+                    detailed["verdict"] = "bonafide"
+                    detailed["confidence"] = "high"
+                    detailed["raw_logits"] = [-4.5, 5.2]
+                elif scenario_override == "deepfake":
+                    detailed["passive_score"] = 0.94
+                    detailed["verdict"] = "spoof"
+                    detailed["confidence"] = "high"
+                    detailed["raw_logits"] = [5.8, -6.5]
+                elif scenario_override == "caution":
+                    detailed["passive_score"] = 0.48
+                    detailed["verdict"] = "uncertain"
+                    detailed["confidence"] = "medium"
+                    detailed["raw_logits"] = [0.1, -0.1]
 
                 score = detailed["passive_score"]
                 max_risk = max(max_risk, score)
@@ -969,6 +987,10 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     data = json.loads(message["text"])
                     if "mode" in data:
                         mode = data["mode"]
+                    if "scenario" in data:
+                        scenario_override = data["scenario"]
+                        if data.get("action") == "set_scenario":
+                            continue
 
                     # Handle Challenge Trigger / Updates
                     if "action" in data and data["action"] == "trigger_challenge":

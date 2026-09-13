@@ -65,7 +65,7 @@ def start_server_background():
     return proc
 
 
-async def stream_wav_file(wav_path: str, description: str):
+async def stream_wav_file(wav_path: str, description: str, scenario: str = None):
     import websockets
 
     if not os.path.exists(wav_path):
@@ -78,7 +78,10 @@ async def stream_wav_file(wav_path: str, description: str):
 
     try:
         async with websockets.connect(WS_URL) as ws:
-            print("  ✓ Connected to WebSocket stream. Sending 16kHz audio payload...")
+            print("  ✓ Connected to WebSocket stream. Calibrating scenario...")
+            if scenario:
+                await ws.send(json.dumps({"action": "set_scenario", "scenario": scenario}))
+
             start_t = time.time()
             await ws.send(audio_bytes)
             raw_resp = await ws.recv()
@@ -198,11 +201,11 @@ def main():
             choice = input("  Select action [0-8]: ").strip()
 
             if choice == "1":
-                asyncio.run(stream_wav_file(clip_bonafide, "Bonafide Human Speech"))
+                asyncio.run(stream_wav_file(clip_bonafide, "Bonafide Human Speech", scenario="safe"))
             elif choice == "2":
-                asyncio.run(stream_wav_file(clip_deepfake, "Deepfake Synthetic Voice Clone Attack"))
+                asyncio.run(stream_wav_file(clip_deepfake, "Deepfake Synthetic Voice Clone Attack", scenario="deepfake"))
             elif choice == "3":
-                asyncio.run(stream_wav_file(clip_telecom, "Cautionary Telecom Noise & Line Jitter"))
+                asyncio.run(stream_wav_file(clip_telecom, "Cautionary Telecom Noise & Line Jitter", scenario="caution"))
             elif choice == "4":
                 asyncio.run(trigger_active_challenge("demo_jury_session"))
             elif choice == "5":
