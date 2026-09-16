@@ -87,6 +87,7 @@ def startup_event():
     logger.info("AASIST model and Meikural privacy database ready.")
 
 
+@app.get("/")
 @app.get("/dashboard")
 async def get_dashboard():
     dashboard_path = os.path.join(BASE_DIR, "dashboard.html")
@@ -95,8 +96,9 @@ async def get_dashboard():
     return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
 
 
-@app.get("/")
-def root():
+@app.get("/api")
+@app.get("/api/info")
+def api_info():
     return {
         "service": "Meikural Audio Anti-Spoofing Service",
         "version": "2.0.0",
