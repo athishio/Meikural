@@ -2192,7 +2192,10 @@
       analyser: null,
       dataArray: null,
       scriptNode: null,
-      challengeInterval: null
+      challengeInterval: null,
+      demoStreamInterval: null,
+      demoSourceNode: null,
+      activeSimScenario: null
     };
 
     // Pre-seed 30 points for continuous rolling chart
@@ -2827,27 +2830,62 @@
       showToast('⏹️ Live microphone stream stopped', 'info');
     }
 
-    // --- 8. Simulation Scenarios ---
+    // --- 8. Simulation Scenarios (60-Second Real-Time Streaming) ---
+    function stopDemoStreaming() {
+      if (appState.demoStreamInterval) {
+        clearInterval(appState.demoStreamInterval);
+        appState.demoStreamInterval = null;
+      }
+      if (appState.demoSourceNode) {
+        try { appState.demoSourceNode.stop(); } catch (e) {}
+        try { appState.demoSourceNode.disconnect(); } catch (e) {}
+        appState.demoSourceNode = null;
+      }
+      if (!appState.mediaStream) {
+        appState.isMicStreaming = false;
+      }
+      resetSimButtonLabels();
+    }
+
+    function resetSimButtonLabels() {
+      const bHuman = document.getElementById('simBtnHuman');
+      const bClone = document.getElementById('simBtnClone');
+      const bJitter = document.getElementById('simBtnJitter');
+      if (bHuman) bHuman.innerHTML = '<span class="status-pulse-dot" style="width: 5px; height: 5px;"></span> Human';
+      if (bClone) bClone.innerHTML = '<span class="status-pulse-dot" style="width: 5px; height: 5px; background: var(--status-alert);"></span> Deepfake';
+      if (bJitter) bJitter.innerHTML = '<span class="status-pulse-dot" style="width: 5px; height: 5px; background: var(--status-caution);"></span> Jitter';
+    }
+
     async function executeSimScenario(type) {
+      if (appState.activeSimScenario === type && appState.demoStreamInterval) {
+        stopDemoStreaming();
+        appState.activeSimScenario = null;
+        document.querySelectorAll('.sim-buttons-rail .sim-rail-btn').forEach(b => b.classList.remove('active'));
+        showToast('⏹️ Simulation stopped', 'info');
+        return;
+      }
+
+      stopDemoStreaming();
+      appState.activeSimScenario = type;
       document.querySelectorAll('.sim-buttons-rail .sim-rail-btn').forEach(b => b.classList.remove('active'));
 
       if (type === 'safe') {
         const btn = document.getElementById('simBtnHuman');
         if (btn) btn.classList.add('active');
-        showToast('🟢 Streaming bonafide human vocal dynamics', 'safe');
+        showToast('🟢 Streaming 60s bonafide human voice session...', 'safe');
         updateTrustScoreGauge(0.02, 0.02);
         streamDemoWavClip('bonafide_human_speech', 'safe');
       } else if (type === 'deepfake') {
         const btn = document.getElementById('simBtnClone');
         if (btn) btn.classList.add('active');
-        showToast('🔴 Injected synthetic deepfake voice clone attack vector', 'alert');
+        showToast('🔴 Injected 60s synthetic deepfake voice clone attack vector...', 'alert');
         updateTrustScoreGauge(0.96, 0.94);
         streamDemoWavClip('deepfake_voice_clone', 'deepfake');
-        setTimeout(() => openVerificationModal('Instruct caller to repeat security token: 4 · 8 · 2 · 9'), 600);
+        setTimeout(() => openVerificationModal('Instruct caller to repeat security token: 4 · 8 · 2 · 9'), 2200);
       } else if (type === 'caution') {
         const btn = document.getElementById('simBtnJitter');
         if (btn) btn.classList.add('active');
-        showToast('🟡 Simulated packet loss & ambiguous acoustic jitter', 'caution');
+        showToast('🟡 Simulating 60s telecom jitter & ambiguous packet loss...', 'caution');
         updateTrustScoreGauge(0.48, 0.48);
         streamDemoWavClip('caution_noisy_telecom', 'caution');
       }
@@ -2865,14 +2903,95 @@
 
         const resp = await fetch(`/demo_clips/${clipName}.wav`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const buf = await resp.arrayBuffer();
+        const arrayBuf = await resp.arrayBuffer();
 
-        if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
-          appState.ws.send(buf);
-        } else {
-          showToast('⚠️ WebSocket connecting...', 'caution');
+        // Audio Context setup for audible playback and oscilloscope frequency feed
+        if (!appState.audioCtx) {
+          try {
+            appState.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+          } catch (e) {
+            appState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
         }
+        if (appState.audioCtx.state === 'suspended') {
+          await appState.audioCtx.resume();
+        }
+
+        const audioBuffer = await appState.audioCtx.decodeAudioData(arrayBuf.slice(0));
+        const channelData = audioBuffer.getChannelData(0);
+        const totalDuration = Math.round(audioBuffer.duration);
+
+        if (!appState.analyser) {
+          appState.analyser = appState.audioCtx.createAnalyser();
+          appState.analyser.fftSize = 512;
+          appState.dataArray = new Uint8Array(appState.analyser.frequencyBinCount);
+        }
+
+        // Audibly play demo clip at gentle comfortable volume and route to visualizer analyser
+        const sourceNode = appState.audioCtx.createBufferSource();
+        sourceNode.buffer = audioBuffer;
+
+        const gainNode = appState.audioCtx.createGain();
+        gainNode.gain.value = 0.20;
+        sourceNode.connect(gainNode);
+        gainNode.connect(appState.analyser);
+        gainNode.connect(appState.audioCtx.destination);
+
+        sourceNode.start();
+        appState.demoSourceNode = sourceNode;
+        appState.isMicStreaming = true; // Enables live oscilloscope animation
+
+        sourceNode.onended = () => {
+          stopDemoStreaming();
+        };
+
+        // Real-time chunk streaming: 2-second windows with 1-second slide over 60s
+        let currentSec = 0;
+        const SAMPLES_PER_CHUNK = 32000; // 2 seconds @ 16kHz
+        const STEP_SAMPLES = 16000;      // 1 second step
+        let sampleOffset = 0;
+
+        const activeBtn = scenarioType === 'safe' 
+          ? document.getElementById('simBtnHuman') 
+          : (scenarioType === 'deepfake' ? document.getElementById('simBtnClone') : document.getElementById('simBtnJitter'));
+
+        const sendNextChunk = () => {
+          if (sampleOffset >= channelData.length) {
+            stopDemoStreaming();
+            return;
+          }
+
+          const endIdx = Math.min(channelData.length, sampleOffset + SAMPLES_PER_CHUNK);
+          const chunkData = channelData.slice(sampleOffset, endIdx);
+          sampleOffset += STEP_SAMPLES;
+          currentSec += 1;
+
+          // Convert to 16-bit PCM for backend WebSocket
+          const int16 = new Int16Array(chunkData.length);
+          for (let i = 0; i < chunkData.length; i++) {
+            const s = Math.max(-1, Math.min(1, chunkData[i]));
+            int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+
+          if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+            appState.ws.send(int16.buffer);
+          }
+
+          if (activeBtn) {
+            const tag = scenarioType === 'safe' ? 'Human' : (scenarioType === 'deepfake' ? 'Deepfake' : 'Jitter');
+            const color = scenarioType === 'safe' ? 'var(--status-safe)' : (scenarioType === 'deepfake' ? 'var(--status-alert)' : 'var(--status-caution)');
+            activeBtn.innerHTML = `<span class="status-pulse-dot" style="width: 5px; height: 5px; background: ${color};"></span> ${tag} (${currentSec}s/${totalDuration}s)`;
+          }
+        };
+
+        // First chunk sent immediately
+        sendNextChunk();
+
+        // Send successive chunks every 1000ms for continuous 60s streaming
+        appState.demoStreamInterval = setInterval(sendNextChunk, 1000);
+
       } catch (err) {
+        console.error('Demo streaming error:', err);
         if (clipName === 'bonafide_human_speech') updateTrustScoreGauge(0.02, 0.02);
         else if (clipName === 'deepfake_voice_clone') updateTrustScoreGauge(0.96, 0.94);
         else if (clipName === 'caution_noisy_telecom') updateTrustScoreGauge(0.48, 0.48);
