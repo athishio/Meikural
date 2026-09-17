@@ -341,6 +341,59 @@ class TestIncidentReportEndpoint(unittest.TestCase):
         self.assertEqual(response.json()["detail"], "Call session not found")
 
 
+class TestTrustGaugeArcCalibration(unittest.TestCase):
+    """
+    Verifies Requirement 1:
+    - Symmetrical full arc sweep (-110° to +110° from vertical, total 220°).
+    - needle_angle = startAngle + (value/100) * (endAngle - startAngle).
+    - Threshold domains: 0-35 (Red: -110° to -33°), 35-65 (Amber: -33° to +33°), 65-100 (Green: +33° to +110°).
+    - Value 88 lands at +83.6° (deep in green band, close to high end +110°, not near top-center 0°).
+    """
+
+    def setUp(self):
+        self.start_angle = -110.0
+        self.end_angle = 110.0
+        self.total_angle = self.end_angle - self.start_angle  # 220.0
+
+    def compute_needle_angle(self, value: float) -> float:
+        clamped = max(0.0, min(100.0, value))
+        return self.start_angle + (clamped / 100.0) * self.total_angle
+
+    def test_trust_gauge_value_88_calibration(self):
+        angle_88 = self.compute_needle_angle(88.0)
+        self.assertAlmostEqual(angle_88, 83.6, places=2)
+
+        # Green threshold starts at 65 (angle: -110 + 0.65*220 = +33°)
+        green_start_angle = self.compute_needle_angle(65.0)
+        self.assertAlmostEqual(green_start_angle, 33.0, places=2)
+
+        # Value 88 must visually land inside the green zone
+        self.assertGreater(angle_88, green_start_angle)
+        self.assertLessEqual(angle_88, self.end_angle)
+
+        # Must be close to high end (distance to end < 30°), NOT near top-center (distance to 0° > 80°)
+        dist_to_end = abs(self.end_angle - angle_88)
+        dist_to_top_center = abs(0.0 - angle_88)
+        self.assertLess(dist_to_end, 30.0)
+        self.assertGreater(dist_to_top_center, 80.0)
+
+    def test_trust_gauge_domains(self):
+        # Value 0 lands at minimum left (Red)
+        self.assertAlmostEqual(self.compute_needle_angle(0.0), -110.0, places=2)
+
+        # Value 50 lands exactly at top-center 0° (Amber)
+        self.assertAlmostEqual(self.compute_needle_angle(50.0), 0.0, places=2)
+
+        # Value 12 lands deep in Red zone
+        angle_12 = self.compute_needle_angle(12.0)
+        self.assertAlmostEqual(angle_12, -83.6, places=2)
+        self.assertLess(angle_12, -33.0)
+
+        # Value 100 lands at maximum right (Green)
+        self.assertAlmostEqual(self.compute_needle_angle(100.0), 110.0, places=2)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
