@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Radio, AlertOctagon, ExternalLink, Search, RefreshCw, Eye, EyeOff, PhoneCall } from 'lucide-react';
+import { Radio, AlertOctagon, Search, RefreshCw, Eye, PhoneCall, Hash, Code } from 'lucide-react';
 import type { TrunkSession } from '../../types/dashboard';
-import { PrivacyMask } from '../common/PrivacyMask';
+import { ReferenceToken } from '../common/ReferenceToken';
 import { Tooltip } from '../common/Tooltip';
 
 interface ActiveCallsPageProps {
@@ -71,7 +71,7 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
 }) => {
   const [trunks, setTrunks] = useState<TrunkSession[]>(mockTrunks);
   const [search, setSearch] = useState('');
-  const [revealAll, setRevealAll] = useState(false);
+  const [fullHashView, setFullHashView] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Live-ticking durations
@@ -107,10 +107,12 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
   const activeCount = trunks.filter((t) => t.channelState === 'Streaming').length;
 
   const filtered = trunks.filter(
-    (t) =>
+    (t, idx) =>
       t.sessionId.toLowerCase().includes(search.toLowerCase()) ||
       t.callerHash.toLowerCase().includes(search.toLowerCase()) ||
-      t.gateway.toLowerCase().includes(search.toLowerCase())
+      t.gateway.toLowerCase().includes(search.toLowerCase()) ||
+      `caller id #${idx + 1}`.includes(search.toLowerCase()) ||
+      `session ref #${idx + 1}`.includes(search.toLowerCase())
   );
 
   const formatDuration = (secs: number) => {
@@ -151,40 +153,42 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
         </button>
       </div>
 
-      {/* Filter & Privacy Control Toolbar */}
+      {/* Filter & Reference View Toggle Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-xl bg-[#0D0F11] border border-[#1E2225]">
         <div className="relative flex-1 max-w-md">
           <Search className="w-3.5 h-3.5 text-[#5E666B] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.75} />
           <input
             type="text"
-            placeholder="Search by session ID, caller hash, or gateway..."
+            placeholder="Search session ref, caller ID, or gateway..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-[#050607] border border-[#1E2225] rounded-lg pl-8 pr-3 py-1.5 text-[12px] text-[#F2F4F5] placeholder:text-[#5E666B] focus:outline-none focus:border-[#FF4713] transition-colors"
           />
         </div>
 
-        {/* Page-level Reveal All Privacy Toggle */}
+        {/* Table-level "Toggle Full / Ref" View */}
         <div className="flex items-center gap-2">
-          <Tooltip content={revealAll ? "Re-mask sensitive identifiers in this table" : "Temporarily reveal all sensitive identifiers in this table"}>
+          <Tooltip content={fullHashView ? "Switch back to clean Reference Tokens" : "Switch to Raw Cryptographic Hashes"}>
             <button
               type="button"
-              onClick={() => setRevealAll((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                revealAll
+              onClick={() => setFullHashView((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-mono font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                fullHashView
                   ? 'bg-[#FF4713]/15 border-[#FF4713]/40 text-[#FF4713] shadow-[0_0_12px_rgba(255,71,19,0.18)]'
                   : 'bg-[#141719] hover:bg-[#1E2225] border-[#1E2225] text-[#9BA3A8] hover:text-[#F2F4F5]'
               }`}
             >
-              {revealAll ? (
-                <EyeOff className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+              {fullHashView ? (
+                <>
+                  <Code className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+                  <span>[&lt;&gt;] Full Hashes View</span>
+                </>
               ) : (
-                <Eye className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={1.75} />
+                <>
+                  <Hash className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={2} />
+                  <span>[#] Reference View</span>
+                </>
               )}
-              <span>{revealAll ? 'Mask Identifiers' : 'Reveal All'}</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/40 text-[#5E666B]">
-                {filtered.length}
-              </span>
             </button>
           </Tooltip>
         </div>
@@ -197,8 +201,8 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
             <thead className="bg-[#050607]/80 border-b border-[#1E2225] text-[11px] font-semibold text-[#5E666B] uppercase tracking-[0.08em]">
               <tr>
                 <th className="py-3 px-4">Gateway / Trunk</th>
-                <th className="py-3 px-4">Session ID</th>
-                <th className="py-3 px-4">Caller Identity (Salted)</th>
+                <th className="py-3 px-4">Session Reference</th>
+                <th className="py-3 px-4">Caller Identity</th>
                 <th className="py-3 px-4">Duration</th>
                 <th className="py-3 px-4">Voice Trust</th>
                 <th className="py-3 px-4">Channel State</th>
@@ -242,43 +246,24 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
                         </span>
                       </td>
 
-                      {/* Masked Session ID */}
+                      {/* Clean Session Reference Token */}
                       <td className="py-3.5 px-4 font-mono">
-                        <PrivacyMask
-                          value={trunk.sessionId}
-                          label="Session ID"
-                          alwaysRevealed={revealAll}
-                          staggerIndex={index}
-                          showEyeButton={true}
-                          copyable={true}
-                        >
-                          {(val) => (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectSession(trunk.sessionId);
-                              }}
-                              title="Scope Overview to this session"
-                              className="inline-flex items-center gap-1 text-[#FF4713] hover:underline font-semibold"
-                            >
-                              <span>{val}</span>
-                              <ExternalLink className="w-3 h-3 text-[#FF4713]" strokeWidth={1.75} />
-                            </button>
-                          )}
-                        </PrivacyMask>
+                        <ReferenceToken
+                          type="session"
+                          raw={trunk.sessionId}
+                          index={index + 1}
+                          fullView={fullHashView}
+                          onSelect={() => onSelectSession(trunk.sessionId)}
+                        />
                       </td>
 
-                      {/* Masked Caller Hash */}
+                      {/* Clean Caller ID Reference Token */}
                       <td className="py-3.5 px-4 font-mono">
-                        <PrivacyMask
-                          value={trunk.callerHash}
-                          label="Caller Hash"
-                          alwaysRevealed={revealAll}
-                          staggerIndex={index}
-                          showEyeButton={true}
-                          copyable={true}
-                          className="max-w-[190px] truncate text-[#9BA3A8]"
+                        <ReferenceToken
+                          type="caller"
+                          raw={trunk.callerHash}
+                          index={index + 1}
+                          fullView={fullHashView}
                         />
                       </td>
 

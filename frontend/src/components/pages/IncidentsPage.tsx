@@ -1,30 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, Download, FileText, ChevronDown, ChevronUp, Search, Printer, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, Download, FileText, ChevronDown, ChevronUp, Search, Printer, ShieldCheck, Hash, Code } from 'lucide-react';
 import type { IncidentRecord } from '../../types/dashboard';
-import { PrivacyMask } from '../common/PrivacyMask';
+import { ReferenceToken } from '../common/ReferenceToken';
 import { Tooltip } from '../common/Tooltip';
 
 interface IncidentsPageProps {
   onViewCert: (session: { sessionId: string; prevHash: string; blockHash: string; score: number; verdict: string; timestamp: string }) => void;
 }
-
-// Configurable column sensitivity schema
-export interface IncidentColumnConfig {
-  key: string;
-  label: string;
-  sensitive: boolean;
-}
-
-export const incidentColumnConfigs: Record<string, IncidentColumnConfig> = {
-  sessionId: { key: 'sessionId', label: 'Session ID', sensitive: true },
-  callerHash: { key: 'callerHash', label: 'Caller Identity Hash', sensitive: true },
-  triggerMechanism: { key: 'triggerMechanism', label: 'Trigger Mechanism', sensitive: true },
-  blockHash: { key: 'blockHash', label: 'Merkle Block Hash', sensitive: true },
-  riskClass: { key: 'riskClass', label: 'Risk Classification', sensitive: false },
-  spoofProbability: { key: 'spoofProbability', label: 'Spoof Probability', sensitive: false },
-  dispatchedAlerts: { key: 'dispatchedAlerts', label: 'Dispatched Alerts', sensitive: false },
-};
 
 const mockIncidents: IncidentRecord[] = [
   {
@@ -82,18 +65,20 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterClass, setFilterClass] = useState<'All' | 'Critical Deepfake' | 'Suspicious Jitter'>('All');
   const [search, setSearch] = useState('');
-  const [revealAll, setRevealAll] = useState(false);
+  const [fullHashView, setFullHashView] = useState(false);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const filtered = incidents.filter((inc) => {
+  const filtered = incidents.filter((inc, idx) => {
     const matchesFilter = filterClass === 'All' || inc.riskClass === filterClass;
     const matchesSearch =
       inc.sessionId.toLowerCase().includes(search.toLowerCase()) ||
       inc.callerHash.toLowerCase().includes(search.toLowerCase()) ||
-      inc.triggerMechanism.toLowerCase().includes(search.toLowerCase());
+      inc.triggerMechanism.toLowerCase().includes(search.toLowerCase()) ||
+      `session ref #${idx + 1}`.includes(search.toLowerCase()) ||
+      `caller id #${idx + 1}`.includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -195,30 +180,35 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
             <Search className="w-3.5 h-3.5 text-[#5E666B] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.75} />
             <input
               type="text"
-              placeholder="Search session ID, hash, or trigger..."
+              placeholder="Search session ref, trigger, or hash..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[#050607] border border-[#1E2225] rounded-lg pl-8 pr-3 py-1.5 text-[12px] text-[#F2F4F5] placeholder:text-[#5E666B] focus:outline-none focus:border-[#FF4713] transition-colors"
             />
           </div>
 
-          {/* Page-level Reveal All Privacy Toggle */}
-          <Tooltip content={revealAll ? "Re-mask sensitive identifiers" : "Temporarily reveal all sensitive identifiers in this register"}>
+          {/* Table-level "Toggle Full / Ref" View */}
+          <Tooltip content={fullHashView ? "Switch back to clean Reference Tokens" : "Switch to Raw Cryptographic Hashes"}>
             <button
               type="button"
-              onClick={() => setRevealAll((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer whitespace-nowrap ${
-                revealAll
+              onClick={() => setFullHashView((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-mono font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer whitespace-nowrap ${
+                fullHashView
                   ? 'bg-[#FF4713]/15 border-[#FF4713]/40 text-[#FF4713] shadow-[0_0_12px_rgba(255,71,19,0.18)]'
                   : 'bg-[#141719] hover:bg-[#1E2225] border-[#1E2225] text-[#9BA3A8] hover:text-[#F2F4F5]'
               }`}
             >
-              {revealAll ? (
-                <EyeOff className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+              {fullHashView ? (
+                <>
+                  <Code className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+                  <span>[&lt;&gt;] Full Hashes View</span>
+                </>
               ) : (
-                <Eye className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={1.75} />
+                <>
+                  <Hash className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={2} />
+                  <span>[#] Reference View</span>
+                </>
               )}
-              <span>{revealAll ? 'Mask All' : 'Reveal All'}</span>
             </button>
           </Tooltip>
         </div>
@@ -230,7 +220,7 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
           <table className="w-full text-left text-[12.5px] border-collapse">
             <thead className="bg-[#050607]/80 border-b border-[#1E2225] text-[11px] font-semibold text-[#5E666B] uppercase tracking-[0.08em]">
               <tr>
-                <th className="py-3 px-4">Session ID</th>
+                <th className="py-3 px-4">Session Reference</th>
                 <th className="py-3 px-4">Risk Classification</th>
                 <th className="py-3 px-4">Spoof Probability</th>
                 <th className="py-3 px-4">Trigger Mechanism</th>
@@ -261,7 +251,7 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
                         onClick={() => toggleExpand(inc.id)}
                         className="relative group hover:bg-[#14181D] transition-colors duration-150 cursor-pointer before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-[#FF4713] before:scale-y-0 hover:before:scale-y-100 before:transition-transform before:duration-150 before:origin-top"
                       >
-                        {/* Masked Session ID */}
+                        {/* Clean Session Reference Token */}
                         <td className="py-3.5 px-4 font-mono font-medium text-[#F2F4F5]">
                           <div className="flex items-center gap-2">
                             {isExpanded ? (
@@ -269,15 +259,11 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
                             ) : (
                               <ChevronDown className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={1.75} />
                             )}
-                            <PrivacyMask
-                              value={inc.sessionId}
-                              label="Incident Session ID"
-                              sensitive={incidentColumnConfigs.sessionId.sensitive}
-                              alwaysRevealed={revealAll}
-                              staggerIndex={index}
-                              showEyeButton={true}
-                              copyable={true}
-                              className="text-[#FF4713] font-semibold"
+                            <ReferenceToken
+                              type="session"
+                              raw={inc.sessionId}
+                              index={index + 1}
+                              fullView={fullHashView}
                             />
                           </div>
                           <span className="text-[10.5px] font-mono text-[#5E666B] block ml-5 mt-0.5">
@@ -304,17 +290,9 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
                           {(inc.spoofProbability * 100).toFixed(1)}% (P: {inc.spoofProbability.toFixed(3)})
                         </td>
 
-                        {/* Trigger Mechanism (Configurable sensitive column) */}
-                        <td className="py-3.5 px-4 text-[#9BA3A8] max-w-xs">
-                          <PrivacyMask
-                            value={inc.triggerMechanism}
-                            label="Trigger Mechanism"
-                            sensitive={incidentColumnConfigs.triggerMechanism.sensitive}
-                            alwaysRevealed={revealAll}
-                            staggerIndex={index}
-                            showEyeButton={false}
-                            className="text-[11.5px] truncate block"
-                          />
+                        {/* Trigger Mechanism: Unblurred, crisp, legible */}
+                        <td className="py-3.5 px-4 text-[#9BA3A8] max-w-xs truncate text-[12px]">
+                          {inc.triggerMechanism}
                         </td>
 
                         {/* Dispatched Alerts */}
@@ -377,27 +355,21 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
                               </p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2.5 border-t border-[#1E2225] text-[11px]">
                                 <div className="space-y-1">
-                                  <span className="text-[#5E666B] block text-[10px] uppercase">Salted Caller Hash:</span>
-                                  <PrivacyMask
-                                    value={inc.callerHash}
-                                    label="Caller Hash"
-                                    sensitive={incidentColumnConfigs.callerHash.sensitive}
-                                    alwaysRevealed={revealAll}
-                                    showEyeButton={true}
-                                    copyable={true}
-                                    className="text-[#9BA3A8]"
+                                  <span className="text-[#5E666B] block text-[10px] uppercase">Salted Caller Identity:</span>
+                                  <ReferenceToken
+                                    type="caller"
+                                    raw={inc.callerHash}
+                                    index={index + 1}
+                                    fullView={fullHashView}
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <span className="text-[#5E666B] block text-[10px] uppercase">Merkle Block Hash:</span>
-                                  <PrivacyMask
-                                    value={inc.blockHash}
-                                    label="Merkle Block Hash"
-                                    sensitive={incidentColumnConfigs.blockHash.sensitive}
-                                    alwaysRevealed={revealAll}
-                                    showEyeButton={true}
-                                    copyable={true}
-                                    className="text-[#22C55E]"
+                                  <span className="text-[#5E666B] block text-[10px] uppercase">Merkle Block Anchor:</span>
+                                  <ReferenceToken
+                                    type="hash"
+                                    raw={inc.blockHash}
+                                    index={index + 1}
+                                    fullView={fullHashView}
                                   />
                                 </div>
                               </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ShieldCheck, AlertTriangle, ShieldAlert, Fingerprint } from 'lucide-react';
 import type { VerdictType, RulesConfig } from '../../types/dashboard';
-import { PrivacyMask } from '../common/PrivacyMask';
+import { ReferenceToken } from '../common/ReferenceToken';
 
 interface VoiceTrustIndexPanelProps {
   score: number; // 0 - 100
@@ -257,16 +257,14 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
         </div>
       </div>
 
-      {/* Sub-Fields (Session ID, AASIST Raw Logit, AASIST Confidence) */}
+      {/* Sub-Fields (Session Reference, AASIST Raw Logit, AASIST Confidence) */}
       <div className="mt-2 pt-3 border-t border-[#1E2225] space-y-1.5 font-mono text-[11px]">
         <div className="flex items-center justify-between text-[#9BA3A8]">
-          <span className="text-[#5E666B]">Session ID:</span>
-          <PrivacyMask
-            value={sessionId}
-            label="Overview Session ID"
-            showEyeButton={true}
-            copyable={true}
-            className="text-[#F2F4F5] truncate font-semibold"
+          <span className="text-[#5E666B]">Session Ref:</span>
+          <ReferenceToken
+            type="session"
+            raw={sessionId}
+            index={1}
           />
         </div>
 

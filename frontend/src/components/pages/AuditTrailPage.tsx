@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, CheckCircle2, Download, RefreshCw, FileText, Search, ChevronLeft, ChevronRight, Eye, EyeOff, Database } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Download, RefreshCw, FileText, Search, ChevronLeft, ChevronRight, Database, Hash, Code } from 'lucide-react';
 import type { AuditRecord } from '../../types/dashboard';
-import { PrivacyMask } from '../common/PrivacyMask';
+import { ReferenceToken } from '../common/ReferenceToken';
 import { Tooltip } from '../common/Tooltip';
 
 interface AuditTrailPageProps {
@@ -89,7 +89,7 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
   const [chainResult, setChainResult] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [revealAll, setRevealAll] = useState(false);
+  const [fullHashView, setFullHashView] = useState(false);
   const pageSize = 4;
 
   const handleVerifyRow = (id: string) => {
@@ -149,12 +149,14 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
     link.remove();
   };
 
-  const filtered = records.filter((r) => {
+  const filtered = records.filter((r, idx) => {
     const matchesFilter = filterVerdict === 'All' || r.verdict === filterVerdict;
     const matchesSearch =
       r.sessionId.toLowerCase().includes(search.toLowerCase()) ||
       r.callerHash.toLowerCase().includes(search.toLowerCase()) ||
-      r.blockHash.toLowerCase().includes(search.toLowerCase());
+      r.blockHash.toLowerCase().includes(search.toLowerCase()) ||
+      `caller id #${idx + 1}`.includes(search.toLowerCase()) ||
+      `session ref #${idx + 1}`.includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -275,7 +277,7 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
             <Search className="w-3.5 h-3.5 text-[#5E666B] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.75} />
             <input
               type="text"
-              placeholder="Search by session ID or hash..."
+              placeholder="Search session ref, caller ID, or hash..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -285,23 +287,28 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
             />
           </div>
 
-          {/* Page-level Reveal All Privacy Toggle */}
-          <Tooltip content={revealAll ? "Re-mask sensitive identifiers" : "Temporarily reveal all sensitive identifiers in this ledger"}>
+          {/* Table-level "Toggle Full / Ref" View */}
+          <Tooltip content={fullHashView ? "Switch back to clean Reference Tokens" : "Switch to Raw Cryptographic Hashes"}>
             <button
               type="button"
-              onClick={() => setRevealAll((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer whitespace-nowrap ${
-                revealAll
+              onClick={() => setFullHashView((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-mono font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-[0.97] cursor-pointer whitespace-nowrap ${
+                fullHashView
                   ? 'bg-[#FF4713]/15 border-[#FF4713]/40 text-[#FF4713] shadow-[0_0_12px_rgba(255,71,19,0.18)]'
                   : 'bg-[#141719] hover:bg-[#1E2225] border-[#1E2225] text-[#9BA3A8] hover:text-[#F2F4F5]'
               }`}
             >
-              {revealAll ? (
-                <EyeOff className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+              {fullHashView ? (
+                <>
+                  <Code className="w-3.5 h-3.5 text-[#FF4713]" strokeWidth={1.75} />
+                  <span>[&lt;&gt;] Full Hashes View</span>
+                </>
               ) : (
-                <Eye className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={1.75} />
+                <>
+                  <Hash className="w-3.5 h-3.5 text-[#9BA3A8]" strokeWidth={2} />
+                  <span>[#] Reference View</span>
+                </>
               )}
-              <span>{revealAll ? 'Mask All' : 'Reveal All'}</span>
             </button>
           </Tooltip>
         </div>
@@ -313,8 +320,8 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
           <table className="w-full text-left text-[12.5px] border-collapse font-sans">
             <thead className="bg-[#050607]/80 border-b border-[#1E2225] text-[11px] font-semibold text-[#5E666B] uppercase tracking-[0.08em]">
               <tr>
-                <th className="py-3 px-4">Session ID</th>
-                <th className="py-3 px-4">Salted Caller Hash (SHA-256)</th>
+                <th className="py-3 px-4">Session Reference</th>
+                <th className="py-3 px-4">Caller Identity</th>
                 <th className="py-3 px-4">Voice Trust Index</th>
                 <th className="py-3 px-4">Verdict</th>
                 <th className="py-3 px-4">Challenge</th>
@@ -326,7 +333,7 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
             {/* AnimatePresence for smooth cross-fade on page transition */}
             <AnimatePresence mode="wait">
               <motion.tbody
-                key={currentPage + filterVerdict + search}
+                key={currentPage + filterVerdict + search + (fullHashView ? 'full' : 'ref')}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -345,6 +352,7 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
                 ) : (
                   paginated.map((row, index) => {
                     const isAlert = row.verdict === 'ALERT';
+                    const globalIndex = (currentPage - 1) * pageSize + index + 1;
                     return (
                       <motion.tr
                         key={row.id}
@@ -353,29 +361,23 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
                         transition={{ duration: 0.18, delay: index * 0.03 }}
                         className="relative group hover:bg-[#14181D] transition-colors duration-150 cursor-default before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-[#FF4713] before:scale-y-0 hover:before:scale-y-100 before:transition-transform before:duration-150 before:origin-top"
                       >
-                        {/* Masked Session ID */}
+                        {/* Clean Session Reference Token */}
                         <td className="py-3.5 px-4 font-mono font-medium text-[#FF4713]">
-                          <PrivacyMask
-                            value={row.sessionId}
-                            label="Audit Session ID"
-                            alwaysRevealed={revealAll}
-                            staggerIndex={index}
-                            showEyeButton={true}
-                            copyable={true}
-                            className="font-semibold text-[#FF4713]"
+                          <ReferenceToken
+                            type="session"
+                            raw={row.sessionId}
+                            index={globalIndex}
+                            fullView={fullHashView}
                           />
                         </td>
 
-                        {/* Masked Salted Caller Hash */}
+                        {/* Clean Caller Identity Token */}
                         <td className="py-3.5 px-4 font-mono text-[#9BA3A8]">
-                          <PrivacyMask
-                            value={row.callerHash}
-                            label="Salted Caller Hash"
-                            alwaysRevealed={revealAll}
-                            staggerIndex={index}
-                            showEyeButton={true}
-                            copyable={true}
-                            className="max-w-[170px] truncate text-[#9BA3A8]"
+                          <ReferenceToken
+                            type="caller"
+                            raw={row.callerHash}
+                            index={globalIndex}
+                            fullView={fullHashView}
                           />
                         </td>
 

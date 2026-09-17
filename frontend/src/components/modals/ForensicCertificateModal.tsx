@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, X, Copy, Check, Printer, FileText } from 'lucide-react';
-import { PrivacyMask } from '../common/PrivacyMask';
+import { ReferenceToken } from '../common/ReferenceToken';
 
 interface CertData {
   sessionId: string;
@@ -102,13 +102,11 @@ export const ForensicCertificateModal: React.FC<ForensicCertificateModalProps> =
             {/* Core Metadata Table */}
             <div className="grid grid-cols-2 gap-3 text-[11.5px] font-mono">
               <div className="p-3 rounded-xl bg-[#050607] border border-[#1E2225] space-y-1">
-                <span className="text-[#5E666B] uppercase text-[10px] block">Session ID</span>
-                <PrivacyMask
-                  value={cert.sessionId}
-                  label="Certificate Session ID"
-                  showEyeButton={true}
-                  copyable={true}
-                  className="text-[#F2F4F5] font-semibold"
+                <span className="text-[#5E666B] uppercase text-[10px] block">Session Reference</span>
+                <ReferenceToken
+                  type="session"
+                  raw={cert.sessionId}
+                  index={1}
                 />
               </div>
 
@@ -138,24 +136,20 @@ export const ForensicCertificateModal: React.FC<ForensicCertificateModalProps> =
               </div>
 
               <div className="space-y-1">
-                <span className="text-[#5E666B] text-[10px] block uppercase">Previous Block Hash:</span>
-                <PrivacyMask
-                  value={cert.prevHash}
-                  label="Previous Block Hash"
-                  showEyeButton={true}
-                  copyable={true}
-                  className="text-[#9BA3A8] text-[10.5px] max-w-full truncate"
+                <span className="text-[#5E666B] text-[10px] block uppercase">Previous Block Anchor:</span>
+                <ReferenceToken
+                  type="hash"
+                  raw={cert.prevHash}
+                  label="Previous Block Ref #0"
                 />
               </div>
 
               <div className="space-y-1 pt-1.5 border-t border-[#1E2225]">
-                <span className="text-[#5E666B] text-[10px] block uppercase">Current Merkle Block Hash:</span>
-                <PrivacyMask
-                  value={cert.blockHash}
-                  label="Current Block Hash"
-                  showEyeButton={true}
-                  copyable={true}
-                  className="text-[#22C55E] text-[10.5px] max-w-full truncate"
+                <span className="text-[#5E666B] text-[10px] block uppercase">Current Merkle Block Anchor:</span>
+                <ReferenceToken
+                  type="hash"
+                  raw={cert.blockHash}
+                  label="Merkle Block Anchor Ref #1"
                 />
               </div>
             </div>
