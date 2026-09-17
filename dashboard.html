@@ -2103,26 +2103,27 @@
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
           <!-- Pillar 1: Initial Passive Score -->
           <div class="diag-subcard" style="padding: 14px; text-align: center; border: 1px solid var(--border-subtle); background: var(--surface-2);">
-            <span class="diag-subcard-label" style="font-size: 10px;">[1] PASSIVE SCORE (AASIST)</span>
-            <div class="mono" id="resPassiveScore" style="font-size: 24px; font-weight: 800; color: var(--status-alert); margin: 8px 0 4px 0;">78.4%</div>
-            <span class="status-tag alert" id="resPassiveTag" style="font-size: 10px; padding: 2px 8px;">Suspicious Logits</span>
-            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 8px;">Acoustic artifacts / line noise</div>
+            <span class="diag-subcard-label" style="font-size: 10px;">[1] PASSIVE RISK (AASIST)</span>
+            <div class="mono" id="resPassiveScore" style="font-size: 24px; font-weight: 800; color: var(--status-caution); margin: 8px 0 4px 0;">36.0%</div>
+            <span class="status-tag caution" id="resPassiveTag" style="font-size: 10px; padding: 2px 8px;">Acoustic Hesitation</span>
+            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 8px;">Microphone acoustics & ambient noise</div>
           </div>
 
           <!-- Pillar 2: Active Challenge Reflex -->
           <div class="diag-subcard" style="padding: 14px; text-align: center; border: 1px solid var(--border-subtle); background: var(--surface-2);">
             <span class="diag-subcard-label" style="font-size: 10px;">[2] ACTIVE REFLEX (LIVENESS)</span>
             <div class="mono" id="resLivenessScore" style="font-size: 24px; font-weight: 800; color: var(--status-safe); margin: 8px 0 4px 0;">95.0%</div>
-            <span class="status-tag safe" id="resLivenessTag" style="font-size: 10px; padding: 2px 8px;">Natural Bio Reflex</span>
-            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 8px;" id="resLatencyNote">Turnaround: 412 ms</div>
+            <span class="status-tag safe" id="resLivenessTag" style="font-size: 10px; padding: 2px 8px;">Biological Reflex</span>
+            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 8px;" id="resLatencyNote">Turnaround: 374 ms (Natural Human)</div>
           </div>
 
           <!-- Pillar 3: Fused Decision -->
           <div class="diag-subcard" style="padding: 14px; text-align: center; border: 1px solid var(--border-medium); background: var(--surface-3); box-shadow: 0 0 16px rgba(0,0,0,0.3);">
-            <span class="diag-subcard-label" style="font-size: 10px; color: var(--brand);">[3] FUSED OPERATIONAL RISK</span>
-            <div class="mono" id="resFusedScore" style="font-size: 24px; font-weight: 800; color: var(--status-safe); margin: 8px 0 4px 0;">12.0%</div>
-            <span class="status-tag safe" id="resVerdictTag" style="font-size: 10px; padding: 2px 8px;">ALLOW / CLEARED</span>
-            <div style="font-size: 11px; color: var(--status-safe); font-weight: 600; margin-top: 8px;" id="resDeltaNote">⬇ 66.4% Risk Reduction</div>
+            <span class="diag-subcard-label" style="font-size: 10px; color: var(--brand);">[3] FUSED HUMAN CONFIDENCE</span>
+            <div class="mono" id="resFusedScore" style="font-size: 26px; font-weight: 900; color: var(--status-safe); margin: 6px 0 2px 0;">92.9%</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;" id="resResidualRiskNote">Attack Risk: 7.1% (Minimal)</div>
+            <span class="status-tag safe" id="resVerdictTag" style="font-size: 10.5px; padding: 3px 10px; font-weight: 700;">ALLOW / CLEARED</span>
+            <div style="font-size: 11px; color: var(--status-safe); font-weight: 600; margin-top: 8px;" id="resDeltaNote">⬇ 28.9% Risk Reduction (Active Enhanced)</div>
           </div>
         </div>
 
@@ -2965,16 +2966,28 @@
       const lTag = document.getElementById('resLivenessTag');
       const latNote = document.getElementById('resLatencyNote');
       const fScoreElem = document.getElementById('resFusedScore');
+      const resRiskElem = document.getElementById('resResidualRiskNote');
       const vTag = document.getElementById('resVerdictTag');
       const deltaNote = document.getElementById('resDeltaNote');
       const formBreak = document.getElementById('resFormulaBreakdown');
       const formExpl = document.getElementById('resFormulaExplanation');
 
+      const humanConfidence = (1.0 - fusedRisk);
+
       if (pScoreElem) pScoreElem.innerText = `${(passiveBefore * 100).toFixed(1)}%`;
       if (lScoreElem) lScoreElem.innerText = `${(liveness * 100).toFixed(1)}%`;
       if (fScoreElem) {
-        fScoreElem.innerText = `${(fusedRisk * 100).toFixed(1)}%`;
+        fScoreElem.innerText = `${(humanConfidence * 100).toFixed(1)}%`;
         fScoreElem.style.color = passed ? 'var(--status-safe)' : 'var(--status-alert)';
+      }
+      if (resRiskElem) {
+        if (passed) {
+          resRiskElem.innerText = `Attack Risk: ${(fusedRisk * 100).toFixed(1)}% (Minimal)`;
+          resRiskElem.style.color = 'var(--text-secondary)';
+        } else {
+          resRiskElem.innerText = `Attack Risk: ${(fusedRisk * 100).toFixed(1)}% (Critical Spoof)`;
+          resRiskElem.style.color = 'var(--status-alert)';
+        }
       }
 
       if (passed) {
@@ -3000,11 +3013,11 @@
           deltaNote.style.color = 'var(--status-safe)';
           deltaNote.innerText = `⬇ ${delta}% Risk Reduction (Active Enhanced)`;
         }
-        if (formBreak) formBreak.innerText = `0.55 × ${(passiveBefore).toFixed(2)} + 0.45 × ${(activeRisk).toFixed(2)} - 0.15 = ${(fusedRisk).toFixed(2)}`;
+        if (formBreak) formBreak.innerText = `0.55 × ${(passiveBefore).toFixed(2)} + 0.45 × ${(activeRisk).toFixed(2)} - 0.15 = ${(fusedRisk).toFixed(2)} (Risk) ➔ ${(humanConfidence * 100).toFixed(1)}% Human Trust`;
         if (formExpl) {
-          formExpl.innerHTML = `Passive neural risk was <strong>successfully reduced by 60%+</strong> by immediate biological reflex (<span class="mono" style="color: #fff;">${turnaroundMs}ms</span>) and phonetically verified dynamic token digits.`;
+          formExpl.innerHTML = `Passive acoustic uncertainty of ${(passiveBefore * 100).toFixed(1)}% was successfully reduced down to ${(fusedRisk * 100).toFixed(1)}% risk by immediate biological turnaround reflex (<span class="mono" style="color: #fff;">${turnaroundMs}ms</span>). Verified human confidence: <strong>${(humanConfidence * 100).toFixed(1)}%</strong>.`;
         }
-        showToast(`✓ Active Verification Passed · Multi-modal risk reduced to ${(fusedRisk * 100).toFixed(0)}%`, 'safe');
+        showToast(`✓ Active Verification Passed · Human Confidence ${(humanConfidence * 100).toFixed(0)}% (Risk ${(fusedRisk * 100).toFixed(0)}%)`, 'safe');
       } else {
         if (badgePill) {
           badgePill.className = 'status-tag alert live';
@@ -3028,7 +3041,7 @@
           deltaNote.style.color = 'var(--status-alert)';
           deltaNote.innerText = `⬆ ${delta}% Risk Escalation (Spoof Confirmed)`;
         }
-        if (formBreak) formBreak.innerText = `0.55 × ${(passiveBefore).toFixed(2)} + 0.45 × ${(activeRisk).toFixed(2)} + 0.35 = ${(fusedRisk).toFixed(2)}`;
+        if (formBreak) formBreak.innerText = `0.55 × ${(passiveBefore).toFixed(2)} + 0.45 × ${(activeRisk).toFixed(2)} + 0.35 = ${(fusedRisk).toFixed(2)} (Risk)`;
         if (formExpl) {
           formExpl.innerHTML = `Response delay of <span class="mono" style="color: #fff;">${turnaroundMs}ms</span> exceeded human thresholds, confirming cascading generative voice pipeline latency (ASR ➔ LLM ➔ TTS).`;
         }
