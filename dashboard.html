@@ -1853,6 +1853,9 @@
             <button class="sim-rail-btn" onclick="openVerificationModal()">
               ⚡ Challenge
             </button>
+            <button class="sim-rail-btn" onclick="openAudioAuditionModal()" style="border-color: rgba(255, 71, 19, 0.4); color: #FF7A45;">
+              🎧 Audition Clips
+            </button>
           </div>
         </div>
       </div>
@@ -2147,6 +2150,100 @@
             Commit & Return to Dashboard
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       AUDIO AUDITION STATION MODAL (FORENSIC CLIP COMPARATOR)
+       ========================================================================== -->
+  <div class="modal-overlay-scrim" id="audioAuditionModal" onclick="if(event.target === this) closeAudioAuditionModal()">
+    <div class="modal-box-card" style="max-width: 680px; padding: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+          <div class="eyebrow-label" style="color: var(--brand);">SIH26104 FORENSIC BENCHMARK</div>
+          <h2 style="font-family: var(--font-headline); font-size: 20px; font-weight: 800; color: #FFFFFF; margin: 4px 0;">
+            🎧 Audio Audition Station
+          </h2>
+          <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+            Listen directly to the 60-second audio streams to hear acoustic differences before streaming to the AI radar.
+          </p>
+        </div>
+        <button class="icon-circle-btn" onclick="closeAudioAuditionModal()">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+        <!-- Clip 1: Bonafide Human -->
+        <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="status-tag safe" style="font-size: 10px; padding: 2px 8px;">BONAFIDE</span>
+              <span style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">Natural Human Voice (60s)</span>
+            </div>
+            <button class="btn-pill ghost" style="font-size: 11px; padding: 4px 12px;" onclick="closeAudioAuditionModal(); executeSimScenario('safe');">
+              ▶ Stream to Radar
+            </button>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 10px 0;">
+            Natural pitch jitter (130Hz), organic vocal tract formants, natural respiratory breathing pauses.
+          </p>
+          <audio controls preload="none" src="/demo_clips/bonafide_human_speech.wav" style="width: 100%; height: 36px;"></audio>
+        </div>
+
+        <!-- Clip 2: Deepfake Voice Clone -->
+        <div style="background: var(--surface-2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="status-tag alert" style="font-size: 10px; padding: 2px 8px;">SPOOF ATTACK</span>
+              <span style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">Synthetic Voice Clone (60s)</span>
+            </div>
+            <button class="btn-pill danger" style="font-size: 11px; padding: 4px 12px;" onclick="closeAudioAuditionModal(); executeSimScenario('deepfake');">
+              ▶ Stream to Radar
+            </button>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 10px 0;">
+            Rigid monotonic pitch (145Hz), neural vocoder high-frequency phase smearing (&gt;7.5kHz), 40Hz frame clicks.
+          </p>
+          <audio controls preload="none" src="/demo_clips/deepfake_voice_clone.wav" style="width: 100%; height: 36px;"></audio>
+        </div>
+
+        <!-- Clip 3: Caution Telecom Jitter -->
+        <div style="background: var(--surface-2); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="status-tag caution" style="font-size: 10px; padding: 2px 8px;">TELECOM NOISE</span>
+              <span style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">Degraded PSTN Line with Jitter (60s)</span>
+            </div>
+            <button class="btn-pill ghost" style="font-size: 11px; padding: 4px 12px;" onclick="closeAudioAuditionModal(); executeSimScenario('caution');">
+              ▶ Stream to Radar
+            </button>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 10px 0;">
+            PSTN 50Hz electrical ground hum, GSM burst static, packet loss dropouts causing acoustic hesitation.
+          </p>
+          <audio controls preload="none" src="/demo_clips/caution_noisy_telecom.wav" style="width: 100%; height: 36px;"></audio>
+        </div>
+
+        <!-- Clip 4: Challenge Response -->
+        <div style="background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="status-tag safe" style="font-size: 10px; padding: 2px 8px;">LIVENESS TOKEN</span>
+              <span style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">Spoken Challenge Digits (60s)</span>
+            </div>
+            <button class="btn-pill ghost" style="font-size: 11px; padding: 4px 12px;" onclick="closeAudioAuditionModal(); openVerificationModal('4 · 8 · 2 · 9');">
+              ⚡ Test Challenge
+            </button>
+          </div>
+          <p style="font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 10px 0;">
+            Human caller reciting security digits with rapid biological turnaround (458ms reflex).
+          </p>
+          <audio controls preload="none" src="/demo_clips/challenge_response_digits.wav" style="width: 100%; height: 36px;"></audio>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn-pill primary" onclick="closeAudioAuditionModal()">Close Station</button>
       </div>
     </div>
   </div>
@@ -2932,7 +3029,7 @@
         sourceNode.buffer = audioBuffer;
 
         const gainNode = appState.audioCtx.createGain();
-        gainNode.gain.value = 0.20;
+        gainNode.gain.value = 0.70; // Clear audible listening level for jury demonstration
         sourceNode.connect(gainNode);
         gainNode.connect(appState.analyser);
         gainNode.connect(appState.audioCtx.destination);
@@ -2995,6 +3092,21 @@
         if (clipName === 'bonafide_human_speech') updateTrustScoreGauge(0.02, 0.02);
         else if (clipName === 'deepfake_voice_clone') updateTrustScoreGauge(0.96, 0.94);
         else if (clipName === 'caution_noisy_telecom') updateTrustScoreGauge(0.48, 0.48);
+      }
+    }
+
+    // --- Audio Audition Station Modal Handlers ---
+    function openAudioAuditionModal() {
+      const modal = document.getElementById('audioAuditionModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeAudioAuditionModal() {
+      const modal = document.getElementById('audioAuditionModal');
+      if (modal) {
+        modal.classList.remove('active');
+        // Pause any previewing audio elements
+        modal.querySelectorAll('audio').forEach(a => a.pause());
       }
     }
 
