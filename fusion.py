@@ -360,15 +360,20 @@ class FusionEngine:
             )
             ch_rec = self.challenge_engine._active_challenges.get(session_id)
             self._session_challenge_dispatched[session_id] = None
+            active_risk = 1.0 - liveness
+            fused_risk_score = max(0.01, min(0.999, (0.55 * smoothed) + (0.45 * active_risk)))
+            self._session_smoothed[session_id] = fused_risk_score
             challenge_state_obj = ChallengeState(
                 event=EventType.CHALLENGE_RESPONSE,
                 challenge_id=ch_rec.challenge_id if ch_rec else "ch_resolved",
                 challenge_type=ch_rec.challenge_type if ch_rec else "digit_repeat",
                 prompt_text=ch_rec.prompt_text if ch_rec else None,
                 liveness_passed=passed,
+                liveness_score=round(liveness, 4),
+                turnaround_ms=round(lat_ms, 1),
+                fused_score=round(fused_risk_score, 4),
+                passive_score_before=round(smoothed, 4),
             )
-            active_risk = 1.0 - liveness
-            fused_risk_score = (0.55 * smoothed) + (0.45 * active_risk)
 
         elif current_challenge and current_challenge.status == ChallengeStatus.ISSUED:
             # Challenge is currently pending

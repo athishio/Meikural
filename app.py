@@ -1085,14 +1085,51 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                             passive_score=max_risk,
                             manual_challenge_action="resolve_challenge",
                             manual_liveness_passed=passed,
+                            timestamp=ts,
                         )
-                        current_challenge = ChallengeState(
-                            event=EventType.CHALLENGE_RESPONSE,
-                            challenge_id=data.get("challenge_id", current_challenge.challenge_id),
-                            challenge_type=current_challenge.challenge_type,
-                            prompt_text=current_challenge.prompt_text,
-                            liveness_passed=passed,
+                        current_challenge = fusion_res["challenge_state"]
+                        fused_risk = fusion_res["fused_risk_score"]
+                        smoothed_score = fusion_res["smoothed_score"]
+                        verdict_str = fusion_res["verdict"]
+                        final_verdict = verdict_str
+
+                        chunk_counter += 1
+                        database.record_event(
+                            session_id=session_id,
+                            score=fused_risk,
+                            smoothed_score=round(smoothed_score, 4),
+                            verdict=verdict_str,
+                            challenge_id=current_challenge.challenge_id,
+                            timestamp=ts,
                         )
+
+                        broadcast = ScoreBroadcast(
+                            timestamp=round(ts, 3),
+                            score=fused_risk,
+                            event=current_challenge.event,
+                            metadata=MetadataInfo(
+                                session_id=session_id,
+                                chunk_id=chunk_counter,
+                                timestamp=round(ts, 3),
+                                inference_latency_ms=1.2,
+                            ),
+                            audio_health=AudioHealth(
+                                is_speech=True,
+                                rms_db=-18.5,
+                                duration_ms=2000.0,
+                            ),
+                            anti_spoofing=AntiSpoofingResult(
+                                passive_score=max_risk,
+                                verdict=VerdictType.SPOOF if max_risk >= 0.65 else (VerdictType.BONAFIDE if max_risk <= 0.35 else VerdictType.UNCERTAIN),
+                                confidence=ConfidenceLevel.HIGH,
+                                threshold_used=0.50,
+                            ),
+                            challenge_state=current_challenge,
+                            timing_profile=fusion_res.get("timing_profile"),
+                            codec_profile=codec_override or "uncompressed_pcm_16k",
+                        )
+                        await broadcast_telemetry(broadcast.model_dump_json())
+                        continue
                     elif "event" in data and data["event"] in [e.value for e in EventType]:
                         current_challenge.event = EventType(data["event"])
 
