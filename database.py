@@ -252,6 +252,17 @@ def log_event(
             (session_id, ts, score, smoothed_score, verdict, challenge_id, prev_hash, record_hash),
         )
         event_id = cursor.lastrowid
+
+        # Keep parent call record updated with latest risk score and verdict
+        has_ch = 1 if challenge_id else 0
+        cursor.execute(
+            """
+            UPDATE calls
+            SET final_risk_score = ?, final_verdict = ?, challenge_fired = MAX(challenge_fired, ?)
+            WHERE session_id = ?
+            """,
+            (score, verdict, has_ch, session_id),
+        )
         return event_id
 
 

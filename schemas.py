@@ -56,6 +56,10 @@ class ChallengeState(BaseModel):
     challenge_type: Optional[str] = Field(default=None, description="Type: phrase_repeat, digit_repeat, etc.", example="digit_repeat")
     prompt_text: Optional[str] = Field(default=None, description="Prompt text to display to user", example="Please repeat: 8 - 4 - 2")
     liveness_passed: Optional[bool] = Field(default=None, description="Active liveness challenge outcome", example=True)
+    liveness_score: Optional[float] = Field(default=None, description="Active acoustic liveness score [0.0 - 1.0]", example=0.95)
+    turnaround_ms: Optional[float] = Field(default=None, description="Turnaround reflex latency in ms", example=412.5)
+    fused_score: Optional[float] = Field(default=None, description="Multi-modal fused risk score", example=0.14)
+    passive_score_before: Optional[float] = Field(default=None, description="Passive score prior to active challenge", example=0.78)
 
 
 class ScoreBroadcast(BaseModel):
