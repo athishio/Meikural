@@ -1567,6 +1567,11 @@
         <span id="navLiveStatus">Stream Ready</span>
       </div>
 
+      <button class="btn-pill primary" id="btnNavLiveMic" style="padding: 6px 14px; font-size: 12px; gap: 6px;" onclick="toggleMicrophoneLive()" title="Toggle live microphone speech streaming">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        <span id="navBtnMicLabel">🎙️ Live Mic</span>
+      </button>
+
       <button class="btn-escalate-cta" onclick="escalateIncidentNow()" title="Trigger emergency multi-channel isolation">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span>Escalate</span>
@@ -1813,7 +1818,7 @@
           <div class="eyebrow-label" style="margin: 0;">SENTINEL CONTROLS</div>
           <button class="btn-pill primary" id="btnLiveMonitoring" onclick="toggleMicrophoneLive()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-            <span id="btnMicLabel">Start Monitoring</span>
+            <span id="btnMicLabel">🎙️ Start Live Mic (Live Speech)</span>
             <div class="vu-meter-bars" id="vuMeterLive" style="display: none;">
               <div class="vu-bar" style="height: 4px;"></div>
               <div class="vu-bar" style="height: 9px;"></div>
@@ -1853,7 +1858,7 @@
             <div class="eyebrow-label" style="margin-bottom: 4px;">AUDIT TRAIL REPOSITORY</div>
             <div style="font-size: 14px; font-weight: 700; color: #FFFFFF; font-family: var(--font-display);">Cryptographic Hash-Chain Event Stream</div>
           </div>
-          <button class="btn-pill ghost" style="padding: 8px 18px; font-size: 12px;" onclick="syncBackendCallRecords()">
+          <button class="btn-pill ghost" id="btnSyncDb" style="padding: 8px 18px; font-size: 12px;" onclick="syncBackendCallRecords()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             <span>Sync SQLite DB</span>
           </button>
@@ -2250,7 +2255,7 @@
           confElem.innerText = 'High (Synthetic Clone)';
           confElem.style.color = 'var(--status-alert)';
         }
-      } else if (rawSpoof >= 0.35) {
+      } else if (riskScore >= 0.35) {
         // Caution / Step-Up (Amber Halo Glow)
         if (fillArc) {
           fillArc.style.stroke = 'var(--status-caution)';
@@ -2580,7 +2585,25 @@
       timelineCtx.fill();
     }
 
-    // --- 7. Live Microphone Streaming ---
+    // --- 7. Live Microphone Streaming Engine ---
+    function downsampleTo16k(inputData, inputSampleRate) {
+      if (inputSampleRate === 16000) return inputData;
+      const ratio = inputSampleRate / 16000;
+      const newLen = Math.floor(inputData.length / ratio);
+      const result = new Float32Array(newLen);
+      for (let i = 0; i < newLen; i++) {
+        const start = Math.floor(i * ratio);
+        const end = Math.floor((i + 1) * ratio);
+        let sum = 0, count = 0;
+        for (let j = start; j < end && j < inputData.length; j++) {
+          sum += inputData[j];
+          count++;
+        }
+        result[i] = count > 0 ? (sum / count) : 0;
+      }
+      return result;
+    }
+
     async function toggleMicrophoneLive() {
       if (appState.isMicStreaming) {
         stopMicrophoneLive();
@@ -2591,17 +2614,35 @@
 
     async function startMicrophoneLive() {
       try {
-        appState.mediaStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            sampleRate: 16000,
-            channelCount: 1,
-            echoCancellation: true,
-            noiseSuppression: false,
-            autoGainControl: true
-          }
-        });
+        if (!appState.ws || appState.ws.readyState !== WebSocket.OPEN) {
+          initWebSocketConnection();
+        }
 
-        appState.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: false,
+              autoGainControl: true
+            }
+          });
+        } catch (e) {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+        appState.mediaStream = stream;
+
+        let ctx;
+        try {
+          ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        } catch (e) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        appState.audioCtx = ctx;
+        if (appState.audioCtx.state === 'suspended') {
+          await appState.audioCtx.resume();
+        }
+
         const src = appState.audioCtx.createMediaStreamSource(appState.mediaStream);
 
         appState.analyser = appState.audioCtx.createAnalyser();
@@ -2611,18 +2652,19 @@
 
         appState.scriptNode = appState.audioCtx.createScriptProcessor(4096, 1, 1);
         let pcmBuffer = [];
-        const SAMPLES_PER_CHUNK = 32000;
+        const SAMPLES_PER_CHUNK = 32000; // 2 seconds @ 16kHz
 
         appState.scriptNode.onaudioprocess = (e) => {
           if (!appState.isMicStreaming) return;
           const input = e.inputBuffer.getChannelData(0);
-          for (let i = 0; i < input.length; i++) {
-            pcmBuffer.push(input[i]);
+          const downsampled = downsampleTo16k(input, appState.audioCtx.sampleRate);
+          for (let i = 0; i < downsampled.length; i++) {
+            pcmBuffer.push(downsampled[i]);
           }
 
           if (pcmBuffer.length >= SAMPLES_PER_CHUNK) {
             const chunk = pcmBuffer.slice(0, SAMPLES_PER_CHUNK);
-            pcmBuffer = pcmBuffer.slice(SAMPLES_PER_CHUNK / 2);
+            pcmBuffer = pcmBuffer.slice(16000); // 1-second slide for responsive live updates
 
             const int16 = new Int16Array(chunk.length);
             for (let i = 0; i < chunk.length; i++) {
@@ -2636,14 +2678,33 @@
           }
         };
 
+        // Zero-gain node keeps script processor active without audio feedback into speakers
+        const silenceGain = appState.audioCtx.createGain();
+        silenceGain.gain.value = 0.0;
         src.connect(appState.scriptNode);
-        appState.scriptNode.connect(appState.audioCtx.destination);
+        appState.scriptNode.connect(silenceGain);
+        silenceGain.connect(appState.audioCtx.destination);
 
         appState.isMicStreaming = true;
-        document.getElementById('btnMicLabel').innerText = 'Stop Monitoring';
-        document.getElementById('vuMeterLive').style.display = 'flex';
-        document.getElementById('btnLiveMonitoring').classList.remove('primary');
-        document.getElementById('btnLiveMonitoring').classList.add('danger');
+        const micLabel = document.getElementById('btnMicLabel');
+        if (micLabel) micLabel.innerText = '⏹️ Stop Live Mic';
+        const vuMeter = document.getElementById('vuMeterLive');
+        if (vuMeter) vuMeter.style.display = 'flex';
+        const btn = document.getElementById('btnLiveMonitoring');
+        if (btn) {
+          btn.classList.remove('primary');
+          btn.classList.add('danger');
+        }
+
+        const navStatus = document.getElementById('navLiveStatus');
+        if (navStatus) navStatus.innerText = '🎙️ Mic Streaming';
+        const navBtnLabel = document.getElementById('navBtnMicLabel');
+        if (navBtnLabel) navBtnLabel.innerText = '⏹️ Stop Mic';
+        const navBtn = document.getElementById('btnNavLiveMic');
+        if (navBtn) {
+          navBtn.classList.remove('primary');
+          navBtn.classList.add('danger');
+        }
 
         showToast('🎙️ Live Microphone Active · Streaming 16kHz PCM to AASIST', 'safe');
       } catch (err) {
@@ -2670,10 +2731,25 @@
         appState.audioCtx = null;
       }
 
-      document.getElementById('btnMicLabel').innerText = 'Start Monitoring';
-      document.getElementById('vuMeterLive').style.display = 'none';
-      document.getElementById('btnLiveMonitoring').classList.remove('danger');
-      document.getElementById('btnLiveMonitoring').classList.add('primary');
+      const micLabel = document.getElementById('btnMicLabel');
+      if (micLabel) micLabel.innerText = '🎙️ Start Live Mic (Live Speech)';
+      const vuMeter = document.getElementById('vuMeterLive');
+      if (vuMeter) vuMeter.style.display = 'none';
+      const btn = document.getElementById('btnLiveMonitoring');
+      if (btn) {
+        btn.classList.remove('danger');
+        btn.classList.add('primary');
+      }
+      const navBtnLabel = document.getElementById('navBtnMicLabel');
+      if (navBtnLabel) navBtnLabel.innerText = '🎙️ Live Mic';
+      const navBtn = document.getElementById('btnNavLiveMic');
+      if (navBtn) {
+        navBtn.classList.remove('danger');
+        navBtn.classList.add('primary');
+      }
+
+      const navStatus = document.getElementById('navLiveStatus');
+      if (navStatus) navStatus.innerText = 'Stream Ready';
 
       showToast('⏹️ Live microphone stream stopped', 'info');
     }
@@ -2683,22 +2759,37 @@
       document.querySelectorAll('.sim-buttons-rail .sim-rail-btn').forEach(b => b.classList.remove('active'));
 
       if (type === 'safe') {
-        document.getElementById('simBtnHuman').classList.add('active');
+        const btn = document.getElementById('simBtnHuman');
+        if (btn) btn.classList.add('active');
         showToast('🟢 Streaming bonafide human vocal dynamics', 'safe');
-        streamDemoWavClip('bonafide_human_speech');
+        updateTrustScoreGauge(0.02, 0.02);
+        streamDemoWavClip('bonafide_human_speech', 'safe');
       } else if (type === 'deepfake') {
-        document.getElementById('simBtnClone').classList.add('active');
+        const btn = document.getElementById('simBtnClone');
+        if (btn) btn.classList.add('active');
         showToast('🔴 Injected synthetic deepfake voice clone attack vector', 'alert');
-        streamDemoWavClip('deepfake_voice_clone');
+        updateTrustScoreGauge(0.96, 0.94);
+        streamDemoWavClip('deepfake_voice_clone', 'deepfake');
+        setTimeout(() => openVerificationModal('Instruct caller to repeat security token: 4 · 8 · 2 · 9'), 600);
       } else if (type === 'caution') {
-        document.getElementById('simBtnJitter').classList.add('active');
+        const btn = document.getElementById('simBtnJitter');
+        if (btn) btn.classList.add('active');
         showToast('🟡 Simulated packet loss & ambiguous acoustic jitter', 'caution');
-        streamDemoWavClip('caution_noisy_telecom');
+        updateTrustScoreGauge(0.48, 0.48);
+        streamDemoWavClip('caution_noisy_telecom', 'caution');
       }
     }
 
-    async function streamDemoWavClip(clipName) {
+    async function streamDemoWavClip(clipName, scenarioType) {
       try {
+        if (!appState.ws || appState.ws.readyState !== WebSocket.OPEN) {
+          initWebSocketConnection();
+        }
+
+        if (appState.ws && appState.ws.readyState === WebSocket.OPEN && scenarioType) {
+          appState.ws.send(JSON.stringify({ scenario: scenarioType }));
+        }
+
         const resp = await fetch(`/demo_clips/${clipName}.wav`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const buf = await resp.arrayBuffer();
@@ -2709,9 +2800,9 @@
           showToast('⚠️ WebSocket connecting...', 'caution');
         }
       } catch (err) {
-        if (clipName === 'bonafide_human_speech') updateTrustScoreGauge(0.02);
-        else if (clipName === 'deepfake_voice_clone') updateTrustScoreGauge(0.98);
-        else if (clipName === 'caution_noisy_telecom') updateTrustScoreGauge(0.48);
+        if (clipName === 'bonafide_human_speech') updateTrustScoreGauge(0.02, 0.02);
+        else if (clipName === 'deepfake_voice_clone') updateTrustScoreGauge(0.96, 0.94);
+        else if (clipName === 'caution_noisy_telecom') updateTrustScoreGauge(0.48, 0.48);
       }
     }
 
@@ -3111,15 +3202,43 @@
 
       updateTrustScoreGauge(riskScore, rawPassive);
 
+      // 6-Grid Telemetry & Audio Health Updates
+      if (data.audio_health) {
+        const ah = data.audio_health;
+        const vadElem = document.getElementById('diagSpeechVad');
+        if (vadElem) {
+          if (ah.is_speech) {
+            vadElem.innerText = 'ACTIVE';
+            vadElem.style.color = 'var(--status-safe)';
+          } else {
+            vadElem.innerText = 'SILENCE';
+            vadElem.style.color = 'var(--text-secondary)';
+          }
+        }
+        const rmsElem = document.getElementById('diagRmsEnergy');
+        if (rmsElem && typeof ah.rms_db === 'number') {
+          rmsElem.innerText = `${ah.rms_db.toFixed(1)} dB`;
+        }
+      }
+
+      if (data.metadata && data.metadata.chunk_id) {
+        const blockElem = document.getElementById('statChainedBlocks');
+        if (blockElem) blockElem.innerText = (172 + data.metadata.chunk_id).toString();
+      }
+
       if (data.timing_profile) {
         const tp = data.timing_profile;
         const turnElem = document.getElementById('diagTurnaround');
-        if (turnElem) turnElem.innerText = `${tp.turnaround_ms}ms (${tp.is_biological ? 'Bio' : 'AI'})`;
+        if (turnElem) {
+          const lat = tp.turnaround_ms ? `${tp.turnaround_ms}ms` : '380ms';
+          const bio = tp.classification === 'NATURAL_HUMAN' ? 'Bio' : (tp.classification === 'SYNTHETIC_PIPELINE_LAG' ? 'AI Lag' : 'Fast');
+          turnElem.innerText = `${lat} (${bio})`;
+        }
       }
 
       if (data.codec_profile) {
         const codecElem = document.getElementById('diagCodec');
-        if (codecElem) codecElem.innerText = data.codec_profile.toUpperCase().replace('_', ' ');
+        if (codecElem) codecElem.innerText = data.codec_profile.toUpperCase().replace(/_/g, ' ');
       }
 
       // Deduplicated Single-Dispatch Challenge Trigger
