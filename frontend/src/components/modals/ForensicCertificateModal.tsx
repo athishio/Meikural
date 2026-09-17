@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, X, Copy, Check, Printer, FileText } from 'lucide-react';
+import { PrivacyMask } from '../common/PrivacyMask';
 
 interface CertData {
   sessionId: string;
@@ -102,7 +103,13 @@ export const ForensicCertificateModal: React.FC<ForensicCertificateModalProps> =
             <div className="grid grid-cols-2 gap-3 text-[11.5px] font-mono">
               <div className="p-3 rounded-xl bg-[#050607] border border-[#1E2225] space-y-1">
                 <span className="text-[#5E666B] uppercase text-[10px] block">Session ID</span>
-                <span className="text-[#F2F4F5] font-semibold">{cert.sessionId}</span>
+                <PrivacyMask
+                  value={cert.sessionId}
+                  label="Certificate Session ID"
+                  showEyeButton={true}
+                  copyable={true}
+                  className="text-[#F2F4F5] font-semibold"
+                />
               </div>
 
               <div className="p-3 rounded-xl bg-[#050607] border border-[#1E2225] space-y-1">
@@ -124,20 +131,32 @@ export const ForensicCertificateModal: React.FC<ForensicCertificateModalProps> =
             </div>
 
             {/* Cryptographic Hash-Chain Box */}
-            <div className="p-3.5 rounded-xl bg-[#050607] border border-[#1E2225] space-y-2 font-mono text-[11px]">
+            <div className="p-3.5 rounded-xl bg-[#050607] border border-[#1E2225] space-y-2.5 font-mono text-[11px]">
               <div className="flex items-center justify-between text-[#5E666B]">
                 <span className="font-semibold text-[#F2F4F5]">CRYPTOGRAPHIC HASH-CHAIN DIGITAL SEAL</span>
                 <span className="text-[#22C55E]">● TAMPER-EVIDENT</span>
               </div>
 
               <div className="space-y-1">
-                <span className="text-[#5E666B] text-[10px] block">Previous Block Hash:</span>
-                <span className="text-[#9BA3A8] text-[10.5px] truncate block">{cert.prevHash}</span>
+                <span className="text-[#5E666B] text-[10px] block uppercase">Previous Block Hash:</span>
+                <PrivacyMask
+                  value={cert.prevHash}
+                  label="Previous Block Hash"
+                  showEyeButton={true}
+                  copyable={true}
+                  className="text-[#9BA3A8] text-[10.5px] max-w-full truncate"
+                />
               </div>
 
-              <div className="space-y-1 pt-1 border-t border-[#1E2225]">
-                <span className="text-[#5E666B] text-[10px] block">Current Merkle Block Hash:</span>
-                <span className="text-[#22C55E] text-[10.5px] break-all block">{cert.blockHash}</span>
+              <div className="space-y-1 pt-1.5 border-t border-[#1E2225]">
+                <span className="text-[#5E666B] text-[10px] block uppercase">Current Merkle Block Hash:</span>
+                <PrivacyMask
+                  value={cert.blockHash}
+                  label="Current Block Hash"
+                  showEyeButton={true}
+                  copyable={true}
+                  className="text-[#22C55E] text-[10.5px] max-w-full truncate"
+                />
               </div>
             </div>
           </div>

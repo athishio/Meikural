@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertOctagon, X, Send, Check } from 'lucide-react';
+import { PrivacyMask } from '../common/PrivacyMask';
 
 interface EscalateConfirmModalProps {
   isOpen: boolean;
@@ -48,7 +49,16 @@ export const EscalateConfirmModal: React.FC<EscalateConfirmModalProps> = ({
               </div>
               <div>
                 <h3 className="text-[14px] font-bold text-[#F2F4F5]">EMERGENCY TRUNK ESCALATION</h3>
-                <p className="text-[11px] font-mono text-[#9BA3A8]">Session: {sessionId}</p>
+                <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#9BA3A8] mt-0.5">
+                  <span>Session:</span>
+                  <PrivacyMask
+                    value={sessionId}
+                    label="Session ID"
+                    showEyeButton={true}
+                    copyable={true}
+                    className="text-[#FF4713] font-semibold"
+                  />
+                </div>
               </div>
             </div>
             <button

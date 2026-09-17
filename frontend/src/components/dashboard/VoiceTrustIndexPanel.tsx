@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ShieldCheck, AlertTriangle, ShieldAlert, Fingerprint } from 'lucide-react';
 import type { VerdictType, RulesConfig } from '../../types/dashboard';
+import { PrivacyMask } from '../common/PrivacyMask';
 
 interface VoiceTrustIndexPanelProps {
   score: number; // 0 - 100
@@ -260,7 +261,13 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
       <div className="mt-2 pt-3 border-t border-[#1E2225] space-y-1.5 font-mono text-[11px]">
         <div className="flex items-center justify-between text-[#9BA3A8]">
           <span className="text-[#5E666B]">Session ID:</span>
-          <span className="text-[#F2F4F5] truncate max-w-[140px]">{sessionId}</span>
+          <PrivacyMask
+            value={sessionId}
+            label="Overview Session ID"
+            showEyeButton={true}
+            copyable={true}
+            className="text-[#F2F4F5] truncate font-semibold"
+          />
         </div>
 
         <div className="flex items-center justify-between text-[#9BA3A8]">
