@@ -141,7 +141,7 @@ class ChallengeRecord:
     prompt_text: str
     expected_answer: Optional[str]
     issued_at: float
-    timeout_seconds: float = 6.0
+    timeout_seconds: float = 15.0
     status: ChallengeStatus = ChallengeStatus.ISSUED
     resolved_at: Optional[float] = None
     liveness_score: float = 0.0
@@ -152,7 +152,12 @@ class ChallengeEngine:
     """
     Manages unscripted conversational micro-challenges to provoke and expose
     synthetic voice clones, pre-recorded audio, and automated soundboards.
+    Includes strict anti-storm debouncing, session limits, and post-challenge cooldowns.
     """
+
+    CHALLENGE_TIMEOUT_SECONDS: float = 15.0
+    CHALLENGE_COOLDOWN_SECONDS: float = 25.0
+    MAX_CHALLENGES_PER_SESSION: int = 2
 
     CHALLENGE_TEMPLATES = [
         {"type": "digit_repeat", "text": "Please repeat the security digits: {d1} - {d2} - {d3} - {d4}."},
@@ -164,11 +169,39 @@ class ChallengeEngine:
 
     def __init__(self):
         self._active_challenges: Dict[str, ChallengeRecord] = {}
+        self._session_cooldown_until: Dict[str, float] = {}
+        self._session_challenge_count: Dict[str, int] = {}
 
-    def issue_challenge(self, session_id: str, challenge_type: Optional[str] = None) -> ChallengeRecord:
+    def can_issue_challenge(self, session_id: str, now: Optional[float] = None) -> bool:
+        """
+        Guards against challenge storms: checks cooldowns, limits, and existing pending challenges.
+        """
+        current_time = now if now is not None else time.time()
+
+        # 1. Check if an active, non-expired challenge is currently open
+        active = self.get_current_challenge(session_id, timestamp=current_time)
+        if active and active.status == ChallengeStatus.ISSUED:
+            return False
+
+        # 2. Check cooldown window
+        cooldown_until = self._session_cooldown_until.get(session_id, 0.0)
+        if current_time < cooldown_until:
+            return False
+
+        # 3. Check session limit
+        count = self._session_challenge_count.get(session_id, 0)
+        if count >= self.MAX_CHALLENGES_PER_SESSION:
+            return False
+
+        return True
+
+    def issue_challenge(
+        self, session_id: str, challenge_type: Optional[str] = None, timestamp: Optional[float] = None
+    ) -> ChallengeRecord:
         """
         Generates an unscripted, dynamic micro-challenge for an ambiguous or high-risk session.
         """
+        now = timestamp if timestamp is not None else time.time()
         ch_id = f"ch_{uuid.uuid4().hex[:6]}"
         template = random.choice(self.CHALLENGE_TEMPLATES)
 
@@ -185,20 +218,23 @@ class ChallengeEngine:
             challenge_type=c_type,
             prompt_text=prompt_text,
             expected_answer=f"{d1}{d2}{d3}{d4}" if "{d4}" in template["text"] else f"{d1}{d2}{d3}",
-            issued_at=time.time(),
-            timeout_seconds=6.0,
+            issued_at=now,
+            timeout_seconds=self.CHALLENGE_TIMEOUT_SECONDS,
             status=ChallengeStatus.ISSUED,
         )
         self._active_challenges[session_id] = record
-        logger.info(f"Challenge issued for session {session_id}: [{ch_id}] '{prompt_text}'")
+        self._session_challenge_count[session_id] = self._session_challenge_count.get(session_id, 0) + 1
+        logger.info(f"Challenge issued for session {session_id}: [{ch_id}] '{prompt_text}' (total: {self._session_challenge_count[session_id]})")
         return record
 
-    def get_current_challenge(self, session_id: str) -> Optional[ChallengeRecord]:
+    def get_current_challenge(self, session_id: str, timestamp: Optional[float] = None) -> Optional[ChallengeRecord]:
+        now = timestamp if timestamp is not None else time.time()
         record = self._active_challenges.get(session_id)
         if record and record.status == ChallengeStatus.ISSUED:
-            if (time.time() - record.issued_at) > record.timeout_seconds:
+            if (now - record.issued_at) > record.timeout_seconds:
                 record.status = ChallengeStatus.EXPIRED
-                logger.warning(f"Challenge [{record.challenge_id}] expired for session {session_id}")
+                self._session_cooldown_until[session_id] = now + self.CHALLENGE_COOLDOWN_SECONDS
+                logger.warning(f"Challenge [{record.challenge_id}] expired for session {session_id}. Cooldown active for {self.CHALLENGE_COOLDOWN_SECONDS}s")
         return record
 
     def evaluate_response(
@@ -207,6 +243,7 @@ class ChallengeEngine:
         is_speech: bool,
         rms_db: float,
         manual_passed: Optional[bool] = None,
+        timestamp: Optional[float] = None,
     ) -> Tuple[bool, float, float]:
         """
         Evaluates the caller's acoustic response to the issued challenge.
@@ -215,7 +252,7 @@ class ChallengeEngine:
         if not record or record.status != ChallengeStatus.ISSUED:
             return False, 0.0, 0.0
 
-        now = time.time()
+        now = timestamp if timestamp is not None else time.time()
         turnaround_ms = (now - record.issued_at) * 1000.0
         record.resolved_at = now
         record.latency_ms = turnaround_ms
@@ -239,8 +276,10 @@ class ChallengeEngine:
 
         record.status = ChallengeStatus.PASSED if passed else ChallengeStatus.FAILED
         record.liveness_score = liveness_score
+        # Enforce cooldown period after resolving
+        self._session_cooldown_until[session_id] = now + self.CHALLENGE_COOLDOWN_SECONDS
         logger.info(
-            f"Challenge [{record.challenge_id}] resolved: passed={passed}, liveness={liveness_score:.2f}, latency={turnaround_ms:.1f}ms"
+            f"Challenge [{record.challenge_id}] resolved: passed={passed}, liveness={liveness_score:.2f}, latency={turnaround_ms:.1f}ms. Cooldown active until {self._session_cooldown_until[session_id]:.1f}"
         )
         return passed, liveness_score, turnaround_ms
 
@@ -249,11 +288,15 @@ class FusionEngine:
     """
     Fuses passive AASIST deepfake score with active challenge state and
     turnaround response latency into an explainable security verdict.
+    Implements adaptive speech-gated EMA smoothing and Schmitt-trigger temporal hysteresis.
     """
 
-    def __init__(self, ema_alpha: float = 0.4):
+    def __init__(self, ema_alpha: float = 0.20):
         self.ema_alpha = ema_alpha
         self._session_smoothed: Dict[str, float] = {}
+        self._session_consecutive_high: Dict[str, int] = {}
+        self._session_challenge_dispatched: Dict[str, Optional[str]] = {}
+        self._session_verdict: Dict[str, str] = {}
         self.challenge_engine = ChallengeEngine()
         self.timing_profiler = TurnaroundLatencyProfiler()
 
@@ -268,23 +311,38 @@ class FusionEngine:
         timestamp: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
-        Executes multi-modal fusion for an incoming audio chunk.
+        Executes multi-modal fusion for an incoming audio chunk with anti-jitter smoothing.
         """
         now = timestamp or time.time()
-        prev_smoothed = self._session_smoothed.get(session_id, passive_score)
-        smoothed = (self.ema_alpha * passive_score) + ((1.0 - self.ema_alpha) * prev_smoothed)
-        self._session_smoothed[session_id] = smoothed
 
-        current_challenge = self.challenge_engine.get_current_challenge(session_id)
+        # 1. Adaptive Speech-Gated EMA Smoothing
+        prev_smoothed = self._session_smoothed.get(session_id, passive_score)
+        if is_speech:
+            smoothed = (self.ema_alpha * passive_score) + ((1.0 - self.ema_alpha) * prev_smoothed)
+            self._session_smoothed[session_id] = smoothed
+
+            # Track consecutive high-risk speech frames for temporal hysteresis
+            if smoothed >= STEP_UP_THRESHOLD:
+                self._session_consecutive_high[session_id] = self._session_consecutive_high.get(session_id, 0) + 1
+            else:
+                self._session_consecutive_high[session_id] = max(0, self._session_consecutive_high.get(session_id, 0) - 1)
+        else:
+            # Silence / ambient noise: hold smoothed score steady, decay consecutive high counter
+            smoothed = prev_smoothed
+            self._session_consecutive_high[session_id] = max(0, self._session_consecutive_high.get(session_id, 0) - 1)
+
+        current_challenge = self.challenge_engine.get_current_challenge(session_id, timestamp=now)
         challenge_state_obj = ChallengeState(event=EventType.NORMAL)
         fused_risk_score = smoothed
 
-        # 1. Evaluate Turnaround Latency & Speech Onset
+        # 2. Evaluate Turnaround Latency & Speech Onset
         timing_profile = self.timing_profiler.evaluate_speech_onset(session_id, is_speech, ts=now)
 
+        # 3. Handle Manual and Auto Challenges with Single-Dispatch Guarantee
         if manual_challenge_action == "trigger_challenge":
-            ch_record = self.challenge_engine.issue_challenge(session_id)
+            ch_record = self.challenge_engine.issue_challenge(session_id, timestamp=now)
             self.timing_profiler.mark_prompt_issued(session_id, ts=now)
+            self._session_challenge_dispatched[session_id] = ch_record.challenge_id
             challenge_state_obj = ChallengeState(
                 event=EventType.CHALLENGE_FIRED,
                 challenge_id=ch_record.challenge_id,
@@ -298,8 +356,10 @@ class FusionEngine:
                 is_speech=is_speech,
                 rms_db=rms_db,
                 manual_passed=manual_liveness_passed,
+                timestamp=now,
             )
             ch_rec = self.challenge_engine._active_challenges.get(session_id)
+            self._session_challenge_dispatched[session_id] = None
             challenge_state_obj = ChallengeState(
                 event=EventType.CHALLENGE_RESPONSE,
                 challenge_id=ch_rec.challenge_id if ch_rec else "ch_resolved",
@@ -311,18 +371,32 @@ class FusionEngine:
             fused_risk_score = (0.55 * smoothed) + (0.45 * active_risk)
 
         elif current_challenge and current_challenge.status == ChallengeStatus.ISSUED:
-            challenge_state_obj = ChallengeState(
-                event=EventType.CHALLENGE_FIRED,
-                challenge_id=current_challenge.challenge_id,
-                challenge_type=current_challenge.challenge_type,
-                prompt_text=current_challenge.prompt_text,
-                liveness_passed=None,
-            )
+            # Challenge is currently pending
+            # Only emit CHALLENGE_FIRED if it hasn't been emitted yet for this challenge_id
+            if self._session_challenge_dispatched.get(session_id) == current_challenge.challenge_id:
+                # Already dispatched! Emit NORMAL to prevent multi-popup storm
+                challenge_state_obj = ChallengeState(
+                    event=EventType.NORMAL,
+                    challenge_id=current_challenge.challenge_id,
+                    challenge_type=current_challenge.challenge_type,
+                    prompt_text=current_challenge.prompt_text,
+                    liveness_passed=None,
+                )
+            else:
+                self._session_challenge_dispatched[session_id] = current_challenge.challenge_id
+                challenge_state_obj = ChallengeState(
+                    event=EventType.CHALLENGE_FIRED,
+                    challenge_id=current_challenge.challenge_id,
+                    challenge_type=current_challenge.challenge_type,
+                    prompt_text=current_challenge.prompt_text,
+                    liveness_passed=None,
+                )
 
-        # 2. Auto-escalate if high passive risk and no challenge active
-        if smoothed >= STEP_UP_THRESHOLD and not current_challenge:
-            auto_ch = self.challenge_engine.issue_challenge(session_id)
+        elif self._session_consecutive_high.get(session_id, 0) >= 3 and self.challenge_engine.can_issue_challenge(session_id, now):
+            # 4. Auto-escalate ONLY after 3 sustained consecutive high-risk speech chunks AND passing cooldown
+            auto_ch = self.challenge_engine.issue_challenge(session_id, timestamp=now)
             self.timing_profiler.mark_prompt_issued(session_id, ts=now)
+            self._session_challenge_dispatched[session_id] = auto_ch.challenge_id
             challenge_state_obj = ChallengeState(
                 event=EventType.CHALLENGE_FIRED,
                 challenge_id=auto_ch.challenge_id,
@@ -331,21 +405,25 @@ class FusionEngine:
                 liveness_passed=None,
             )
 
-        # 3. Fuse Timing Anomaly Penalty if Available
+        # 5. Fuse Timing Anomaly Penalty if Available
         if timing_profile:
-            # Positive penalty increases spoof risk; negative reward decreases spoof risk
             fused_risk_score = max(0.01, min(0.999, fused_risk_score + timing_profile.anomaly_penalty))
 
-        # 4. Determine Unified Operational Verdict
-        if fused_risk_score > STEP_UP_THRESHOLD:
+        # 6. Schmitt-Trigger Temporal Hysteresis for Security Verdict
+        prev_verdict = self._session_verdict.get(session_id, RiskVerdict.ALLOW.value)
+        consecutive_high = self._session_consecutive_high.get(session_id, 0)
+
+        if fused_risk_score > STEP_UP_THRESHOLD and consecutive_high >= 3:
             verdict = RiskVerdict.STEP_UP_VERIFICATION.value
             acoustic_type = VerdictType.SPOOF.value
-        elif fused_risk_score >= SAFE_THRESHOLD:
+        elif fused_risk_score >= SAFE_THRESHOLD or (prev_verdict == RiskVerdict.STEP_UP_VERIFICATION.value and fused_risk_score >= 0.50):
             verdict = RiskVerdict.WARN.value
             acoustic_type = VerdictType.UNCERTAIN.value
         else:
             verdict = RiskVerdict.ALLOW.value
             acoustic_type = VerdictType.BONAFIDE.value
+
+        self._session_verdict[session_id] = verdict
 
         return {
             "passive_score": round(passive_score, 4),
@@ -359,5 +437,5 @@ class FusionEngine:
         }
 
 
-# Global Singleton
-fusion_engine = FusionEngine(ema_alpha=0.4)
+# Global Singleton with balanced 0.20 EMA smoothing
+fusion_engine = FusionEngine(ema_alpha=0.20)

@@ -980,21 +980,34 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     passive_score=score,
                     is_speech=detailed["audio_health"]["is_speech"],
                     rms_db=detailed["audio_health"]["rms_db"],
+                    timestamp=ts,
                 )
+                fused_risk = fusion_res["fused_risk_score"]
                 smoothed_score = fusion_res["smoothed_score"]
                 verdict_str = fusion_res["verdict"]
 
-                # Check if challenge was triggered
-                if current_challenge.event == EventType.CHALLENGE_FIRED:
-                    # Keep challenge state active during evaluation
-                    pass
-                elif fusion_res["challenge_state"].event != EventType.NORMAL:
-                    current_challenge = fusion_res["challenge_state"]
+                # Challenge State Synchronization (Single-Dispatch Guarantee)
+                ch_state = fusion_res["challenge_state"]
+                if ch_state.event == EventType.CHALLENGE_FIRED:
+                    current_challenge = ch_state
                     challenge_fired = True
+                elif ch_state.event == EventType.CHALLENGE_RESPONSE:
+                    current_challenge = ch_state
+                elif current_challenge.event == EventType.CHALLENGE_FIRED:
+                    # After firing once, report NORMAL while keeping challenge_id so client doesn't re-trigger popups
+                    current_challenge = ChallengeState(
+                        event=EventType.NORMAL,
+                        challenge_id=current_challenge.challenge_id,
+                        challenge_type=current_challenge.challenge_type,
+                        prompt_text=current_challenge.prompt_text,
+                        liveness_passed=None,
+                    )
+                elif current_challenge.event == EventType.CHALLENGE_RESPONSE:
+                    current_challenge = ChallengeState(event=EventType.NORMAL)
 
-                # Step-up alert dispatch
-                if score > RISK_THRESHOLD_STEP_UP and not alert_dispatched:
-                    dispatch_step_up_alerts(session_id=session_id, risk_score=score)
+                # Step-up alert dispatch (only on sustained verified high risk)
+                if fused_risk > RISK_THRESHOLD_STEP_UP and not alert_dispatched:
+                    dispatch_step_up_alerts(session_id=session_id, risk_score=fused_risk)
                     alert_dispatched = True
 
                 final_verdict = verdict_str
@@ -1002,7 +1015,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 # Record in SQLite database
                 database.record_event(
                     session_id=session_id,
-                    score=score,
+                    score=fused_risk,
                     smoothed_score=round(smoothed_score, 4),
                     verdict=verdict_str,
                     challenge_id=current_challenge.challenge_id,
@@ -1011,7 +1024,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
 
                 broadcast = ScoreBroadcast(
                     timestamp=round(ts, 3),
-                    score=score,
+                    score=fused_risk,
                     event=current_challenge.event,
                     metadata=MetadataInfo(
                         session_id=session_id,

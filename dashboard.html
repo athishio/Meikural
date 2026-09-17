@@ -2098,11 +2098,16 @@
       sessionId: 'call_df99fc14',
       rawSpoofScore: 0.021,
       trustScore: 0.98,
+      targetTrustScore: 0.98,
+      displayedTrustScore: 0.98,
       latencyMs: 436.0,
       latencyHistory: [436.0],
       isMicStreaming: false,
       activeVisTab: 'waveform',
       timelinePoints: [],
+      activeChallengeId: null,
+      dismissedChallenges: new Set(),
+      lastAlertDismissedAt: 0,
       ws: null,
       audioCtx: null,
       mediaStream: null,
@@ -2206,14 +2211,13 @@
       }
     }
 
-    // --- 4. Trust Score Gauge & Dynamic Status Halo Glow ---
-    function updateTrustScoreGauge(rawSpoof) {
-      const trust = Math.max(0.01, Math.min(0.99, 1.0 - rawSpoof));
-      appState.rawSpoofScore = rawSpoof;
+    // --- 4. Trust Score Gauge & Dynamic Status Halo Glow (Smooth Interpolation) ---
+    function updateTrustScoreGauge(riskScore, rawPassive) {
+      const trust = Math.max(0.01, Math.min(0.99, 1.0 - riskScore));
+      appState.rawSpoofScore = riskScore;
       appState.trustScore = trust;
+      appState.targetTrustScore = trust;
 
-      const scoreElem = document.getElementById('heroTrustGaugeVal');
-      const statScoreElem = document.getElementById('statTrustScore');
       const statSpoofElem = document.getElementById('statSpoofProb');
       const pillElem = document.getElementById('heroVerdictPill');
       const badgeElem = document.getElementById('radarTagBadge');
@@ -2221,16 +2225,10 @@
       const haloGlow = document.getElementById('gaugeGlowHalo');
       const confElem = document.getElementById('radarConfidenceText');
 
-      const scoreInt = Math.round(trust * 100);
-      if (scoreElem) scoreElem.innerText = scoreInt < 10 ? `0${scoreInt}` : scoreInt;
-      if (statScoreElem) statScoreElem.innerText = scoreInt;
-      if (statSpoofElem) statSpoofElem.innerText = `${(rawSpoof * 100).toFixed(1)}%`;
+      const displaySpoof = (rawPassive !== undefined) ? rawPassive : riskScore;
+      if (statSpoofElem) statSpoofElem.innerText = `${(displaySpoof * 100).toFixed(1)}%`;
 
-      const circumference = 502.65;
-      const offset = circumference * (1 - trust);
-      if (fillArc) fillArc.style.strokeDashoffset = offset;
-
-      if (rawSpoof >= 0.65) {
+      if (riskScore >= 0.65) {
         // Critical Spoof Alert (Red Halo Glow)
         if (fillArc) {
           fillArc.style.stroke = 'var(--status-alert)';
@@ -2301,7 +2299,27 @@
       appState.timelinePoints.shift();
       appState.timelinePoints.push(trust);
       renderTimelineChart();
-      updateEvidenceReadouts(rawSpoof);
+      updateEvidenceReadouts(displaySpoof);
+    }
+
+    // 60fps Smooth Lerp for Radial Trust Gauge (eliminates erratic needle twitching)
+    function smoothAnimateGauge() {
+      if (appState.targetTrustScore !== undefined && appState.displayedTrustScore !== undefined) {
+        appState.displayedTrustScore += (appState.targetTrustScore - appState.displayedTrustScore) * 0.12;
+        const trust = appState.displayedTrustScore;
+        const scoreElem = document.getElementById('heroTrustGaugeVal');
+        const statScoreElem = document.getElementById('statTrustScore');
+        const fillArc = document.getElementById('radarGaugeFill');
+
+        const scoreInt = Math.round(trust * 100);
+        if (scoreElem) scoreElem.innerText = scoreInt < 10 ? `0${scoreInt}` : scoreInt;
+        if (statScoreElem) statScoreElem.innerText = scoreInt;
+
+        const circumference = 502.65;
+        const offset = circumference * (1 - trust);
+        if (fillArc) fillArc.style.strokeDashoffset = offset;
+      }
+      requestAnimationFrame(smoothAnimateGauge);
     }
 
     function updateEvidenceReadouts(rawSpoof) {
@@ -2698,51 +2716,66 @@
     }
 
     // --- 9. Dynamic Verification Challenge Modal ---
-    function openVerificationModal() {
+    function openVerificationModal(promptText, challengeId) {
       const modal = document.getElementById('challengeModal');
+      if (!modal) return;
       modal.classList.add('active');
 
-      const d1 = Math.floor(Math.random() * 9) + 1;
-      const d2 = Math.floor(Math.random() * 9) + 1;
-      const d3 = Math.floor(Math.random() * 9) + 1;
-      const d4 = Math.floor(Math.random() * 9) + 1;
-      const prompt = `${d1} · ${d2} · ${d3} · ${d4}`;
+      const prompt = promptText || `${Math.floor(Math.random() * 9) + 1} · ${Math.floor(Math.random() * 9) + 1} · ${Math.floor(Math.random() * 9) + 1} · ${Math.floor(Math.random() * 9) + 1}`;
+      const chId = challengeId || `ch_${Math.random().toString(16).substring(2, 8)}`;
+      appState.activeChallengeId = chId;
 
-      document.getElementById('modalDynamicToken').innerText = prompt;
-      document.getElementById('challengeSnippetText').innerText = `Active Token: "${prompt}"`;
-      document.getElementById('quickChallengeCard').classList.add('active');
+      const tokenElem = document.getElementById('modalDynamicToken');
+      if (tokenElem) tokenElem.innerText = prompt;
+      const snipElem = document.getElementById('challengeSnippetText');
+      if (snipElem) snipElem.innerText = `Active Token: "${prompt}"`;
+      const qCard = document.getElementById('quickChallengeCard');
+      if (qCard) qCard.classList.add('active');
 
-      let remaining = 12;
+      let remaining = 15;
       const timerElem = document.getElementById('modalCountdownText');
       const barElem = document.getElementById('challengeTimerBar');
-      barElem.style.width = '100%';
+      if (barElem) barElem.style.width = '100%';
 
       if (appState.challengeInterval) clearInterval(appState.challengeInterval);
       appState.challengeInterval = setInterval(() => {
         remaining--;
         if (remaining <= 0) {
           clearInterval(appState.challengeInterval);
-          timerElem.innerText = '0 seconds remaining';
-          barElem.style.width = '0%';
-          document.getElementById('modalReflexStatus').innerText = 'Reflex evaluation complete';
+          if (timerElem) timerElem.innerText = '0 seconds remaining';
+          if (barElem) barElem.style.width = '0%';
+          const refElem = document.getElementById('modalReflexStatus');
+          if (refElem) refElem.innerText = 'Reflex evaluation complete';
         } else {
-          timerElem.innerText = `${remaining} seconds remaining`;
-          barElem.style.width = `${(remaining / 12) * 100}%`;
+          if (timerElem) timerElem.innerText = `${remaining} seconds remaining`;
+          if (barElem) barElem.style.width = `${(remaining / 15) * 100}%`;
         }
       }, 1000);
 
-      if (appState.ws && appState.ws.readyState === WebSocket.OPEN) {
+      showToast(`⚡ Dynamic Challenge Injected: "${prompt}"`, 'caution');
+
+      if (!challengeId && appState.ws && appState.ws.readyState === WebSocket.OPEN) {
         appState.ws.send(JSON.stringify({ action: 'trigger_challenge', prompt_text: prompt }));
       }
     }
 
     function closeVerificationModal() {
-      document.getElementById('challengeModal').classList.remove('active');
-      document.getElementById('quickChallengeCard').classList.remove('active');
+      if (appState.activeChallengeId) {
+        appState.dismissedChallenges.add(appState.activeChallengeId);
+        appState.activeChallengeId = null;
+      }
+      const modal = document.getElementById('challengeModal');
+      if (modal) modal.classList.remove('active');
+      const qCard = document.getElementById('quickChallengeCard');
+      if (qCard) qCard.classList.remove('active');
       if (appState.challengeInterval) clearInterval(appState.challengeInterval);
     }
 
     function resolveChallengeAction(passed) {
+      if (appState.activeChallengeId) {
+        appState.dismissedChallenges.add(appState.activeChallengeId);
+        appState.activeChallengeId = null;
+      }
       closeVerificationModal();
       if (passed) {
         showToast('✓ Liveness Verified: Natural biological vocal tract confirmed', 'safe');
@@ -3048,13 +3081,19 @@
     }
 
     function handleIncomingPacket(data) {
-      const rawSpoof = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
+      // Prioritize smoothed fused score, fallback to raw
+      const riskScore = (typeof data.score === 'number')
+        ? data.score
+        : ((data.anti_spoofing && data.anti_spoofing.passive_score !== undefined) ? data.anti_spoofing.passive_score : 0.0);
+
+      const rawPassive = (data.anti_spoofing && data.anti_spoofing.passive_score !== undefined)
         ? data.anti_spoofing.passive_score
-        : (typeof data.score === 'number' ? data.score : 0.0);
+        : riskScore;
 
       const sessId = (data.metadata && data.metadata.session_id) || data.session_id || appState.sessionId;
       appState.sessionId = sessId;
-      document.getElementById('radarActiveSession').innerText = sessId;
+      const sessElem = document.getElementById('radarActiveSession');
+      if (sessElem) sessElem.innerText = sessId;
 
       if (data.metadata && data.metadata.inference_latency_ms) {
         const lat = data.metadata.inference_latency_ms;
@@ -3062,24 +3101,39 @@
         if (appState.latencyHistory.length > 15) appState.latencyHistory.shift();
         const avg = appState.latencyHistory.reduce((a, b) => a + b, 0) / appState.latencyHistory.length;
         appState.latencyMs = avg;
-        document.getElementById('heroInferenceBadge').innerText = `AASIST INT8 · ${avg.toFixed(0)}ms`;
-        document.getElementById('statInferenceTime').innerText = `${avg.toFixed(0)}ms`;
-        document.getElementById('diagInferenceLat').innerText = `${avg.toFixed(0)} ms`;
+        const b1 = document.getElementById('heroInferenceBadge');
+        if (b1) b1.innerText = `AASIST INT8 · ${avg.toFixed(0)}ms`;
+        const b2 = document.getElementById('statInferenceTime');
+        if (b2) b2.innerText = `${avg.toFixed(0)}ms`;
+        const b3 = document.getElementById('diagInferenceLat');
+        if (b3) b3.innerText = `${avg.toFixed(0)} ms`;
       }
 
-      updateTrustScoreGauge(rawSpoof);
+      updateTrustScoreGauge(riskScore, rawPassive);
 
       if (data.timing_profile) {
         const tp = data.timing_profile;
-        document.getElementById('diagTurnaround').innerText = `${tp.turnaround_ms}ms (${tp.is_biological ? 'Bio' : 'AI'})`;
+        const turnElem = document.getElementById('diagTurnaround');
+        if (turnElem) turnElem.innerText = `${tp.turnaround_ms}ms (${tp.is_biological ? 'Bio' : 'AI'})`;
       }
 
       if (data.codec_profile) {
-        document.getElementById('diagCodec').innerText = data.codec_profile.toUpperCase().replace('_', ' ');
+        const codecElem = document.getElementById('diagCodec');
+        if (codecElem) codecElem.innerText = data.codec_profile.toUpperCase().replace('_', ' ');
       }
 
-      if (data.challenge_state && data.challenge_state.event === 'challenge_fired') {
-        openVerificationModal();
+      // Deduplicated Single-Dispatch Challenge Trigger
+      if (data.challenge_state) {
+        const ch = data.challenge_state;
+        const chId = ch.challenge_id;
+        if (ch.event === 'challenge_fired' && chId && !appState.dismissedChallenges.has(chId) && appState.activeChallengeId !== chId) {
+          appState.activeChallengeId = chId;
+          const prompt = ch.prompt_text || 'Please repeat dynamic token: 9 · 2 · 5';
+          openVerificationModal(prompt, chId);
+        } else if (ch.event === 'challenge_response') {
+          appState.activeChallengeId = null;
+          closeVerificationModal();
+        }
       }
     }
 
@@ -3157,6 +3211,7 @@
       syncBackendCallRecords();
 
       requestAnimationFrame(renderVisualizerAnimation);
+      requestAnimationFrame(smoothAnimateGauge);
       initWebSocketConnection();
     });
 

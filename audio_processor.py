@@ -274,8 +274,10 @@ class AASISTWrapper:
 
         # Determine verdict and confidence
         if not health["is_speech"]:
+            spoof_prob = 0.0
             verdict = "silence"
             confidence = "high"
+            raw_logits = [-5.0, 5.0]
         elif spoof_prob >= 0.65:
             verdict = "spoof"
             confidence = "high" if spoof_prob >= 0.85 else "medium"
