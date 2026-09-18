@@ -137,12 +137,16 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             </span>
           </div>
 
-          {/* Color-segmented track */}
-          <div className="relative h-10 w-full rounded-xl overflow-hidden flex border border-[#1E2225] font-mono text-[11.5px] font-bold text-white select-none">
+          {/* Color-segmented track with save confirmation pulse */}
+          <motion.div
+            animate={savedSuccess ? { scale: [1, 1.015, 1], boxShadow: ['0 0 0 rgba(34,197,94,0)', '0 0 20px rgba(34,197,94,0.35)', '0 0 0 rgba(34,197,94,0)'] } : {}}
+            transition={{ duration: 0.6 }}
+            className="relative h-10 w-full rounded-xl overflow-hidden flex border border-[#1E2225] font-mono text-[11.5px] font-bold text-white select-none transition-shadow"
+          >
             {/* Safe Band */}
             <div
               style={{ width: `${allowThreshold * 100}%` }}
-              className="bg-[#22C55E]/80 hover:bg-[#22C55E] flex items-center justify-center transition-all cursor-default"
+              className="bg-[#22C55E]/80 hover:bg-[#22C55E] flex items-center justify-center transition-all duration-150 cursor-default"
             >
               <span className="truncate px-2">ALLOW (Safe)</span>
             </div>
@@ -150,7 +154,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Caution Band */}
             <div
               style={{ width: `${(criticalThreshold - allowThreshold) * 100}%` }}
-              className="bg-[#F59E0B]/80 hover:bg-[#F59E0B] flex items-center justify-center transition-all cursor-default text-[#050607]"
+              className="bg-[#F59E0B]/80 hover:bg-[#F59E0B] flex items-center justify-center transition-all duration-150 cursor-default text-[#050607]"
             >
               <span className="truncate px-2">WARN (Challenge)</span>
             </div>
@@ -158,11 +162,11 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Alert Band */}
             <div
               style={{ width: `${(1.0 - criticalThreshold) * 100}%` }}
-              className="bg-[#EF4444]/80 hover:bg-[#EF4444] flex items-center justify-center transition-all cursor-default"
+              className="bg-[#EF4444]/80 hover:bg-[#EF4444] flex items-center justify-center transition-all duration-150 cursor-default"
             >
               <span className="truncate px-2">ALERT (Quarantine)</span>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* 3 Interactive Cards with Contiguous Sliders & Live Numeric Readout */}
@@ -193,7 +197,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
                 step="0.01"
                 value={allowThreshold}
                 onChange={(e) => handleAllowChange(parseFloat(e.target.value))}
-                className="w-full accent-[#22C55E] bg-[#141719] h-1.5 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#22C55E] bg-[#141719] h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#22C55E]/50 focus:shadow-[0_0_12px_rgba(34,197,94,0.4)] transition-all"
               />
             </div>
           </div>
@@ -247,7 +251,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
                 step="0.01"
                 value={criticalThreshold}
                 onChange={(e) => handleCriticalChange(parseFloat(e.target.value))}
-                className="w-full accent-[#EF4444] bg-[#141719] h-1.5 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#EF4444] bg-[#141719] h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#EF4444]/50 focus:shadow-[0_0_12px_rgba(239,68,68,0.4)] transition-all"
               />
             </div>
           </div>

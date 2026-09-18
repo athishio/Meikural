@@ -45,9 +45,12 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onReconnectWs}
             title="WebSocket Active · Real-time telemetry synchronized"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E] text-[11px] font-mono font-medium hover:bg-[#22C55E]/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E] text-[11px] font-mono font-medium hover:bg-[#22C55E]/20 transition-all duration-150 cursor-pointer shadow-[0_0_12px_rgba(34,197,94,0.18)] animate-[pulse_3s_ease-in-out_infinite] active:scale-[0.97]"
           >
-            <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]" />
+            </span>
             <span>Backend Live</span>
           </button>
         );
@@ -56,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onReconnectWs}
             title="Attempting WebSocket reconnect..."
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#F59E0B] text-[11px] font-mono font-medium hover:bg-[#F59E0B]/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F59E0B]/10 border border-[#F59E0B]/30 text-[#F59E0B] text-[11px] font-mono font-medium hover:bg-[#F59E0B]/20 transition-all duration-150 cursor-pointer active:scale-[0.97]"
           >
             <span className="w-2 h-2 rounded-full border border-current border-t-transparent animate-spin" />
             <span>Reconnecting</span>
@@ -68,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onReconnectWs}
             title="WebSocket disconnected. Click to reconnect."
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EF4444]/10 border border-[#EF4444]/30 text-[#EF4444] text-[11px] font-mono font-medium hover:bg-[#EF4444]/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EF4444]/10 border border-[#EF4444]/30 text-[#EF4444] text-[11px] font-mono font-medium hover:bg-[#EF4444]/20 transition-all duration-150 cursor-pointer active:scale-[0.97]"
           >
             <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
             <span>Offline (Retry)</span>
