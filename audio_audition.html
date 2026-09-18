@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEIKURAL — Forensic Audio Audition Station</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #07090D;
+      --card: #0D121B;
+      --border: rgba(255, 255, 255, 0.08);
+      --brand: #FF4713;
+      --safe: #2ECC71;
+      --alert: #EF4444;
+      --caution: #F59E0B;
+    }
+    body {
+      background-color: var(--bg);
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    audio::-webkit-media-controls-panel {
+      background-color: #161F2E;
+    }
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+      color: #94A3B8;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6 md:p-12 flex flex-col items-center justify-center">
+
+  <div class="max-w-4xl w-full">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-orange-950/60 border border-orange-500/30 text-[#FF5B00] mb-3">
+        Smart India Hackathon 2026 · SIH26104
+      </div>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white mb-2">
+        MEIKURAL Forensic Audio Station
+      </h1>
+      <p class="text-slate-400 text-sm md:text-base max-w-2xl mx-auto">
+        Listen to the 60-second benchmark audio profiles used in the live MEIKURAL engine. Compare natural biological human speech acoustics against generative neural vocoder deepfakes.
+      </p>
+    </div>
+
+    <!-- 4 Audio Comparison Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+      <!-- Card 1: Bonafide Human -->
+      <div class="bg-[#0D121B] border border-emerald-500/30 rounded-xl p-6 shadow-lg relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-extrabold tracking-wider uppercase bg-emerald-950/80 border border-emerald-500/50 text-emerald-400">
+            ✓ BONAFIDE HUMAN
+          </span>
+          <span class="text-xs text-slate-400 font-mono">60.0s · 16kHz PCM</span>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">Natural Human Voice</h3>
+        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+          Dynamic pitch variance (~130Hz) with natural micro-jitter vibrato, organic vocal-tract formants, and natural breathing pauses every 4–5s.
+        </p>
+        <audio controls class="w-full rounded-lg outline-none" src="/demo_clips/bonafide_human_speech.wav"></audio>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Expected Risk:</span>
+          <span class="text-emerald-400 font-mono font-bold">2.1% · ALLOW / CLEARED</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Deepfake Voice Clone -->
+      <div class="bg-[#0D121B] border border-red-500/40 rounded-xl p-6 shadow-lg relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-extrabold tracking-wider uppercase bg-red-950/80 border border-red-500/50 text-red-400">
+            🚨 SYNTHETIC DEEPFAKE
+          </span>
+          <span class="text-xs text-slate-400 font-mono">60.0s · 16kHz PCM</span>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">AI Voice Clone Attack</h3>
+        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+          Unnaturally rigid mechanical pitch (145Hz), high-frequency neural vocoder phase artifacts (&gt;7.5kHz), and GAN frame clicks.
+        </p>
+        <audio controls class="w-full rounded-lg outline-none" src="/demo_clips/deepfake_voice_clone.wav"></audio>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Expected Risk:</span>
+          <span class="text-red-400 font-mono font-bold">96.4% · STEP-UP / REJECTED</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Caution Telecom Jitter -->
+      <div class="bg-[#0D121B] border border-amber-500/40 rounded-xl p-6 shadow-lg relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-extrabold tracking-wider uppercase bg-amber-950/80 border border-amber-500/50 text-amber-400">
+            ⚠️ TELECOM JITTER
+          </span>
+          <span class="text-xs text-slate-400 font-mono">60.0s · 16kHz PCM</span>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">Degraded PSTN Line</h3>
+        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+          PSTN 50Hz electrical ground hum, GSM line static, and packet loss dropouts causing acoustic hesitation.
+        </p>
+        <audio controls class="w-full rounded-lg outline-none" src="/demo_clips/caution_noisy_telecom.wav"></audio>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Expected Risk:</span>
+          <span class="text-amber-400 font-mono font-bold">48.0% · TRIGGER CHALLENGE</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Active Challenge Reflex -->
+      <div class="bg-[#0D121B] border border-sky-500/30 rounded-xl p-6 shadow-lg relative overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-extrabold tracking-wider uppercase bg-sky-950/80 border border-sky-500/50 text-sky-400">
+            ⚡ ACTIVE LIVENESS
+          </span>
+          <span class="text-xs text-slate-400 font-mono">60.0s · 16kHz PCM</span>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">Dynamic Token Response</h3>
+        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+          Spoken security challenge tokens with rapid sub-second biological turnaround reflex (458ms), defeating generative AI pipelines.
+        </p>
+        <audio controls class="w-full rounded-lg outline-none" src="/demo_clips/challenge_response_digits.wav"></audio>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Reflex Latency:</span>
+          <span class="text-sky-400 font-mono font-bold">458ms (Natural Human)</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Judge Presentation Explainer Box -->
+    <div class="bg-[#101725] border border-slate-800 rounded-xl p-6 text-sm leading-relaxed text-slate-300">
+      <h4 class="font-bold text-white mb-2 flex items-center gap-2">
+        <span class="text-[#FF4713]">💡</span> Why Play These for the Judges?
+      </h4>
+      <p class="mb-2">
+        To the naked human ear, high-end neural speech synthesis sounds almost indistinguishable from a real caller. Point this out to the jury:
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-slate-400 text-xs">
+        <li><strong>Human Ear Vulnerability:</strong> A human bank teller hearing the voice clone would be completely fooled and authorize the transaction.</li>
+        <li><strong>AASIST SincNet Layer:</strong> While human ears hear smooth audio, MEIKURAL's neural acoustic filters instantly detect micro-discontinuities and phase anomalies at &gt;7.5kHz.</li>
+        <li><strong>Biological Reflex Test:</strong> If acoustic noise creates uncertainty, the active micro-challenge tests for the 1.2s+ latency required by generative AI pipelines.</li>
+      </ul>
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+        <span class="text-slate-500">Full Real-Time SOC Dashboard:</span>
+        <a href="/dashboard" target="_blank" class="text-[#FF5B00] hover:underline font-bold">Launch MEIKURAL Radar Dashboard &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

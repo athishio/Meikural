@@ -161,7 +161,7 @@ export const ForensicCertificateModal: React.FC<ForensicCertificateModalProps> =
               </button>
 
               <a
-                href={`http://127.0.0.1:8000/calls/${cert.sessionId}/certificate`}
+                href={`/calls/${cert.sessionId}/certificate`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-1.5 rounded-lg bg-[#FF4713] hover:bg-[#FF4713]/90 text-white font-semibold text-[12px] flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,71,19,0.25)] transition-all"

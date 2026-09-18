@@ -254,7 +254,7 @@ export const IncidentsPage: React.FC<IncidentsPageProps> = ({ onViewCert }) => {
                             View Cert
                           </button>
                           <a
-                            href={`http://127.0.0.1:8000/calls/${inc.sessionId}/certificate`}
+                            href={`/calls/${inc.sessionId}/certificate`}
                             target="_blank"
                             rel="noreferrer"
                             className="p-1 rounded text-[#9BA3A8] hover:text-[#F2F4F5] hover:bg-[#1E2225]"

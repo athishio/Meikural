@@ -20,6 +20,7 @@ import { ForensicCertificateModal } from './components/modals/ForensicCertificat
 import { SearchCommandPalette } from './components/modals/SearchCommandPalette';
 import { UploadModal } from './components/modals/UploadModal';
 import { BatchAnalysisModal } from './components/modals/BatchAnalysisModal';
+import { AuditionModal } from './components/modals/AuditionModal';
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
   const [selectedCert, setSelectedCert] = useState<any>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [isAuditionOpen, setIsAuditionOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -76,6 +78,9 @@ export const App: React.FC = () => {
 
   const handleQuickAction = (actionId: string) => {
     switch (actionId) {
+      case 'audition':
+        setIsAuditionOpen(true);
+        break;
       case 'upload':
         setIsUploadOpen(true);
         break;
@@ -95,7 +100,8 @@ export const App: React.FC = () => {
 
   const handleCommandSelect = (action: string) => {
     const actLower = action.toLowerCase();
-    if (actLower.includes('overview')) setActiveTab('overview');
+    if (actLower.includes('audition') || actLower.includes('clip')) setIsAuditionOpen(true);
+    else if (actLower.includes('overview')) setActiveTab('overview');
     else if (actLower.includes('active call')) setActiveTab('active-calls');
     else if (actLower.includes('incident')) setActiveTab('incidents');
     else if (actLower.includes('audit')) setActiveTab('audit-trail');
@@ -167,6 +173,7 @@ export const App: React.FC = () => {
             onEscalate={() => setIsEscalateOpen(true)}
             onSimulationScenario={setSimulationScenario}
             onTriggerChallenge={triggerChallenge}
+            onOpenAudition={() => setIsAuditionOpen(true)}
             activeScenario={activeScenario}
             analyserNode={analyserNode}
             diagnostics={diagnostics}
@@ -302,6 +309,14 @@ export const App: React.FC = () => {
       <BatchAnalysisModal
         isOpen={isBatchOpen}
         onClose={() => setIsBatchOpen(false)}
+      />
+
+      {/* Forensic Audio Audition Station Modal */}
+      <AuditionModal
+        isOpen={isAuditionOpen}
+        onClose={() => setIsAuditionOpen(false)}
+        onSimulateScenario={setSimulationScenario}
+        onTriggerChallenge={triggerChallenge}
       />
     </div>
   );

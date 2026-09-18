@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, Mic, Layers, FileText, ChevronRight, Zap } from 'lucide-react';
+import { UploadCloud, Mic, Layers, FileText, ChevronRight, Zap, Headphones } from 'lucide-react';
 import type { QuickActionItem } from '../../types/dashboard';
 
 interface QuickActionsProps {
@@ -8,6 +8,12 @@ interface QuickActionsProps {
 }
 
 const defaultActions: QuickActionItem[] = [
+  {
+    id: 'audition',
+    title: 'Audition Clips',
+    subtitle: '60s human vs deepfake audio',
+    icon: 'Headphones',
+  },
   {
     id: 'upload',
     title: 'Upload Audio',
@@ -37,6 +43,8 @@ const defaultActions: QuickActionItem[] = [
 export const QuickActions: React.FC<QuickActionsProps> = ({ onActionClick }) => {
   const renderIcon = (name: string) => {
     switch (name) {
+      case 'Headphones':
+        return <Headphones className="w-4 h-4 text-text-primary group-hover:text-accent-primary transition-colors" strokeWidth={1.5} />;
       case 'UploadCloud':
         return <UploadCloud className="w-4 h-4 text-text-primary group-hover:text-accent-primary transition-colors" strokeWidth={1.5} />;
       case 'Mic':

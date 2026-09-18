@@ -53,7 +53,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
     }
 
     try {
-      const resp = await fetch('http://127.0.0.1:8000/score', {
+      const resp = await fetch('/score', {
         method: 'POST',
         body: formData,
       });

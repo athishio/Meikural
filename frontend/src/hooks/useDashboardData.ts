@@ -91,7 +91,9 @@ export function useDashboardData() {
     }
 
     setWsState('reconnecting');
-    const wsUrl = 'ws://127.0.0.1:8000/ws/audio';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || '127.0.0.1:8000';
+    const wsUrl = `${protocol}//${host}/ws/audio`;
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -201,7 +203,7 @@ export function useDashboardData() {
 
   // Fetch persisted rules once on mount
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/rules')
+    fetch('/api/rules')
       .then((r) => r.json())
       .then((data) => {
         if (data && data.bonafide_allow_threshold !== undefined) {
@@ -277,7 +279,7 @@ export function useDashboardData() {
   // Sentinel: Run Verification
   const runVerification = useCallback(async () => {
     try {
-      await fetch(`http://127.0.0.1:8000/calls/${sessionId}/verify`);
+      await fetch(`/calls/${sessionId}/verify`);
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ action: 'rescore', session_id: sessionId }));
       }
@@ -371,8 +373,8 @@ export function useDashboardData() {
   // Escalate Trunk
   const escalateIncident = useCallback(async () => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/trunks/${sessionId}/isolate`, { method: 'POST' });
-      await fetch('http://127.0.0.1:8000/alerts/trigger', {
+      await fetch(`/api/trunks/${sessionId}/isolate`, { method: 'POST' });
+      await fetch('/alerts/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, risk_score: 0.95 }),
@@ -399,7 +401,7 @@ export function useDashboardData() {
   // Save Rules
   const saveRulesConfig = useCallback(async (newRules: RulesConfig) => {
     try {
-      await fetch('http://127.0.0.1:8000/api/rules', {
+      await fetch('/api/rules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRules),
@@ -413,7 +415,7 @@ export function useDashboardData() {
   // Run 90-Day Auto Purge
   const runPurge = useCallback(async () => {
     try {
-      const resp = await fetch('http://127.0.0.1:8000/purge-expired', { method: 'POST' });
+      const resp = await fetch('/purge-expired', { method: 'POST' });
       if (resp.ok) {
         return await resp.json();
       }
@@ -426,7 +428,7 @@ export function useDashboardData() {
   // Test Integrations Dispatch
   const testDispatch = useCallback(async (channel: 'sip' | 'twilio' | 'smtp') => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/test-dispatch?channel=${channel}`, { method: 'POST' });
+      await fetch(`/api/test-dispatch?channel=${channel}`, { method: 'POST' });
       setRules((prev) => ({
         ...prev,
         last_dispatch: {
@@ -454,7 +456,7 @@ export function useDashboardData() {
   // Sync SQLite DB
   const syncDb = useCallback(async () => {
     try {
-      await fetch('http://127.0.0.1:8000/calls');
+      await fetch('/calls');
     } catch {
       // Fallback
     }

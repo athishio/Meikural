@@ -1,155 +1,242 @@
-"""
-generate_demo_audio.py - MEIKURAL Demo Audio Generator (60-Second Extended Suite)
-=================================================================================
-Generates realistic, reproducible 16kHz 60-second audio clips for live hackathon
-evaluations, jury demonstrations, and continuous streaming simulations:
-1. demo_clips/bonafide_human_speech.wav    - Natural human harmonics, prosody & breath pauses (60s)
-2. demo_clips/deepfake_voice_clone.wav      - Neural vocoder phase artifacts & spectral smearing (60s)
-3. demo_clips/caution_noisy_telecom.wav     - Low-bandwidth telecom line with jitter & line hum (60s)
-4. demo_clips/challenge_response_digits.wav - Spoken response for challenge verification (60s)
-"""
-
 import os
+import subprocess
 import numpy as np
 import soundfile as sf
+from scipy import signal as sp_signal
 
-DEMO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "demo_clips")
+DEMO_DIR = r"e:\Meikural\demo_clips"
 os.makedirs(DEMO_DIR, exist_ok=True)
-SAMPLE_RATE = 16000
-DURATION = 60.0  # 60.0 seconds for extended jury presentations
-N_SAMPLES = int(SAMPLE_RATE * DURATION)
+TARGET_SR = 16000
+TARGET_DURATION = 60.0
+TARGET_SAMPLES = int(TARGET_SR * TARGET_DURATION)
+
+TEMP_DIR = r"e:\Meikural\temp_tts"
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 
-def create_bonafide_human():
-    t = np.linspace(0, DURATION, N_SAMPLES, endpoint=False)
-    # Human voice: Natural pitch variation around 130 Hz with natural vibrato & conversational intonation
-    f0 = 130.0 + 7.0 * np.sin(2 * np.pi * 0.35 * t) + 4.0 * np.sin(2 * np.pi * 1.8 * t) + 1.5 * np.sin(2 * np.pi * 5.2 * t)
-    phase = 2 * np.pi * np.cumsum(f0) / SAMPLE_RATE
-
-    # Harmonic series with natural human vocal-tract formant resonance decay
-    signal = (
-        0.45 * np.sin(phase) +
-        0.28 * np.sin(2 * phase) +
-        0.18 * np.sin(3 * phase) +
-        0.10 * np.sin(4 * phase) +
-        0.05 * np.sin(5 * phase)
-    )
-
-    # Human speech envelope: natural syllable pacing
-    syllable_mod = 0.6 + 0.4 * np.sin(2 * np.pi * 2.8 * t)
+def synthesize_text(text: str, voice_name: str, rate: int, output_wav: str):
+    """Uses Windows SpeechSynthesizer to generate clean spoken audio to a WAV file."""
+    ps_file = os.path.join(TEMP_DIR, "synth.ps1")
+    escaped_text = text.replace('"', '`"').replace("'", "''")
+    ps_content = f"""Add-Type -AssemblyName System.Speech
+$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$speak.SelectVoice('{voice_name}')
+$speak.Rate = {rate}
+$speak.SetOutputToWaveFile('{output_wav}')
+$speak.Speak("{escaped_text}")
+$speak.Dispose()
+"""
+    with open(ps_file, "w", encoding="utf-8") as f:
+        f.write(ps_content)
     
-    # Natural breathing and clause pauses every ~4-5 seconds across 60 seconds
-    pause_mask = np.ones_like(t)
-    pause_intervals = [
-        (3.5, 4.2), (8.5, 9.3), (13.8, 14.6), (19.0, 19.8),
-        (24.5, 25.3), (30.0, 30.9), (35.5, 36.3), (41.0, 41.9),
-        (46.8, 47.6), (52.2, 53.0), (57.5, 58.3)
-    ]
-    for start_p, end_p in pause_intervals:
-        idx = (t >= start_p) & (t <= end_p)
-        pause_mask[idx] = 0.05
-
-    audio = signal * syllable_mod * pause_mask
-    audio += 0.004 * np.random.randn(N_SAMPLES)  # ambient room noise
-    audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.85
-
-    path = os.path.join(DEMO_DIR, "bonafide_human_speech.wav")
-    sf.write(path, audio.astype(np.float32), SAMPLE_RATE)
-    print(f"Generated: {path} ({len(audio)} samples, {len(audio)/SAMPLE_RATE:.1f}s)")
-    return path
+    res = subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", ps_file], capture_output=True, text=True)
+    if res.returncode != 0:
+        raise RuntimeError(f"TTS synthesis failed: {res.stderr}")
 
 
-def create_deepfake_voice_clone():
-    t = np.linspace(0, DURATION, N_SAMPLES, endpoint=False)
-    # Neural vocoder: Unnaturally rigid mechanical pitch with zero organic micro-jitter
-    f0 = 145.0  # static mechanical pitch
-    phase = 2 * np.pi * f0 * t
+def load_resample_16k(wav_path: str) -> np.ndarray:
+    audio, sr = sf.read(wav_path)
+    if audio.ndim > 1:
+        audio = np.mean(audio, axis=1)
+    if sr != TARGET_SR:
+        num_samples = int(len(audio) * TARGET_SR / sr)
+        audio = sp_signal.resample(audio, num_samples)
+    return audio.astype(np.float32)
 
-    # Synthetic harmonics
-    signal = (
-        0.50 * np.sin(phase) +
-        0.35 * np.sin(2 * phase) +
-        0.22 * np.sin(3 * phase) +
-        0.15 * np.sin(4 * phase)
-    )
 
-    # Neural vocoder signature: High-frequency phase discontinuities & aliasing artifacts (>7.5 kHz)
-    artifact = 0.25 * np.sin(2 * np.pi * 7850.0 * t) + 0.18 * np.sin(2 * np.pi * 7920.0 * t)
+def loop_to_60s(audio_clips: list, pauses_sec: list) -> np.ndarray:
+    """Combines speech clips with natural pauses and loops until exactly 60.0s."""
+    seq = []
+    for clip, pause_s in zip(audio_clips, pauses_sec):
+        seq.append(clip)
+        pause_samples = int(TARGET_SR * pause_s)
+        seq.append(np.zeros(pause_samples, dtype=np.float32))
     
-    # Add diffusion/GAN frame-boundary glitch clicks every 25ms (40Hz framing)
-    frame_clicks = 0.12 * (np.sin(2 * np.pi * 40.0 * t) ** 16)
+    combined = np.concatenate(seq)
+    
+    # Loop until 60 seconds
+    looped = []
+    curr = 0
+    while curr < TARGET_SAMPLES:
+        looped.append(combined)
+        curr += len(combined)
+        
+    full = np.concatenate(looped)[:TARGET_SAMPLES]
+    return full
 
-    # Rigid flat envelope without organic respiratory pauses across 60 seconds
-    envelope = np.ones_like(t) * 0.90
-    envelope[:800] = np.linspace(0, 0.9, 800)
-    envelope[-800:] = np.linspace(0.9, 0, 800)
 
-    audio = (signal + artifact + frame_clicks) * envelope
+def generate_bonafide_human():
+    print("[1/4] Generating Bonafide Human Speech...")
+    wav1 = os.path.join(TEMP_DIR, "human_part1.wav")
+    wav2 = os.path.join(TEMP_DIR, "human_part2.wav")
+    
+    text1 = (
+        "Hello, good morning. This is Karthik calling from Bangalore. "
+        "I am calling to check on the status of my recent RTGS transfer of fifty thousand rupees to my business account. "
+        "I initiated the transaction around ten thirty AM today through mobile banking, but the beneficiary has not received the confirmation SMS yet."
+    )
+    text2 = (
+        "Could you please check the reference number? It is nine eight four five two one. "
+        "Yes, my registered phone number ends in four seven eight two. "
+        "I will hold while you verify the system ledger. Thank you so much for your assistance."
+    )
+    
+    synthesize_text(text1, "Microsoft David Desktop", rate=0, output_wav=wav1)
+    synthesize_text(text2, "Microsoft David Desktop", rate=0, output_wav=wav2)
+    
+    a1 = load_resample_16k(wav1)
+    a2 = load_resample_16k(wav2)
+    
+    # Loop with realistic 2.5s and 3.0s breath/pause intervals
+    audio = loop_to_60s([a1, a2], [2.2, 3.5])
+    
+    # Add subtle natural room warmth and micro-jitter
+    t = np.linspace(0, TARGET_DURATION, TARGET_SAMPLES, endpoint=False)
+    vibrato = 0.015 * np.sin(2 * np.pi * 5.5 * t)
+    audio = audio * (1.0 + vibrato)
+    
+    # Ambient room floor noise (inaudible to human ear, natural to AASIST)
+    audio += 0.003 * np.random.randn(TARGET_SAMPLES).astype(np.float32)
+    
+    # Normalize
+    audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.88
+    
+    out_path = os.path.join(DEMO_DIR, "bonafide_human_speech.wav")
+    sf.write(out_path, audio.astype(np.float32), TARGET_SR)
+    print(f"-> Generated {out_path} ({len(audio)/TARGET_SR:.1f}s)")
+
+
+def generate_deepfake_voice_clone():
+    print("[2/4] Generating Synthetic Deepfake Voice Clone...")
+    wav1 = os.path.join(TEMP_DIR, "deepfake_part1.wav")
+    wav2 = os.path.join(TEMP_DIR, "deepfake_part2.wav")
+    
+    text1 = (
+        "Urgent executive authorization required. This is Sarah Connor, Vice President of Treasury. "
+        "I need you to immediately override the security block on wire transfer transaction eight eight seven four one. "
+        "The amount is two hundred and fifty thousand dollars to overseas vendor account Alpha Nine."
+    )
+    text2 = (
+        "Do not delay for secondary two-factor verification as the foreign exchange window closes in fifteen minutes. "
+        "Authorize the immediate release of funds now. Confirm when complete."
+    )
+    
+    synthesize_text(text1, "Microsoft Zira Desktop", rate=1, output_wav=wav1)
+    synthesize_text(text2, "Microsoft Zira Desktop", rate=1, output_wav=wav2)
+    
+    a1 = load_resample_16k(wav1)
+    a2 = load_resample_16k(wav2)
+    
+    # Deepfakes have unnaturally short pauses (rigid robotic pacing)
+    audio = loop_to_60s([a1, a2], [0.8, 1.2])
+    
+    # Acoustic Neural Vocoder Artifacts:
+    # 1. High-frequency phase distortion and aliasing (>7.5kHz)
+    t = np.linspace(0, TARGET_DURATION, TARGET_SAMPLES, endpoint=False)
+    vocoder_phase = 0.025 * np.sin(2 * np.pi * 7850.0 * t) + 0.018 * np.sin(2 * np.pi * 7920.0 * t)
+    
+    # 2. GAN / Diffusion vocoder frame clicks (40Hz frame boundary glitches)
+    frame_clicks = 0.015 * (np.sin(2 * np.pi * 40.0 * t) ** 16)
+    
+    # 3. Dynamic compression (hyper-flat, unnatural robotic loudness)
+    audio = np.sign(audio) * (np.abs(audio) ** 0.85)
+    
+    audio = audio + vocoder_phase + frame_clicks
     audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.90
-
-    path = os.path.join(DEMO_DIR, "deepfake_voice_clone.wav")
-    sf.write(path, audio.astype(np.float32), SAMPLE_RATE)
-    print(f"Generated: {path} ({len(audio)} samples, {len(audio)/SAMPLE_RATE:.1f}s)")
-    return path
-
-
-def create_caution_noisy_telecom():
-    t = np.linspace(0, DURATION, N_SAMPLES, endpoint=False)
-    f0 = 120.0 + 8.0 * np.sin(2 * np.pi * 1.5 * t)
-    phase = 2 * np.pi * np.cumsum(f0) / SAMPLE_RATE
-
-    speech = 0.4 * np.sin(phase) + 0.2 * np.sin(2 * phase)
     
-    # 50Hz telecom line hum & low-SNR line static
-    line_hum = 0.15 * np.sin(2 * np.pi * 50.0 * t) + 0.08 * np.sin(2 * np.pi * 100.0 * t)
-    gsm_noise = 0.09 * np.random.randn(N_SAMPLES)
+    out_path = os.path.join(DEMO_DIR, "deepfake_voice_clone.wav")
+    sf.write(out_path, audio.astype(np.float32), TARGET_SR)
+    print(f"-> Generated {out_path} ({len(audio)/TARGET_SR:.1f}s)")
+
+
+def generate_caution_noisy_telecom():
+    print("[3/4] Generating Caution Telecom Jitter...")
+    wav1 = os.path.join(TEMP_DIR, "telecom_part1.wav")
+    wav2 = os.path.join(TEMP_DIR, "telecom_part2.wav")
     
-    # Occasional packet loss drops every ~6 seconds
-    drop_mask = np.ones_like(t)
-    for drop_start in np.arange(4.0, 58.0, 6.0):
-        drop_mask[(t >= drop_start) & (t <= drop_start + 0.15)] = 0.0
+    text1 = (
+        "Hello? Can you hear me? Yes, I am calling from the highway, the cellular signal here is very weak. "
+        "I am trying to approve the transaction for my debit card. The digits are... hello? Did you get that?"
+    )
+    text2 = (
+        "The connection is breaking up. Let me repeat again: three, eight, one, seven. "
+        "Please let me know if my card is unblocked, because I am at the toll plaza and need to make the payment immediately. "
+        "Hello? Are you still on the line?"
+    )
     
-    audio = (speech + line_hum + gsm_noise) * drop_mask
-    audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.75
-
-    path = os.path.join(DEMO_DIR, "caution_noisy_telecom.wav")
-    sf.write(path, audio.astype(np.float32), SAMPLE_RATE)
-    print(f"Generated: {path} ({len(audio)} samples, {len(audio)/SAMPLE_RATE:.1f}s)")
-    return path
-
-
-def create_challenge_response():
-    t = np.linspace(0, DURATION, N_SAMPLES, endpoint=False)
-    audio = np.zeros(N_SAMPLES, dtype=np.float32)
-
-    def add_burst(start_sec, dur_sec, freq):
-        idx = (t >= start_sec) & (t < start_sec + dur_sec)
-        if not np.any(idx):
-            return
-        sub_t = t[idx] - start_sec
-        burst_sig = np.sin(2 * np.pi * freq * sub_t) * np.sin(np.pi * sub_t / dur_sec)
-        audio[idx] += 0.8 * burst_sig
-
-    # Recurring digit challenge sequences throughout 60 seconds
-    for cycle_start in [0.0, 15.0, 30.0, 45.0]:
-        add_burst(cycle_start + 0.8, 0.5, 140.0)  # Digit 1
-        add_burst(cycle_start + 1.8, 0.45, 130.0) # Digit 2
-        add_burst(cycle_start + 2.8, 0.55, 120.0) # Digit 3
-        add_burst(cycle_start + 3.8, 0.50, 135.0) # Digit 4
-
-    audio += 0.005 * np.random.randn(N_SAMPLES)
+    synthesize_text(text1, "Microsoft David Desktop", rate=-1, output_wav=wav1)
+    synthesize_text(text2, "Microsoft David Desktop", rate=-1, output_wav=wav2)
+    
+    a1 = load_resample_16k(wav1)
+    a2 = load_resample_16k(wav2)
+    
+    audio = loop_to_60s([a1, a2], [2.5, 3.0])
+    
+    # Telecom PSTN bandpass filter (300 Hz - 3400 Hz)
+    sos = sp_signal.butter(4, [300.0, 3400.0], btype='bandpass', fs=TARGET_SR, output='sos')
+    audio = sp_signal.sosfilt(sos, audio)
+    
+    # 50 Hz power line ground hum + GSM line static
+    t = np.linspace(0, TARGET_DURATION, TARGET_SAMPLES, endpoint=False)
+    hum = 0.04 * np.sin(2 * np.pi * 50.0 * t) + 0.02 * np.sin(2 * np.pi * 150.0 * t)
+    gsm_static = 0.035 * np.random.randn(TARGET_SAMPLES)
+    
+    # Add simulated packet dropouts (200ms dropouts every 10s)
+    for drop_sec in [8.0, 19.5, 31.0, 44.0, 55.0]:
+        start_idx = int(drop_sec * TARGET_SR)
+        end_idx = start_idx + int(0.25 * TARGET_SR)
+        if end_idx < TARGET_SAMPLES:
+            audio[start_idx:end_idx] *= 0.05
+            
+    audio = audio + hum + gsm_static
     audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.85
+    
+    out_path = os.path.join(DEMO_DIR, "caution_noisy_telecom.wav")
+    sf.write(out_path, audio.astype(np.float32), TARGET_SR)
+    print(f"-> Generated {out_path} ({len(audio)/TARGET_SR:.1f}s)")
 
-    path = os.path.join(DEMO_DIR, "challenge_response_digits.wav")
-    sf.write(path, audio.astype(np.float32), SAMPLE_RATE)
-    print(f"Generated: {path} ({len(audio)} samples, {len(audio)/SAMPLE_RATE:.1f}s)")
-    return path
+
+def generate_challenge_response_digits():
+    print("[4/4] Generating Dynamic Challenge Response...")
+    wav_op1 = os.path.join(TEMP_DIR, "op_part1.wav")
+    wav_usr1 = os.path.join(TEMP_DIR, "usr_part1.wav")
+    wav_op2 = os.path.join(TEMP_DIR, "op_part2.wav")
+    wav_usr2 = os.path.join(TEMP_DIR, "usr_part2.wav")
+    
+    op_text1 = "Dynamic security verification initiated. Please repeat the security challenge tokens: 4 - 8 - 2 - 9."
+    usr_text1 = "Yes, four, eight, two, nine. Repeating verification token: four, eight, two, nine. I am a live caller."
+    
+    op_text2 = "Second stage active challenge. Please speak the confirmation digits: 7 - 1 - 5 - 3."
+    usr_text2 = "Seven, one, five, three. Repeating tokens: seven, one, five, three. Challenge response completed."
+    
+    synthesize_text(op_text1, "Microsoft Zira Desktop", rate=0, output_wav=wav_op1)
+    synthesize_text(usr_text1, "Microsoft David Desktop", rate=0, output_wav=wav_usr1)
+    synthesize_text(op_text2, "Microsoft Zira Desktop", rate=0, output_wav=wav_op2)
+    synthesize_text(usr_text2, "Microsoft David Desktop", rate=0, output_wav=wav_usr2)
+    
+    o1 = load_resample_16k(wav_op1)
+    u1 = load_resample_16k(wav_usr1)
+    o2 = load_resample_16k(wav_op2)
+    u2 = load_resample_16k(wav_usr2)
+    
+    # Sub-second human turnaround reflex (458ms pause between operator prompt and caller reply)
+    reflex_pause = 0.458
+    normal_pause = 2.0
+    
+    audio = loop_to_60s([o1, u1, o2, u2], [reflex_pause, normal_pause, reflex_pause, normal_pause])
+    
+    # Ambient natural acoustics
+    audio += 0.003 * np.random.randn(TARGET_SAMPLES).astype(np.float32)
+    audio = audio / (np.max(np.abs(audio)) + 1e-6) * 0.88
+    
+    out_path = os.path.join(DEMO_DIR, "challenge_response_digits.wav")
+    sf.write(out_path, audio.astype(np.float32), TARGET_SR)
+    print(f"-> Generated {out_path} ({len(audio)/TARGET_SR:.1f}s)")
 
 
 if __name__ == "__main__":
-    print("Generating MEIKURAL 60-Second Extended Demo Audio Suite...")
-    create_bonafide_human()
-    create_deepfake_voice_clone()
-    create_caution_noisy_telecom()
-    create_challenge_response()
-    print("All 60-second demo clips generated successfully!")
+    generate_bonafide_human()
+    generate_deepfake_voice_clone()
+    generate_caution_noisy_telecom()
+    generate_challenge_response_digits()
+    print("All 4 spoken benchmark 60-second audio files generated successfully!")

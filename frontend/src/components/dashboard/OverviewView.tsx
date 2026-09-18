@@ -28,6 +28,7 @@ interface OverviewViewProps {
   onEscalate: () => void;
   onSimulationScenario: (scenario: 'safe' | 'deepfake' | 'caution') => void;
   onTriggerChallenge: () => void;
+  onOpenAudition?: () => void;
   activeScenario?: string | null;
   analyserNode: AnalyserNode | null;
   diagnostics: TelemetryDiagnostics;
@@ -51,6 +52,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onEscalate,
   onSimulationScenario,
   onTriggerChallenge,
+  onOpenAudition,
   activeScenario,
   analyserNode,
   diagnostics,
@@ -75,6 +77,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         onEscalate={onEscalate}
         onSimulationScenario={onSimulationScenario}
         onTriggerChallenge={onTriggerChallenge}
+        onOpenAudition={onOpenAudition}
         activeScenario={activeScenario}
         isOffline={isOffline}
       />

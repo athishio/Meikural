@@ -70,6 +70,30 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
   const [trunks, setTrunks] = useState<TrunkSession[]>(mockTrunks);
   const [search, setSearch] = useState('');
 
+  // Fetch live calls from backend
+  useEffect(() => {
+    fetch('/calls')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const liveTrunks: TrunkSession[] = data.map((c: any, idx: number) => ({
+            id: `trk-db-${idx}`,
+            gateway: 'SIP Trunk 16kHz Ingest Node',
+            sessionId: c.session_id,
+            callerHash: c.caller_id_hash ? `${c.caller_id_hash.slice(0, 16)}...` : '7f9e8a12bc44d019...',
+            startTime: c.start_time ? c.start_time * 1000 : Date.now() - 30000,
+            durationSeconds: c.start_time ? Math.floor(c.end_time ? (c.end_time - c.start_time) : (Date.now() / 1000 - c.start_time)) : 30,
+            voiceTrust: Math.max(1, Math.min(99, Math.round((1 - (c.final_risk_score ?? 0.15)) * 100))),
+            channelState: (c.end_time ? 'Isolated' : 'Streaming') as 'Streaming' | 'Isolated',
+            isIsolated: Boolean(c.end_time),
+            codec: 'G.711u / PCM',
+          }));
+          setTrunks(liveTrunks);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Live-ticking durations
   useEffect(() => {
     const interval = setInterval(() => {

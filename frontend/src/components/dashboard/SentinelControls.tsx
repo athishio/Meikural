@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, PlayCircle, AlertOctagon, Zap } from 'lucide-react';
+import { Mic, MicOff, PlayCircle, AlertOctagon, Zap, Headphones } from 'lucide-react';
 
 interface SentinelControlsProps {
   isMonitoring: boolean;
@@ -8,6 +8,7 @@ interface SentinelControlsProps {
   onEscalate: () => void;
   onSimulationScenario: (scenario: 'safe' | 'deepfake' | 'caution') => void;
   onTriggerChallenge: () => void;
+  onOpenAudition?: () => void;
   activeScenario?: string | null;
   isOffline?: boolean;
 }
@@ -19,6 +20,7 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
   onEscalate,
   onSimulationScenario,
   onTriggerChallenge,
+  onOpenAudition,
   activeScenario,
   isOffline = false,
 }) => {
@@ -150,6 +152,16 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
         >
           <Zap className="w-3.5 h-3.5" />
           Challenge
+        </button>
+
+        {/* Audition Benchmark Clips Button */}
+        <button
+          onClick={onOpenAudition}
+          className="px-3 py-1.5 rounded-lg text-[11.5px] font-mono font-medium border flex items-center gap-1.5 bg-[#FF4713]/15 hover:bg-[#FF4713]/25 text-[#FF4713] border-[#FF4713]/40 shadow-[0_0_12px_rgba(255,71,19,0.2)] transition-all cursor-pointer"
+          title="Audition 60-second reference clips: Natural Human vs Generative Deepfake"
+        >
+          <Headphones className="w-3.5 h-3.5" />
+          <span>Audition Clips</span>
         </button>
       </div>
     </div>
