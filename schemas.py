@@ -76,6 +76,8 @@ class ScoreBroadcast(BaseModel):
     audio_health: AudioHealth
     anti_spoofing: AntiSpoofingResult
     challenge_state: ChallengeState
+    risk_verdict: RiskVerdict = Field(default=RiskVerdict.ALLOW, description="Hysteresis Schmitt-trigger state machine verdict")
+    demo_mode: bool = Field(default=False, description="Whether server is running in demo mode")
     timing_profile: Optional[Dict[str, Any]] = Field(default=None, description="In-call turnaround latency profiling (human reflex vs cascading AI lag)")
     codec_profile: Optional[str] = Field(default="uncompressed_pcm_16k", description="Simulated telecommunication codec")
 

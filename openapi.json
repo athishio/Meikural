@@ -6,10 +6,90 @@
     "version": "2.0.0"
   },
   "paths": {
+    "/dashboard": {
+      "get": {
+        "summary": "Get Dashboard",
+        "operationId": "get_dashboard_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
-        "summary": "Root",
-        "operationId": "root__get",
+        "summary": "Get Dashboard",
+        "operationId": "get_dashboard__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/favicon.svg": {
+      "get": {
+        "summary": "Get Favicon",
+        "operationId": "get_favicon_favicon_svg_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/icons.svg": {
+      "get": {
+        "summary": "Get Icons",
+        "operationId": "get_icons_icons_svg_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/info": {
+      "get": {
+        "summary": "Api Info",
+        "operationId": "api_info_api_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api": {
+      "get": {
+        "summary": "Api Info",
+        "operationId": "api_info_api_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -206,6 +286,44 @@
         }
       }
     },
+    "/calls/{session_id}/verify": {
+      "get": {
+        "summary": "Verify Call Chain Endpoint",
+        "description": "Verifies cryptographic hash-chain integrity across all telemetry events for a call session.\nWalks all sequential events and confirms sha256(prev_hash + session_id + timestamp + score + verdict).\nReturns verification status and the first tampered index if integrity is violated.\nNote: This is an appendable cryptographic hash-chain for tamper detection, not a distributed blockchain.",
+        "operationId": "verify_call_chain_endpoint_calls__session_id__verify_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/calls/{session_id}/report": {
       "get": {
         "summary": "Download Incident Report Endpoint",
@@ -246,10 +364,152 @@
         }
       }
     },
+    "/calls/{session_id}/certificate": {
+      "get": {
+        "summary": "Get Forensic Certificate Endpoint",
+        "description": "Returns an official, cryptographically verifiable Forensic Incident Certificate (HTML & Print-to-PDF).\nFeatures salted SHA-256 caller ID, HMAC-SHA256 digital signature, and DPDP Act 2023 compliance seal.",
+        "operationId": "get_forensic_certificate_endpoint_calls__session_id__certificate_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{session_id}/challenge/trigger": {
+      "post": {
+        "summary": "Trigger Challenge Endpoint",
+        "description": "Manually triggers an unscripted dynamic micro-challenge for an active session.",
+        "operationId": "trigger_challenge_endpoint_calls__session_id__challenge_trigger_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "challenge_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Challenge Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{session_id}/challenge/verify": {
+      "post": {
+        "summary": "Verify Challenge Endpoint",
+        "description": "Resolves the conversational micro-challenge with a verified liveness verdict.",
+        "operationId": "verify_challenge_endpoint_calls__session_id__challenge_verify_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "passed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Passed"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/alerts/trigger": {
       "post": {
         "summary": "Trigger Alert Endpoint",
-        "description": "Explicitly triggers multi-channel security alert (Twilio SMS + SMTP Email).",
+        "description": "Explicitly triggers multi-channel security alert (Twilio SMS + SMTP Email).\nRequires administrative authentication.",
         "operationId": "trigger_alert_endpoint_alerts_trigger_post",
         "requestBody": {
           "content": {
@@ -282,13 +542,204 @@
               }
             }
           }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/rules": {
+      "get": {
+        "summary": "Get Rules",
+        "operationId": "get_rules_api_rules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Update Rules",
+        "operationId": "update_rules_api_rules_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Rules"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/compliance/stats": {
+      "get": {
+        "summary": "Get Compliance Stats",
+        "operationId": "get_compliance_stats_api_compliance_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trunks/{session_id}/isolate": {
+      "post": {
+        "summary": "Isolate Trunk",
+        "operationId": "isolate_trunk_api_trunks__session_id__isolate_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trunks/isolated": {
+      "get": {
+        "summary": "Get Isolated Trunks",
+        "operationId": "get_isolated_trunks_api_trunks_isolated_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/test-dispatch": {
+      "post": {
+        "summary": "Test Dispatch",
+        "operationId": "test_dispatch_api_test_dispatch_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "twilio",
+              "title": "Channel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
       }
     },
     "/purge-expired": {
       "post": {
         "summary": "Purge Expired Endpoint",
-        "description": "Executes 90-day auto-purge compliance check to delete expired call metadata.",
+        "description": "Executes 90-day auto-purge compliance check to delete expired call metadata.\nRequires administrative authentication.",
         "operationId": "purge_expired_endpoint_purge_expired_post",
         "responses": {
           "200": {
@@ -301,14 +752,42 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/score": {
       "post": {
         "summary": "Score Audio File",
-        "description": "HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry.",
+        "description": "HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry and optional telephony codec simulation.\nAccepts audio binary in either 'file' or 'audio' multipart form field.",
         "operationId": "score_audio_file_score_post",
+        "parameters": [
+          {
+            "name": "codec",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Simulated telephony codec: g711_ulaw, g711_alaw, pstn_narrowband, amr_wb",
+              "title": "Codec"
+            },
+            "description": "Simulated telephony codec: g711_ulaw, g711_alaw, pstn_narrowband, amr_wb"
+          }
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -316,8 +795,7 @@
                 "$ref": "#/components/schemas/Body_score_audio_file_score_post"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -505,15 +983,31 @@
       "Body_score_audio_file_score_post": {
         "properties": {
           "file": {
-            "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "File"
+          },
+          "audio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio"
           }
         },
         "type": "object",
-        "required": [
-          "file"
-        ],
         "title": "Body_score_audio_file_score_post"
       },
       "CallCreateRequest": {
@@ -681,6 +1175,58 @@
             "title": "Liveness Passed",
             "description": "Active liveness challenge outcome",
             "example": true
+          },
+          "liveness_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liveness Score",
+            "description": "Active acoustic liveness score [0.0 - 1.0]",
+            "example": 0.95
+          },
+          "turnaround_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turnaround Ms",
+            "description": "Turnaround reflex latency in ms",
+            "example": 412.5
+          },
+          "fused_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fused Score",
+            "description": "Multi-modal fused risk score",
+            "example": 0.14
+          },
+          "passive_score_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passive Score Before",
+            "description": "Passive score prior to active challenge",
+            "example": 0.78
           }
         },
         "type": "object",
@@ -819,6 +1365,15 @@
         ],
         "title": "PurgeResponse"
       },
+      "RiskVerdict": {
+        "type": "string",
+        "enum": [
+          "ALLOW",
+          "WARN",
+          "STEP_UP_VERIFICATION"
+        ],
+        "title": "RiskVerdict"
+      },
       "ScoreBroadcast": {
         "properties": {
           "timestamp": {
@@ -849,6 +1404,43 @@
           },
           "challenge_state": {
             "$ref": "#/components/schemas/ChallengeState"
+          },
+          "risk_verdict": {
+            "$ref": "#/components/schemas/RiskVerdict",
+            "description": "Hysteresis Schmitt-trigger state machine verdict",
+            "default": "ALLOW"
+          },
+          "demo_mode": {
+            "type": "boolean",
+            "title": "Demo Mode",
+            "description": "Whether server is running in demo mode",
+            "default": false
+          },
+          "timing_profile": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timing Profile",
+            "description": "In-call turnaround latency profiling (human reflex vs cascading AI lag)"
+          },
+          "codec_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codec Profile",
+            "description": "Simulated telecommunication codec",
+            "default": "uncompressed_pcm_16k"
           }
         },
         "type": "object",
@@ -911,6 +1503,17 @@
           "silence"
         ],
         "title": "VerdictType"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

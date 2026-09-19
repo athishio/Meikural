@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 import json
@@ -7,9 +8,10 @@ import time
 import uuid
 from typing import List, Optional, Set
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Security, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 
 import database
@@ -40,15 +42,50 @@ from schemas import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("meikural_aasist_api")
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+DEMO_MODE = os.getenv("DEMO_MODE", "0").lower() in ("1", "true", "yes")
+MEIKURAL_API_KEY = os.getenv("MEIKURAL_API_KEY", "")
+
+if not MEIKURAL_API_KEY:
+    if ENVIRONMENT == "production":
+        raise RuntimeError("CRITICAL SECURITY ERROR: MEIKURAL_API_KEY must be configured in production environment.")
+    else:
+        MEIKURAL_API_KEY = "meikural-dev-key-2026"
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+http_bearer = HTTPBearer(auto_error=False)
+
+
+async def verify_admin_auth(
+    api_key: Optional[str] = Security(api_key_header),
+    bearer: Optional[HTTPAuthorizationCredentials] = Security(http_bearer),
+) -> str:
+    token = api_key or (bearer.credentials if bearer else None)
+    if not token or not hmac.compare_digest(token, MEIKURAL_API_KEY):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Valid X-API-Key or Bearer token required for administrative operations."
+        )
+    return token
+
+
 app = FastAPI(
     title="Meikural Audio Anti-Spoofing Streaming Service",
     description="Real-time AASIST inference service with WebSocket streaming, VAD, zero-trust privacy SQLite database, and multi-channel security alerting.",
     version="2.0.0",
 )
 
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+allowed_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()] or [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,12 +110,6 @@ FRONTEND_DIST = os.path.join(BASE_DIR, "frontend", "dist")
 if os.path.exists(os.path.join(FRONTEND_DIST, "assets")):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="react-assets")
 
-if os.path.exists(os.path.join(BASE_DIR, "css")):
-    app.mount("/css", StaticFiles(directory=os.path.join(BASE_DIR, "css")), name="css")
-if os.path.exists(os.path.join(BASE_DIR, "js")):
-    app.mount("/js", StaticFiles(directory=os.path.join(BASE_DIR, "js")), name="js")
-if os.path.exists(os.path.join(BASE_DIR, "static")):
-    app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 if os.path.exists(os.path.join(BASE_DIR, "demo_clips")):
     app.mount("/demo_clips", StaticFiles(directory=os.path.join(BASE_DIR, "demo_clips")), name="demo_clips")
 
@@ -90,6 +121,19 @@ def startup_event():
     AASISTWrapper.get_instance()
     logger.info("AASIST model and Meikural privacy database ready.")
 
+    # Startup diagnostics banner (Logged once cleanly at startup)
+    logger.info("\n" + "=" * 78)
+    logger.info(" MEIKURAL AUDIO ANTI-SPOOFING STREAMING SERVICE v2.0.0")
+    logger.info(f" - Environment: {ENVIRONMENT.upper()}")
+    logger.info(f" - Database: {database.DB_PATH}")
+    logger.info(f" - Inference Pipeline: AASIST (PyTorch INT8 Quantized)")
+    logger.info(f" - Demo Mode: {'ENABLED (Simulated scenarios allowed)' if DEMO_MODE else 'DISABLED (Pure AASIST neural inference path)'}")
+    if MEIKURAL_API_KEY == "meikural-dev-key-2026":
+        logger.warning(" - [SECURITY NOTICE] MEIKURAL_API_KEY using dev default ('meikural-dev-key-2026')")
+    else:
+        logger.info(" - Administrative API Authentication: CONFIGURED (Production Secret Active)")
+    logger.info("=" * 78 + "\n")
+
 
 @app.get("/")
 @app.get("/dashboard")
@@ -97,29 +141,7 @@ async def get_dashboard():
     react_index = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(react_index):
         return FileResponse(react_index)
-    dashboard_path = os.path.join(BASE_DIR, "dashboard.html")
-    if os.path.exists(dashboard_path):
-        return FileResponse(dashboard_path)
-    return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
-
-
-@app.get("/classic")
-async def get_classic_dashboard():
-    classic_path = os.path.join(BASE_DIR, "dashboard_classic.html")
-    if os.path.exists(classic_path):
-        return FileResponse(classic_path)
-    dashboard_path = os.path.join(BASE_DIR, "dashboard.html")
-    if os.path.exists(dashboard_path):
-        return FileResponse(dashboard_path)
-    return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
-
-
-@app.get("/audio_audition")
-async def get_audio_audition():
-    audition_path = os.path.join(BASE_DIR, "audio_audition.html")
-    if os.path.exists(audition_path):
-        return FileResponse(audition_path)
-    raise HTTPException(status_code=404, detail="audio_audition.html not found")
+    raise HTTPException(status_code=404, detail="Dashboard index not found in frontend/dist")
 
 
 @app.get("/favicon.svg")
@@ -846,9 +868,10 @@ async def verify_challenge_endpoint(session_id: str, passed: bool = True):
 
 
 @app.post("/alerts/trigger", response_model=AlertResponse)
-def trigger_alert_endpoint(req: AlertTriggerRequest):
+def trigger_alert_endpoint(req: AlertTriggerRequest, _admin: str = Depends(verify_admin_auth)):
     """
     Explicitly triggers multi-channel security alert (Twilio SMS + SMTP Email).
+    Requires administrative authentication.
     """
     result = dispatch_step_up_alerts(session_id=req.session_id, risk_score=req.risk_score)
     return AlertResponse(**result)
@@ -885,7 +908,7 @@ def get_rules():
     return load_rules()
 
 @app.post("/api/rules")
-def update_rules(rules: dict):
+def update_rules(rules: dict, _admin: str = Depends(verify_admin_auth)):
     current = load_rules()
     current.update(rules)
     save_rules(current)
@@ -907,7 +930,7 @@ def get_compliance_stats():
 isolated_trunks = set()
 
 @app.post("/api/trunks/{session_id}/isolate")
-def isolate_trunk(session_id: str):
+def isolate_trunk(session_id: str, _admin: str = Depends(verify_admin_auth)):
     isolated_trunks.add(session_id)
     database.record_event(
         session_id=session_id,
@@ -924,7 +947,7 @@ def get_isolated_trunks():
     return list(isolated_trunks)
 
 @app.post("/api/test-dispatch")
-def test_dispatch(channel: str = Query("twilio")):
+def test_dispatch(channel: str = Query("twilio"), _admin: str = Depends(verify_admin_auth)):
     test_session = f"test_dispatch_{int(time.time())}"
     res = dispatch_step_up_alerts(session_id=test_session, risk_score=0.92)
     rules = load_rules()
@@ -934,9 +957,10 @@ def test_dispatch(channel: str = Query("twilio")):
 
 
 @app.post("/purge-expired", response_model=PurgeResponse)
-def purge_expired_endpoint():
+def purge_expired_endpoint(_admin: str = Depends(verify_admin_auth)):
     """
     Executes 90-day auto-purge compliance check to delete expired call metadata.
+    Requires administrative authentication.
     """
     count = database.purge_expired_records()
     return PurgeResponse(purged_count=count, timestamp=time.time())
@@ -965,35 +989,40 @@ async def score_audio_file(
 
     detailed = score_audio_chunk_detailed(contents, simulate_codec=codec)
     filename = getattr(upload, "filename", "") or ""
-    # Calibrate known benchmark demo clips
-    fn_lower = filename.lower()
-    if "bonafide" in fn_lower:
-        detailed["passive_score"] = 0.021
-        detailed["verdict"] = "bonafide"
-        detailed["confidence"] = "high"
-        detailed["raw_logits"] = [-5.2, 5.8]
-    elif "deepfake" in fn_lower:
-        detailed["passive_score"] = 0.964
-        detailed["verdict"] = "spoof"
-        detailed["confidence"] = "high"
-        detailed["raw_logits"] = [5.9, -6.4]
-    elif "caution" in fn_lower or "noisy" in fn_lower:
-        detailed["passive_score"] = 0.480
-        detailed["verdict"] = "uncertain"
-        detailed["confidence"] = "medium"
-        detailed["raw_logits"] = [0.15, -0.2]
-    elif "challenge" in fn_lower:
-        detailed["passive_score"] = 0.045
-        detailed["verdict"] = "bonafide"
-        detailed["confidence"] = "high"
-        detailed["raw_logits"] = [-4.8, 5.1]
+    # Calibrate known benchmark demo clips strictly when DEMO_MODE is explicitly enabled
+    if DEMO_MODE:
+        fn_lower = filename.lower()
+        if "bonafide" in fn_lower:
+            detailed["passive_score"] = 0.021
+            detailed["verdict"] = "bonafide"
+            detailed["confidence"] = "high"
+            detailed["raw_logits"] = [-5.2, 5.8]
+            logger.info(f"[DEMO_MODE] Calibrated score applied for benchmark clip: {filename}")
+        elif "deepfake" in fn_lower:
+            detailed["passive_score"] = 0.964
+            detailed["verdict"] = "spoof"
+            detailed["confidence"] = "high"
+            detailed["raw_logits"] = [5.9, -6.4]
+            logger.info(f"[DEMO_MODE] Calibrated score applied for benchmark clip: {filename}")
+        elif "caution" in fn_lower or "noisy" in fn_lower:
+            detailed["passive_score"] = 0.480
+            detailed["verdict"] = "uncertain"
+            detailed["confidence"] = "medium"
+            detailed["raw_logits"] = [0.15, -0.2]
+            logger.info(f"[DEMO_MODE] Calibrated score applied for benchmark clip: {filename}")
+        elif "challenge" in fn_lower:
+            detailed["passive_score"] = 0.045
+            detailed["verdict"] = "bonafide"
+            detailed["confidence"] = "high"
+            detailed["raw_logits"] = [-4.8, 5.1]
+            logger.info(f"[DEMO_MODE] Calibrated score applied for benchmark clip: {filename}")
 
     passive_score = detailed["passive_score"]
 
     # Classify verdict
     if passive_score > RISK_THRESHOLD_STEP_UP:
         risk_verdict = RiskVerdict.STEP_UP_VERIFICATION.value
-        dispatch_step_up_alerts(session_id=session_id, risk_score=passive_score)
+        await asyncio.to_thread(dispatch_step_up_alerts, session_id=session_id, risk_score=passive_score)
     elif passive_score >= 0.35:
         risk_verdict = RiskVerdict.WARN.value
     else:
@@ -1039,6 +1068,8 @@ async def score_audio_file(
         challenge_state=ChallengeState(
             event=EventType.NORMAL,
         ),
+        risk_verdict=RiskVerdict(risk_verdict),
+        demo_mode=DEMO_MODE,
         codec_profile=detailed.get("codec_profile", "uncompressed_pcm_16k"),
     )
     await broadcast_telemetry(broadcast.model_dump_json())
@@ -1087,7 +1118,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 chunk_counter += 1
                 audio_bytes = message["bytes"]
 
-                if mode == "dummy":
+                if DEMO_MODE and mode == "dummy":
                     detailed = {
                         "passive_score": 0.50,
                         "verdict": "uncertain",
@@ -1100,22 +1131,23 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 else:
                     detailed = score_audio_chunk_detailed(audio_bytes, simulate_codec=codec_override)
 
-                # Calibrate demo scenarios if explicitly specified by demo runner
-                if scenario_override == "safe":
-                    detailed["passive_score"] = 0.08
-                    detailed["verdict"] = "bonafide"
-                    detailed["confidence"] = "high"
-                    detailed["raw_logits"] = [-4.5, 5.2]
-                elif scenario_override == "deepfake":
-                    detailed["passive_score"] = 0.94
-                    detailed["verdict"] = "spoof"
-                    detailed["confidence"] = "high"
-                    detailed["raw_logits"] = [5.8, -6.5]
-                elif scenario_override == "caution":
-                    detailed["passive_score"] = 0.48
-                    detailed["verdict"] = "uncertain"
-                    detailed["confidence"] = "medium"
-                    detailed["raw_logits"] = [0.1, -0.1]
+                # Calibrate demo scenarios ONLY if DEMO_MODE is explicitly enabled
+                if DEMO_MODE and scenario_override:
+                    if scenario_override == "safe":
+                        detailed["passive_score"] = 0.08
+                        detailed["verdict"] = "bonafide"
+                        detailed["confidence"] = "high"
+                        detailed["raw_logits"] = [-4.5, 5.2]
+                    elif scenario_override == "deepfake":
+                        detailed["passive_score"] = 0.94
+                        detailed["verdict"] = "spoof"
+                        detailed["confidence"] = "high"
+                        detailed["raw_logits"] = [5.8, -6.5]
+                    elif scenario_override == "caution":
+                        detailed["passive_score"] = 0.48
+                        detailed["verdict"] = "uncertain"
+                        detailed["confidence"] = "medium"
+                        detailed["raw_logits"] = [0.1, -0.1]
 
                 score = detailed["passive_score"]
                 max_risk = max(max_risk, score)
@@ -1132,28 +1164,19 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 smoothed_score = fusion_res["smoothed_score"]
                 verdict_str = fusion_res["verdict"]
 
-                # Challenge State Synchronization (Single-Dispatch Guarantee)
-                ch_state = fusion_res["challenge_state"]
-                if ch_state.event == EventType.CHALLENGE_FIRED:
-                    current_challenge = ch_state
+                # Single Source of Truth for Challenge State (Relayed directly from fusion_engine)
+                current_challenge = fusion_res["challenge_state"]
+                if current_challenge.event == EventType.CHALLENGE_FIRED:
                     challenge_fired = True
-                elif ch_state.event == EventType.CHALLENGE_RESPONSE:
-                    current_challenge = ch_state
-                elif current_challenge.event == EventType.CHALLENGE_FIRED:
-                    # After firing once, report NORMAL while keeping challenge_id so client doesn't re-trigger popups
-                    current_challenge = ChallengeState(
-                        event=EventType.NORMAL,
-                        challenge_id=current_challenge.challenge_id,
-                        challenge_type=current_challenge.challenge_type,
-                        prompt_text=current_challenge.prompt_text,
-                        liveness_passed=None,
-                    )
-                elif current_challenge.event == EventType.CHALLENGE_RESPONSE:
-                    current_challenge = ChallengeState(event=EventType.NORMAL)
 
-                # Step-up alert dispatch (only on sustained verified high risk)
+                # Step-up alert dispatch (executed asynchronously in threadpool to avoid event loop blocking)
                 if fused_risk > RISK_THRESHOLD_STEP_UP and not alert_dispatched:
-                    dispatch_step_up_alerts(session_id=session_id, risk_score=fused_risk)
+                    await asyncio.to_thread(
+                        dispatch_step_up_alerts,
+                        session_id=session_id,
+                        risk_score=fused_risk,
+                        verdict=verdict_str,
+                    )
                     alert_dispatched = True
 
                 final_verdict = verdict_str
@@ -1191,6 +1214,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         raw_logits=detailed["raw_logits"],
                     ),
                     challenge_state=current_challenge,
+                    risk_verdict=RiskVerdict(verdict_str),
+                    demo_mode=DEMO_MODE,
                     timing_profile=fusion_res.get("timing_profile"),
                     codec_profile=detailed.get("codec_profile", "uncompressed_pcm_16k"),
                 )
@@ -1200,13 +1225,20 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 try:
                     data = json.loads(message["text"])
                     if "mode" in data:
-                        mode = data["mode"]
+                        if not DEMO_MODE and data["mode"] == "dummy":
+                            logger.warning(f"Rejecting dummy mode for {session_id}: DEMO_MODE is not enabled.")
+                        else:
+                            mode = data["mode"]
                         if len(data) == 1:
                             continue
                     if "codec" in data:
                         codec_override = data["codec"]
                     if "scenario" in data:
-                        scenario_override = data["scenario"]
+                        if not DEMO_MODE:
+                            logger.warning(f"Rejecting scenario override for {session_id}: DEMO_MODE is not enabled.")
+                        else:
+                            scenario_override = data["scenario"]
+                            logger.info(f"[DEMO_MODE] Scenario override set: {scenario_override}")
                         if data.get("action") == "set_scenario":
                             continue
 
@@ -1273,6 +1305,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                                 threshold_used=0.50,
                             ),
                             challenge_state=current_challenge,
+                            risk_verdict=RiskVerdict(verdict_str),
+                            demo_mode=DEMO_MODE,
                             timing_profile=fusion_res.get("timing_profile"),
                             codec_profile=codec_override or "uncompressed_pcm_16k",
                         )
@@ -1280,6 +1314,10 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         continue
                     elif "event" in data and data["event"] in [e.value for e in EventType]:
                         current_challenge.event = EventType(data["event"])
+
+                    if not DEMO_MODE and "dummy_score" in data:
+                        logger.warning(f"Ignoring client dummy_score for {session_id}: DEMO_MODE disabled.")
+                        continue
 
                     dummy_score = float(data.get("dummy_score", 0.73 if mode == "dummy" else 0.0))
                     smoothed_score = dummy_score
@@ -1329,6 +1367,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                             raw_logits=[0.0, 0.0],
                         ),
                         challenge_state=current_challenge,
+                        risk_verdict=RiskVerdict(verdict_str),
+                        demo_mode=DEMO_MODE,
                     )
                     await broadcast_telemetry(broadcast.model_dump_json())
                 except Exception as ex:
@@ -1344,6 +1384,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
             pass
     finally:
         active_websockets.discard(websocket)
+        # Clean up in-memory fusion, challenge, and timing dictionaries (Memory leak fix)
+        fusion_engine.cleanup_session(session_id)
         # Finalize call session in SQLite
         database.finalize_call(
             session_id=session_id,

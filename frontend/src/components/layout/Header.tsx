@@ -10,6 +10,7 @@ interface HeaderProps {
   onEscalate: () => void;
   onReconnectWs: () => void;
   wsState: WebSocketState;
+  isDemoMode?: boolean;
   notifications: NotificationItem[];
   onMarkNotificationsRead: () => void;
 }
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   onEscalate,
   onReconnectWs,
   wsState,
+  isDemoMode = false,
   notifications,
   onMarkNotificationsRead,
 }) => {
@@ -132,6 +134,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Backend Live Pill + Escalate + Search + Notifications */}
       <div className="flex items-center gap-2.5">
+        {/* Demo Mode Indicator */}
+        {isDemoMode && (
+          <span
+            className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#F59E0B]/15 border border-[#F59E0B]/30 text-[#F59E0B] shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+            title="Server is running with DEMO_MODE enabled"
+          >
+            DEMO MODE
+          </span>
+        )}
+
         {/* WebSocket Live Pill */}
         <div className="hidden sm:block">
           {renderWsBadge()}

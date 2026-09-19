@@ -77,6 +77,11 @@ class TurnaroundLatencyProfiler:
         self._session_prompt_ts: Dict[str, float] = {}
         self._session_in_speech: Dict[str, bool] = {}
 
+    def cleanup_session(self, session_id: str) -> None:
+        self._session_turns.pop(session_id, None)
+        self._session_prompt_ts.pop(session_id, None)
+        self._session_in_speech.pop(session_id, None)
+
     def mark_prompt_issued(self, session_id: str, ts: Optional[float] = None) -> float:
         now = ts or time.time()
         self._session_prompt_ts[session_id] = now
@@ -171,6 +176,11 @@ class ChallengeEngine:
         self._active_challenges: Dict[str, ChallengeRecord] = {}
         self._session_cooldown_until: Dict[str, float] = {}
         self._session_challenge_count: Dict[str, int] = {}
+
+    def cleanup_session(self, session_id: str) -> None:
+        self._active_challenges.pop(session_id, None)
+        self._session_cooldown_until.pop(session_id, None)
+        self._session_challenge_count.pop(session_id, None)
 
     def can_issue_challenge(self, session_id: str, now: Optional[float] = None) -> bool:
         """
@@ -299,6 +309,18 @@ class FusionEngine:
         self._session_verdict: Dict[str, str] = {}
         self.challenge_engine = ChallengeEngine()
         self.timing_profiler = TurnaroundLatencyProfiler()
+
+    def cleanup_session(self, session_id: str) -> None:
+        """
+        Pops and releases all in-memory telemetry, challenge records, and timing profiler
+        dictionaries for a terminated call session to eliminate memory leaks.
+        """
+        self._session_smoothed.pop(session_id, None)
+        self._session_consecutive_high.pop(session_id, None)
+        self._session_challenge_dispatched.pop(session_id, None)
+        self._session_verdict.pop(session_id, None)
+        self.challenge_engine.cleanup_session(session_id)
+        self.timing_profiler.cleanup_session(session_id)
 
     def process_chunk(
         self,

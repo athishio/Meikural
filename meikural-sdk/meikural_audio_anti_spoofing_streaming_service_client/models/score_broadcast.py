@@ -9,6 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 from ..models.event_type import EventType
+from ..models.risk_verdict import RiskVerdict
 from ..types import UNSET, Unset
 from typing import cast
 
@@ -39,6 +40,8 @@ class ScoreBroadcast:
             challenge_state (ChallengeState):
             timestamp (float | Unset): Unix epoch timestamp
             event (EventType | Unset):
+            risk_verdict (RiskVerdict | Unset):
+            demo_mode (bool | Unset):
      """
 
     score: float
@@ -48,6 +51,8 @@ class ScoreBroadcast:
     challenge_state: ChallengeState
     timestamp: float | Unset = UNSET
     event: EventType | Unset = UNSET
+    risk_verdict: RiskVerdict | Unset = UNSET
+    demo_mode: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
 
@@ -90,6 +95,10 @@ class ScoreBroadcast:
             field_dict["timestamp"] = timestamp
         if event is not UNSET:
             field_dict["event"] = event
+        if self.risk_verdict is not UNSET:
+            field_dict["risk_verdict"] = str(self.risk_verdict)
+        if self.demo_mode is not UNSET:
+            field_dict["demo_mode"] = self.demo_mode
 
         return field_dict
 
@@ -106,23 +115,11 @@ class ScoreBroadcast:
 
         metadata = MetadataInfo.from_dict(d.pop("metadata"))
 
-
-
-
         audio_health = AudioHealth.from_dict(d.pop("audio_health"))
-
-
-
 
         anti_spoofing = AntiSpoofingResult.from_dict(d.pop("anti_spoofing"))
 
-
-
-
         challenge_state = ChallengeState.from_dict(d.pop("challenge_state"))
-
-
-
 
         timestamp = d.pop("timestamp", UNSET)
 
@@ -133,8 +130,14 @@ class ScoreBroadcast:
         else:
             event = EventType(_event)
 
+        _risk_verdict = d.pop("risk_verdict", UNSET)
+        risk_verdict: RiskVerdict | Unset
+        if isinstance(_risk_verdict, Unset):
+            risk_verdict = UNSET
+        else:
+            risk_verdict = RiskVerdict(_risk_verdict)
 
-
+        demo_mode = d.pop("demo_mode", UNSET)
 
         score_broadcast = cls(
             score=score,
@@ -144,6 +147,8 @@ class ScoreBroadcast:
             challenge_state=challenge_state,
             timestamp=timestamp,
             event=event,
+            risk_verdict=risk_verdict,
+            demo_mode=demo_mode,
         )
 
 

@@ -16,6 +16,7 @@ from .event_type import EventType
 from .http_validation_error import HTTPValidationError
 from .metadata_info import MetadataInfo
 from .purge_response import PurgeResponse
+from .risk_verdict import RiskVerdict
 from .score_broadcast import ScoreBroadcast
 from .validation_error import ValidationError
 from .validation_error_context import ValidationErrorContext
@@ -38,6 +39,7 @@ __all__ = (
     "HTTPValidationError",
     "MetadataInfo",
     "PurgeResponse",
+    "RiskVerdict",
     "ScoreBroadcast",
     "ValidationError",
     "ValidationErrorContext",

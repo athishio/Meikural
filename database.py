@@ -10,6 +10,7 @@ Adheres strictly to zero-trust privacy and regulatory compliance:
 
 import hashlib
 import logging
+import os
 import sqlite3
 import time
 from contextlib import contextmanager
@@ -17,8 +18,23 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("meikural_database")
 
-DB_PATH = "meikural_audit.db"
-SALT = "MEIKURAL_SECURE_SALT_2026"
+DB_PATH = os.getenv("MEIKURAL_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "meikural_audit.db"))
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+SALT = os.getenv("MEIKURAL_SALT", "")
+
+if not SALT:
+    if ENVIRONMENT == "production":
+        raise RuntimeError("CRITICAL SECURITY ERROR: MEIKURAL_SALT must be configured in production environment.")
+    else:
+        SALT = "MEIKURAL_DEV_SALT_DO_NOT_USE_IN_PROD_2026"
+        logger.warning(
+            "\n" + "=" * 78 + "\n"
+            "[SECURITY NOTICE] MEIKURAL_SALT not configured. Using fallback development salt.\n"
+            "Configure MEIKURAL_SALT in your environment or .env file before production use.\n"
+            + "=" * 78
+        )
+
 RETENTION_PERIOD_SECONDS = 90 * 86400  # 90 days in seconds
 GENESIS_HASH = "0" * 64  # Initial seed hash for the appendable event hash-chain
 
@@ -413,6 +429,3 @@ record_event = log_event
 finalize_call = log_call_end
 get_call = get_call_summary
 get_events_for_call = get_events
-
-# Self-initialization on import
-init_db()

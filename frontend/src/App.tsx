@@ -60,6 +60,7 @@ export const App: React.FC = () => {
     testDispatch,
     updateRecipients,
     syncDb,
+    isDemoMode,
   } = useDashboardData();
 
   // Modals state
@@ -130,6 +131,7 @@ export const App: React.FC = () => {
         onEscalate={() => setIsEscalateOpen(true)}
         onReconnectWs={connectWebSocket}
         wsState={wsState}
+        isDemoMode={isDemoMode}
         notifications={notifications}
         onMarkNotificationsRead={markAllNotificationsRead}
       />

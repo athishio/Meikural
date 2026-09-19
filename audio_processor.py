@@ -206,11 +206,16 @@ class AASISTWrapper:
             else:
                 waveform = np.mean(waveform, axis=1)
 
-        # Resample if sample_rate != 16000
+        # Resample if sample_rate != 16000 using anti-aliased polyphase filtering
         if sample_rate != TARGET_SAMPLE_RATE and len(waveform) > 0:
-            indices = np.round(np.arange(0, len(waveform), sample_rate / TARGET_SAMPLE_RATE)).astype(int)
-            indices = indices[indices < len(waveform)]
-            waveform = waveform[indices]
+            gcd = math.gcd(int(sample_rate), TARGET_SAMPLE_RATE)
+            up = TARGET_SAMPLE_RATE // gcd
+            down = int(sample_rate) // gcd
+            try:
+                waveform = signal.resample_poly(waveform, up, down).astype(np.float32)
+            except Exception:
+                num_target = int(round(len(waveform) * float(TARGET_SAMPLE_RATE) / float(sample_rate)))
+                waveform = signal.resample(waveform, num_target).astype(np.float32)
 
         # Apply telephony codec simulation if requested
         if simulate_codec:

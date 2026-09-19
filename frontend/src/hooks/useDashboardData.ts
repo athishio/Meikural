@@ -45,6 +45,7 @@ export function useDashboardData() {
 
   // Simulation State
   const [activeScenario, setActiveScenario] = useState<string | null>('safe');
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Rules Configuration
   const [rules, setRules] = useState<RulesConfig>({
@@ -124,25 +125,37 @@ export function useDashboardData() {
               setSessionId(data.metadata.session_id);
             }
 
-            const activeRules = rulesRef.current;
-            // Map Verdict strictly to ALLOW / WARN / ALERT
-            let derivedVerdict: VerdictType = 'ALLOW';
-            if (currentScore >= (activeRules.critical_deepfake_threshold || 0.65)) {
-              derivedVerdict = 'ALERT';
-            } else if (currentScore > (activeRules.bonafide_allow_threshold || 0.35)) {
-              derivedVerdict = 'WARN';
-            } else {
-              derivedVerdict = 'ALLOW';
+            if (data.demo_mode !== undefined) {
+              setIsDemoMode(Boolean(data.demo_mode));
             }
-            setVerdict(derivedVerdict);
 
-            // Automatically trigger challenge HUD only on explicit challenge event or initial WARN threshold
+            // Use backend Schmitt-trigger hysteresis state machine verdict directly (Fix 2.4 - eliminates UI flicker)
+            let finalVerdict: VerdictType = 'ALLOW';
+            if (data.risk_verdict) {
+              finalVerdict = data.risk_verdict === 'STEP_UP_VERIFICATION' ? 'ALERT' : (data.risk_verdict as VerdictType);
+            } else {
+              const activeRules = rulesRef.current;
+              if (currentScore >= (activeRules.critical_deepfake_threshold || 0.65)) {
+                finalVerdict = 'ALERT';
+              } else if (currentScore > (activeRules.bonafide_allow_threshold || 0.35)) {
+                finalVerdict = 'WARN';
+              } else {
+                finalVerdict = 'ALLOW';
+              }
+            }
+            setVerdict(finalVerdict);
+
+            // Synchronize challenge prompt directly from backend ChallengeState (Fix 3.3)
             if (data.challenge_state?.event === 'challenge_fired') {
-              const d1 = Math.floor(Math.random() * 9) + 1;
-              const d2 = Math.floor(Math.random() * 9) + 1;
-              const d3 = Math.floor(Math.random() * 9) + 1;
-              const d4 = Math.floor(Math.random() * 9) + 1;
-              setChallengeDigits(`${d1} - ${d2} - ${d3} - ${d4}`);
+              if (data.challenge_state.prompt_text) {
+                const prompt = data.challenge_state.prompt_text;
+                const match = prompt.match(/\d+(?:\s*-\s*\d+)*/);
+                if (match) {
+                  setChallengeDigits(match[0]);
+                } else {
+                  setChallengeDigits(prompt);
+                }
+              }
               setShowChallengeModal(true);
             }
 
@@ -292,28 +305,10 @@ export function useDashboardData() {
   }, [sessionId]);
 
   // Sentinel: Simulation Scenario
-  const setSimulationScenario = useCallback((scenario: 'safe' | 'deepfake' | 'caution') => {
+  const setSimulationScenario = useCallback((scenario: string) => {
     setActiveScenario(scenario);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ action: 'set_scenario', scenario }));
-    }
-
-    if (scenario === 'safe') {
-      setVoiceTrust(94);
-      setSpoofProbability(0.06);
-      setRawLogit(0.06);
-      setVerdict('ALLOW');
-    } else if (scenario === 'deepfake') {
-      setVoiceTrust(12);
-      setSpoofProbability(0.94);
-      setRawLogit(0.94);
-      setVerdict('ALERT');
-    } else if (scenario === 'caution') {
-      setVoiceTrust(52);
-      setSpoofProbability(0.48);
-      setRawLogit(0.48);
-      setVerdict('WARN');
-      setShowChallengeModal(true);
     }
   }, []);
 
@@ -331,60 +326,46 @@ export function useDashboardData() {
     }
   }, [sessionId]);
 
-  // Sentinel: Resolve Challenge
+  // Sentinel: Resolve Challenge (Awaits real fused score from backend, does NOT fake trust)
   const resolveChallenge = useCallback(async (passed: boolean) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ action: 'resolve_challenge', liveness_passed: passed }));
     }
 
-    if (passed) {
-      setVerdict('ALLOW');
-      setVoiceTrust(92);
-      setSpoofProbability(0.08);
-      setNotifications((prev) => [
-        {
-          id: `notif-${Date.now()}`,
-          title: 'Caller Passed Liveness Challenge',
-          message: `Session ${sessionId} security digits verified. Call authorized.`,
-          time: 'Just now',
-          type: 'safe',
-          read: false,
-        },
-        ...prev,
-      ]);
-    } else {
-      setVerdict('ALERT');
-      setVoiceTrust(14);
-      setSpoofProbability(0.92);
-      setNotifications((prev) => [
-        {
-          id: `notif-${Date.now()}`,
-          title: 'Challenge Failed — Automated Quarantine',
-          message: `Session ${sessionId} failed security challenge. Alert dispatched.`,
-          time: 'Just now',
-          type: 'alert',
-          read: false,
-        },
-        ...prev,
-      ]);
-    }
+    setNotifications((prev) => [
+      {
+        id: `notif-${Date.now()}`,
+        title: passed ? 'Liveness Challenge Resolution Submitted' : 'Challenge Rejected — Trunk Flagged',
+        message: passed
+          ? `Session ${sessionId} marked as passed. Waiting for multi-modal fused score update.`
+          : `Session ${sessionId} marked as failed by operator. Warning alerts dispatched.`,
+        time: 'Just now',
+        type: passed ? 'safe' : 'alert',
+        read: false,
+      },
+      ...prev,
+    ]);
   }, [sessionId]);
 
   // Escalate Trunk
   const escalateIncident = useCallback(async () => {
     try {
-      await fetch(`/api/trunks/${sessionId}/isolate`, { method: 'POST' });
+      await fetch(`/api/trunks/${sessionId}/isolate`, {
+        method: 'POST',
+        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+      });
       await fetch('/alerts/trigger', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'meikural-dev-key-2026',
+        },
         body: JSON.stringify({ session_id: sessionId, risk_score: 0.95 }),
       });
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error('Failed to escalate incident:', err);
     }
 
-    setVerdict('ALERT');
-    setVoiceTrust(10);
     setNotifications((prev) => [
       {
         id: `notif-${Date.now()}`,
@@ -401,49 +382,62 @@ export function useDashboardData() {
   // Save Rules
   const saveRulesConfig = useCallback(async (newRules: RulesConfig) => {
     try {
-      await fetch('/api/rules', {
+      const resp = await fetch('/api/rules', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'meikural-dev-key-2026',
+        },
         body: JSON.stringify(newRules),
       });
-    } catch {
-      // Fallback
+      if (!resp.ok) {
+        throw new Error(`Failed to save rules (HTTP ${resp.status})`);
+      }
+      setRules(newRules);
+    } catch (err: any) {
+      console.error('Failed to save rules config:', err);
+      throw err;
     }
-    setRules(newRules);
   }, []);
 
-  // Run 90-Day Auto Purge
+  // Run 90-Day Auto Purge (Honest return/error, no fake success numbers)
   const runPurge = useCallback(async () => {
     try {
-      const resp = await fetch('/purge-expired', { method: 'POST' });
+      const resp = await fetch('/purge-expired', {
+        method: 'POST',
+        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+      });
       if (resp.ok) {
         return await resp.json();
       }
-    } catch {
-      // Fallback
+      throw new Error(`Compliance purge failed (HTTP ${resp.status})`);
+    } catch (err: any) {
+      console.error('Purge expired records error:', err);
+      throw err;
     }
-    return { purged_count: 3 };
   }, []);
 
   // Test Integrations Dispatch
   const testDispatch = useCallback(async (channel: 'sip' | 'twilio' | 'smtp') => {
     try {
-      await fetch(`/api/test-dispatch?channel=${channel}`, { method: 'POST' });
-      setRules((prev) => ({
-        ...prev,
-        last_dispatch: {
-          ...prev.last_dispatch,
-          [channel]: Date.now(),
-        },
-      }));
-    } catch {
-      setRules((prev) => ({
-        ...prev,
-        last_dispatch: {
-          ...prev.last_dispatch,
-          [channel]: Date.now(),
-        },
-      }));
+      const resp = await fetch(`/api/test-dispatch?channel=${channel}`, {
+        method: 'POST',
+        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+      });
+      if (resp.ok) {
+        setRules((prev) => ({
+          ...prev,
+          last_dispatch: {
+            ...prev.last_dispatch,
+            [channel]: Date.now(),
+          },
+        }));
+      } else {
+        throw new Error(`Test dispatch failed (HTTP ${resp.status})`);
+      }
+    } catch (err) {
+      console.error(`Test dispatch error for ${channel}:`, err);
+      throw err;
     }
   }, []);
 
@@ -526,6 +520,7 @@ export function useDashboardData() {
     runVerification,
     activeScenario,
     setSimulationScenario,
+    isDemoMode,
     showChallengeModal,
     setShowChallengeModal,
     challengeDigits,
