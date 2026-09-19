@@ -40,6 +40,29 @@ class TestHealthAndReadinessProbes(unittest.TestCase):
         self.assertEqual(subsystems["database"], "ok")
         self.assertIn("alert_channels", subsystems)
 
+    def test_readyz_degraded_when_database_fails(self):
+        """Validates that /readyz returns HTTP 503 when the database subsystem fails."""
+        from unittest.mock import patch
+        import sqlite3
+
+        with patch("database.get_recent_calls", side_effect=sqlite3.OperationalError("disk I/O failure")):
+            res = self.client.get("/readyz")
+            self.assertEqual(res.status_code, 503)
+            data = res.json()
+            self.assertFalse(data["ready"])
+            self.assertIn("error", data["subsystems"]["database"].lower())
+
+    def test_readyz_degraded_when_aasist_model_fails(self):
+        """Validates that /readyz returns HTTP 503 when the neural model subsystem fails."""
+        from unittest.mock import patch
+
+        with patch("audio_processor.AASISTWrapper.get_instance", side_effect=RuntimeError("Model weights corrupted")):
+            res = self.client.get("/readyz")
+            self.assertEqual(res.status_code, 503)
+            data = res.json()
+            self.assertFalse(data["ready"])
+            self.assertIn("error", data["subsystems"]["aasist_model"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

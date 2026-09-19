@@ -6,7 +6,7 @@ interface ChallengeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onResolve: (passed: boolean) => void;
-  challengeDigits?: string;
+  challengeDigits: string;
   sessionId?: string;
 }
 
@@ -18,23 +18,15 @@ export const DynamicVoiceChallengeModal: React.FC<ChallengeModalProps> = ({
   sessionId = 'call_active',
 }) => {
   const [timeLeft, setTimeLeft] = useState(15);
-  const [digits, setDigits] = useState(challengeDigits || '4 - 8 - 2 - 9');
+  const [digits, setDigits] = useState(challengeDigits || 'Awaiting challenge token...');
   const [activeTab, setActiveTab] = useState<'ai_warning' | 'human_verified'>('ai_warning');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Generate random digits if not provided
+  // Synchronize challenge digits strictly from backend
   useEffect(() => {
     if (isOpen) {
-      if (!challengeDigits) {
-        const d1 = Math.floor(Math.random() * 9) + 1;
-        const d2 = Math.floor(Math.random() * 9) + 1;
-        const d3 = Math.floor(Math.random() * 9) + 1;
-        const d4 = Math.floor(Math.random() * 9) + 1;
-        setDigits(`${d1} - ${d2} - ${d3} - ${d4}`);
-      } else {
-        setDigits(challengeDigits);
-      }
+      setDigits(challengeDigits || 'Awaiting challenge token...');
       setTimeLeft(15);
       setIsPlaying(false);
     }

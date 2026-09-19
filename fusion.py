@@ -275,10 +275,9 @@ class ChallengeEngine:
             passed = manual_passed
             liveness_score = 0.95 if passed else 0.10
         elif detected_answer is not None and len(detected_answer) > 0:
-            # Automated ASR digit verification against expected_answer
+            # Automated ASR digit verification against expected_answer (strict exact match)
             exp = record.expected_answer or ""
-            # Match if expected digits are exact, or contained in detected digits
-            matched = (exp == detected_answer) or (exp in detected_answer) or (detected_answer in exp and len(detected_answer) >= len(exp) - 1)
+            matched = (exp == detected_answer)
             if matched and is_speech:
                 passed = True
                 conf = asr_confidence if asr_confidence is not None else 0.85

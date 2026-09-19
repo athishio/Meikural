@@ -41,9 +41,8 @@ class TestAutomatedLiveness(unittest.TestCase):
     def test_asr_audio_transcription(self):
         """Validates faster-whisper transcription on challenge_response_digits.wav."""
         audio, sr = sf.read(self.digits_wav)
-        # Take the first 3 seconds containing '4 8 2 9'
-        first_3s = audio[: sr * 3]
-        digits, transcript, conf = self.asr.transcribe(first_3s)
+        # Transcribe audio segment containing the caller's spoken response
+        digits, transcript, conf = self.asr.transcribe(audio[: sr * 12])
         self.assertIn("4829", digits)
         self.assertGreater(conf, 0.3)
 
@@ -96,10 +95,33 @@ class TestAutomatedLiveness(unittest.TestCase):
         self.assertLessEqual(ch_state.liveness_score, 0.20)
         self.assertEqual(ch.status, ChallengeStatus.FAILED)
 
+    def test_automated_liveness_partial_answer_rejected(self):
+        """Validates that partial matches (e.g. 3 of 4 digits) are strictly rejected."""
+        engine = FusionEngine()
+        session_id = "test_liveness_partial_003"
+
+        ch = engine.challenge_engine.issue_challenge(session_id)
+        ch.expected_answer = "4829"
+
+        # Caller said only '482' (missing last digit)
+        res = engine.process_chunk(
+            session_id=session_id,
+            passive_score=0.45,
+            is_speech=True,
+            rms_db=-18.0,
+            detected_answer="482",
+            asr_confidence=0.90,
+        )
+
+        ch_state = res["challenge_state"]
+        self.assertEqual(ch_state.event, EventType.CHALLENGE_RESPONSE)
+        self.assertFalse(ch_state.liveness_passed)
+        self.assertEqual(ch.status, ChallengeStatus.FAILED)
+
     def test_manual_operator_escalation_override(self):
         """Validates that manual operator action overrides automated decisions."""
         engine = FusionEngine()
-        session_id = "test_liveness_override_003"
+        session_id = "test_liveness_override_004"
 
         ch = engine.challenge_engine.issue_challenge(session_id)
         ch.expected_answer = "4829"

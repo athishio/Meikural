@@ -21,6 +21,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
   const [analyzing, setAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -29,12 +30,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      setError(null);
+      setResult(null);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setError(null);
+      setResult(null);
     }
   };
 
@@ -42,14 +47,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
     if (!file) return;
     setAnalyzing(true);
     setResult(null);
+    setError(null);
 
-    // Try backend API first, fallback to robust simulation
     const formData = new FormData();
     formData.append('file', file);
 
     for (let i = 0; i < pipelineSteps.length; i++) {
       setCurrentStep(i);
-      await new Promise((res) => setTimeout(res, 450));
+      await new Promise((res) => setTimeout(res, 250));
     }
 
     try {
@@ -57,38 +62,49 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
         method: 'POST',
         body: formData,
       });
-      if (resp.ok) {
-        const data = await resp.json();
-        setResult(data);
-        if (onAnalysisComplete) onAnalysisComplete(data);
-        setAnalyzing(false);
-        return;
-      }
-    } catch {
-      // Offline fallback
-    }
 
-    // High fidelity result simulation
-    const simulatedScore = Math.floor(Math.random() * 85) + 10;
-    const isFake = simulatedScore > 50;
-    const mockResult = {
-      filename: file.name,
-      overall_risk_score: simulatedScore,
-      verdict: isFake ? 'Deepfake Synthetic' : 'Authentic Human Voice',
-      confidence: (88 + Math.random() * 11).toFixed(1) + '%',
-      liveness_score: isFake ? 34 : 96,
-      synthetic_probability: simulatedScore,
-      latency: '2.1s',
-      hash: 'sha256:7f9e8a' + Math.random().toString(16).substring(2, 10),
-    };
-    setResult(mockResult);
-    if (onAnalysisComplete) onAnalysisComplete(mockResult);
-    setAnalyzing(false);
+      if (!resp.ok) {
+        let errDetail = `Analysis failed (HTTP ${resp.status})`;
+        try {
+          const errJson = await resp.json();
+          if (errJson.detail) errDetail = errJson.detail;
+        } catch {}
+        throw new Error(errDetail);
+      }
+
+      const data = await resp.json();
+      const realScore = typeof data.score === 'number' ? Math.round(data.score * 100) : 0;
+      const isFake = data.risk_verdict === 'STEP_UP_VERIFICATION' || realScore > 50;
+      const realResult = {
+        filename: file.name,
+        session_id: data.metadata?.session_id || 'N/A',
+        overall_risk_score: realScore,
+        verdict: isFake
+          ? 'High Risk / Deepfake Detected'
+          : data.risk_verdict === 'WARN'
+          ? 'Suspicious Conversational Jitter'
+          : 'Authentic Biological Voice',
+        confidence: data.anti_spoofing?.confidence ? `${data.anti_spoofing.confidence.toUpperCase()}` : 'HIGH',
+        liveness_score: Math.max(1, Math.min(99, Math.round((1 - data.score) * 100))),
+        latency: `${(data.metadata?.inference_latency_ms || 0).toFixed(1)}ms`,
+        demo_mode: data.demo_mode,
+        codec_profile: data.codec_profile || 'uncompressed_pcm_16k',
+      };
+      setResult(realResult);
+      if (onAnalysisComplete) onAnalysisComplete(realResult);
+    } catch (err: any) {
+      console.error('Forensic inspection error:', err);
+      setError(err.message || 'Analysis failed: could not communicate with backend service');
+      setResult(null);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const resetModal = () => {
     setFile(null);
     setResult(null);
+    setError(null);
     setAnalyzing(false);
     setCurrentStep(0);
   };
@@ -209,6 +225,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
                   </div>
                 )}
 
+                {/* Error Banner */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl bg-accent-danger/10 border border-accent-danger/30 text-accent-danger flex items-start gap-3"
+                  >
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-12 font-semibold">Inspection Failed</div>
+                      <div className="text-11 mt-0.5 opacity-90">{error}</div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Results Screen */}
                 {result && (
                   <motion.div
@@ -226,14 +257,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
                             <>
                               <AlertTriangle className="w-4 h-4 text-accent-danger" />
                               <span className="text-14 font-semibold text-accent-danger">
-                                High Risk / Deepfake Detected
+                                {result.verdict}
                               </span>
                             </>
                           ) : (
                             <>
                               <ShieldCheck className="w-4 h-4 text-accent-success" />
                               <span className="text-14 font-semibold text-accent-success">
-                                Authentic Biological Voice
+                                {result.verdict}
                               </span>
                             </>
                           )}
@@ -258,26 +289,28 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onAna
                       <div className="p-2 rounded bg-surface-elevated border border-card-border">
                         <div className="text-10 text-text-subtle">Confidence</div>
                         <div className="text-12 font-medium text-text-primary mt-0.5">
-                          {result.confidence || '96.4%'}
+                          {result.confidence}
                         </div>
                       </div>
                       <div className="p-2 rounded bg-surface-elevated border border-card-border">
-                        <div className="text-10 text-text-subtle">Liveness</div>
+                        <div className="text-10 text-text-subtle">Voice Trust</div>
                         <div className="text-12 font-medium text-accent-success mt-0.5">
-                          {result.liveness_score ? `${result.liveness_score}%` : '94%'}
+                          {result.liveness_score}%
                         </div>
                       </div>
                       <div className="p-2 rounded bg-surface-elevated border border-card-border">
                         <div className="text-10 text-text-subtle">Latency</div>
                         <div className="text-12 font-medium text-text-primary mt-0.5">
-                          {result.latency || '2.3s'}
+                          {result.latency}
                         </div>
                       </div>
                     </div>
 
                     <div className="p-2 rounded bg-surface-elevated/50 border border-card-border text-10 font-mono text-text-subtle flex items-center justify-between">
-                      <span className="truncate">Attestation: {result.hash || 'sha256:4a8c9b2f...'}</span>
-                      <span className="text-accent-primary ml-2 flex-shrink-0">Verified</span>
+                      <span className="truncate">Session Audit Ref: {result.session_id}</span>
+                      <span className="text-accent-primary ml-2 flex-shrink-0">
+                        {result.demo_mode ? 'Demo Calibrated' : 'Neural Verified'}
+                      </span>
                     </div>
                   </motion.div>
                 )}
