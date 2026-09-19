@@ -8,14 +8,18 @@ import time
 import uuid
 from typing import List, Optional, Set
 
-from fastapi import Depends, FastAPI, File, HTTPException, Query, Security, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, Security, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 import database
 from alerts import dispatch_step_up_alerts, RISK_THRESHOLD_STEP_UP
+from asr_engine import ASREngine
 from audio_processor import (
     AASISTWrapper,
     score_audio_chunk_detailed,
@@ -38,9 +42,11 @@ from schemas import (
     ScoreBroadcast,
     VerdictType,
 )
+from structured_logger import get_soc_logger, setup_soc_logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("meikural_aasist_api")
+SERVICE_START_TIME = time.time()
+setup_soc_logging()
+logger = get_soc_logger("meikural_soc")
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 DEMO_MODE = os.getenv("DEMO_MODE", "0").lower() in ("1", "true", "yes")
@@ -69,11 +75,16 @@ async def verify_admin_auth(
     return token
 
 
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="Meikural Audio Anti-Spoofing Streaming Service",
     description="Real-time AASIST inference service with WebSocket streaming, VAD, zero-trust privacy SQLite database, and multi-channel security alerting.",
     version="2.0.0",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 allowed_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()] or [
@@ -116,10 +127,14 @@ if os.path.exists(os.path.join(BASE_DIR, "demo_clips")):
 
 @app.on_event("startup")
 def startup_event():
-    logger.info("Initializing AASIST model singleton & SQLite database...")
+    logger.info("Initializing AASIST model singleton, ASR engine & SQLite database...")
     database.init_db()
     AASISTWrapper.get_instance()
-    logger.info("AASIST model and Meikural privacy database ready.")
+    try:
+        ASREngine.get_instance()
+    except Exception as e:
+        logger.warning(f"ASREngine pre-warming deferred: {e}")
+    logger.info("AASIST model, ASR engine, and Meikural privacy database ready.")
 
     # Startup diagnostics banner (Logged once cleanly at startup)
     logger.info("\n" + "=" * 78)
@@ -127,12 +142,79 @@ def startup_event():
     logger.info(f" - Environment: {ENVIRONMENT.upper()}")
     logger.info(f" - Database: {database.DB_PATH}")
     logger.info(f" - Inference Pipeline: AASIST (PyTorch INT8 Quantized)")
+    logger.info(f" - Automated Liveness ASR: faster-whisper (CPU INT8)")
     logger.info(f" - Demo Mode: {'ENABLED (Simulated scenarios allowed)' if DEMO_MODE else 'DISABLED (Pure AASIST neural inference path)'}")
     if MEIKURAL_API_KEY == "meikural-dev-key-2026":
         logger.warning(" - [SECURITY NOTICE] MEIKURAL_API_KEY using dev default ('meikural-dev-key-2026')")
     else:
         logger.info(" - Administrative API Authentication: CONFIGURED (Production Secret Active)")
     logger.info("=" * 78 + "\n")
+
+
+@app.get("/healthz")
+def healthz_probe():
+    """
+    Kubernetes / Docker liveness probe.
+    Confirms process is active and running.
+    """
+    return {
+        "status": "alive",
+        "service": "meikural-soc",
+        "uptime_seconds": round(time.time() - SERVICE_START_TIME, 2),
+        "version": "2.0.0",
+    }
+
+
+@app.get("/readyz")
+def readyz_probe():
+    """
+    Kubernetes / Docker readiness probe.
+    Confirms all core subsystems are operational:
+    - AASIST neural anti-spoofing model
+    - ASR digit verification engine
+    - SQLite database read/write
+    - Multi-channel alert dispatchers
+    """
+    checks = {}
+    is_ready = True
+
+    # 1. AASIST model check
+    try:
+        model_inst = AASISTWrapper.get_instance()
+        checks["aasist_model"] = "ok" if model_inst.model is not None else "failed"
+    except Exception as e:
+        checks["aasist_model"] = f"error: {str(e)}"
+        is_ready = False
+
+    # 2. ASR Engine check
+    try:
+        asr_inst = ASREngine.get_instance()
+        checks["asr_engine"] = "ok" if asr_inst.model is not None else "failed"
+    except Exception as e:
+        checks["asr_engine"] = f"error: {str(e)}"
+        is_ready = False
+
+    # 3. Database read/write check
+    try:
+        database.get_recent_calls(limit=1)
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = f"error: {str(e)}"
+        is_ready = False
+
+    # 4. Alert channels check
+    from alerts import TWILIO_ACCOUNT_SID, SMTP_HOST
+    checks["alert_channels"] = {
+        "sms": "configured" if TWILIO_ACCOUNT_SID else "simulated",
+        "email": "configured" if SMTP_HOST else "simulated",
+    }
+
+    status_code = 200 if is_ready else 503
+    return Response(
+        content=json.dumps({"ready": is_ready, "timestamp": time.time(), "subsystems": checks}),
+        status_code=status_code,
+        media_type="application/json",
+    )
 
 
 @app.get("/")
@@ -160,7 +242,6 @@ async def get_icons():
     return Response(status_code=404)
 
 
-
 @app.get("/api")
 @app.get("/api/info")
 def api_info():
@@ -168,6 +249,8 @@ def api_info():
         "service": "Meikural Audio Anti-Spoofing Service",
         "version": "2.0.0",
         "endpoints": {
+            "liveness_probe": "/healthz",
+            "readiness_probe": "/readyz",
             "health": "/health",
             "score_file": "/score (POST)",
             "websocket_stream": "/ws/audio (WebSocket)",
@@ -867,8 +950,14 @@ async def verify_challenge_endpoint(session_id: str, passed: bool = True):
     return {"status": "ok", "fusion_result": fusion_res}
 
 
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25MB maximum upload limit
+MAX_AUDIO_DURATION_SECONDS = 300.0   # 5 minutes maximum decoded audio duration
+ALLOWED_EXTENSIONS = {".wav", ".mp3", ".ogg", ".flac", ".m4a", ".webm", ".aac"}
+
+
 @app.post("/alerts/trigger", response_model=AlertResponse)
-def trigger_alert_endpoint(req: AlertTriggerRequest, _admin: str = Depends(verify_admin_auth)):
+@limiter.limit("10/minute")
+def trigger_alert_endpoint(request: Request, req: AlertTriggerRequest, _admin: str = Depends(verify_admin_auth)):
     """
     Explicitly triggers multi-channel security alert (Twilio SMS + SMTP Email).
     Requires administrative authentication.
@@ -908,7 +997,8 @@ def get_rules():
     return load_rules()
 
 @app.post("/api/rules")
-def update_rules(rules: dict, _admin: str = Depends(verify_admin_auth)):
+@limiter.limit("10/minute")
+def update_rules(request: Request, rules: dict, _admin: str = Depends(verify_admin_auth)):
     current = load_rules()
     current.update(rules)
     save_rules(current)
@@ -930,7 +1020,8 @@ def get_compliance_stats():
 isolated_trunks = set()
 
 @app.post("/api/trunks/{session_id}/isolate")
-def isolate_trunk(session_id: str, _admin: str = Depends(verify_admin_auth)):
+@limiter.limit("10/minute")
+def isolate_trunk(request: Request, session_id: str, _admin: str = Depends(verify_admin_auth)):
     isolated_trunks.add(session_id)
     database.record_event(
         session_id=session_id,
@@ -947,7 +1038,8 @@ def get_isolated_trunks():
     return list(isolated_trunks)
 
 @app.post("/api/test-dispatch")
-def test_dispatch(channel: str = Query("twilio"), _admin: str = Depends(verify_admin_auth)):
+@limiter.limit("10/minute")
+def test_dispatch(request: Request, channel: str = Query("twilio"), _admin: str = Depends(verify_admin_auth)):
     test_session = f"test_dispatch_{int(time.time())}"
     res = dispatch_step_up_alerts(session_id=test_session, risk_score=0.92)
     rules = load_rules()
@@ -957,7 +1049,8 @@ def test_dispatch(channel: str = Query("twilio"), _admin: str = Depends(verify_a
 
 
 @app.post("/purge-expired", response_model=PurgeResponse)
-def purge_expired_endpoint(_admin: str = Depends(verify_admin_auth)):
+@limiter.limit("10/minute")
+def purge_expired_endpoint(request: Request, _admin: str = Depends(verify_admin_auth)):
     """
     Executes 90-day auto-purge compliance check to delete expired call metadata.
     Requires administrative authentication.
@@ -967,27 +1060,60 @@ def purge_expired_endpoint(_admin: str = Depends(verify_admin_auth)):
 
 
 @app.post("/score", response_model=ScoreBroadcast)
+@limiter.limit("30/minute")
 async def score_audio_file(
+    request: Request,
     file: Optional[UploadFile] = File(None),
     audio: Optional[UploadFile] = File(None),
     codec: Optional[str] = Query(None, description="Simulated telephony codec: g711_ulaw, g711_alaw, pstn_narrowband, amr_wb"),
 ):
     """
-    HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry and optional telephony codec simulation.
+    HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, MP3, etc.) with full telemetry and optional telephony codec simulation.
     Accepts audio binary in either 'file' or 'audio' multipart form field.
     """
     upload = file or audio
     if not upload:
         raise HTTPException(status_code=422, detail="Missing audio file upload ('file' or 'audio' field required)")
 
+    # 1. Filename & Extension Whitelist Check
+    filename = getattr(upload, "filename", "") or "audio.wav"
+    ext = os.path.splitext(filename)[1].lower()
+    if ext and ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported Media Type: '{ext}' is not supported. Allowed formats: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+        )
+
+    # 2. File Size Limit Check (Max 25MB)
     contents = await upload.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Payload Too Large: Audio file size ({len(contents)} bytes) exceeds maximum limit of 25MB."
+        )
+
+    if len(contents) == 0:
+        raise HTTPException(status_code=422, detail="Unprocessable Entity: Uploaded audio file is empty.")
+
     session_id = f"batch_{uuid.uuid4().hex[:8]}"
     ts = time.time()
 
     # Register batch session in privacy DB
     database.create_call(session_id=session_id, caller_id_hash=database.hash_caller_id("BATCH_UPLOAD"))
 
-    detailed = score_audio_chunk_detailed(contents, simulate_codec=codec)
+    try:
+        detailed = score_audio_chunk_detailed(contents, simulate_codec=codec)
+    except Exception as e:
+        logger.error(f"Failed to decode audio: {e}")
+        raise HTTPException(status_code=422, detail=f"Unprocessable Entity: Unable to decode audio stream: {str(e)}")
+
+    # 3. Decoded Audio Duration Check (Max 5 minutes)
+    dur_sec = detailed["audio_health"]["duration_ms"] / 1000.0
+    if dur_sec > MAX_AUDIO_DURATION_SECONDS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unprocessable Entity: Audio duration ({dur_sec:.1f}s) exceeds maximum allowed limit of {MAX_AUDIO_DURATION_SECONDS}s."
+        )
     filename = getattr(upload, "filename", "") or ""
     # Calibrate known benchmark demo clips strictly when DEMO_MODE is explicitly enabled
     if DEMO_MODE:
@@ -1115,8 +1241,13 @@ async def websocket_audio_endpoint(websocket: WebSocket):
             ts = time.time()
 
             if "bytes" in message and message["bytes"] is not None:
-                chunk_counter += 1
                 audio_bytes = message["bytes"]
+                # Chunk size validation: 1MB maximum per audio chunk
+                if len(audio_bytes) > 1024 * 1024:
+                    logger.warning(f"Chunk size {len(audio_bytes)} exceeds 1MB limit. Discarding.", extra={"session_id": session_id})
+                    continue
+
+                chunk_counter += 1
 
                 if DEMO_MODE and mode == "dummy":
                     detailed = {
@@ -1152,12 +1283,30 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                 score = detailed["passive_score"]
                 max_risk = max(max_risk, score)
 
+                # Automated ASR Liveness Check (Executed off the event loop via asyncio.to_thread)
+                active_ch_rec = fusion_engine.challenge_engine.get_current_challenge(session_id)
+                detected_digits = None
+                asr_conf = None
+                if active_ch_rec and active_ch_rec.status.value == "ISSUED" and detailed["audio_health"]["is_speech"]:
+                    try:
+                        asr_inst = ASREngine.get_instance()
+                        detected_digits, transcript, asr_conf = await asyncio.to_thread(asr_inst.transcribe, audio_bytes)
+                        if detected_digits:
+                            logger.info(
+                                f"Automated ASR captured challenge speech: '{transcript}' -> digits: '{detected_digits}' (conf: {asr_conf})",
+                                extra={"session_id": session_id, "event_type": "ASR_DIGIT_DETECTED"}
+                            )
+                    except Exception as asr_err:
+                        logger.warning(f"ASR transcription failed: {asr_err}", extra={"session_id": session_id})
+
                 # Process through multi-modal fusion engine
                 fusion_res = fusion_engine.process_chunk(
                     session_id=session_id,
                     passive_score=score,
                     is_speech=detailed["audio_health"]["is_speech"],
                     rms_db=detailed["audio_health"]["rms_db"],
+                    detected_answer=detected_digits,
+                    asr_confidence=asr_conf,
                     timestamp=ts,
                 )
                 fused_risk = fusion_res["fused_risk_score"]

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # MEIKURAL Voice Security Operations Center (SOC) Engine
+  # Real-time AASIST inference, ASR digit verification, and WebSocket telemetry
+  # ============================================================================
+  meikural-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meikural-soc-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEMO_MODE=0
+      - MEIKURAL_API_KEY=change-me-to-a-secure-production-key-in-prod
+      - MEIKURAL_SALT=change-me-to-a-64-byte-production-salt-hex
+      - ASR_MODEL=tiny.en
+      - ASR_THREADS=2
+      - CORS_ORIGINS=http://localhost:8000,http://127.0.0.1:8000,http://localhost:5173
+      - SOC_JSON_LOGS=1
+      # Telephony / SMS Alert credentials (optional)
+      - TWILIO_ACCOUNT_SID=
+      - TWILIO_AUTH_TOKEN=
+      - TWILIO_FROM_NUMBER=
+      - ALERT_RECIPIENT_PHONE=
+      # SMTP Alert credentials (optional)
+      - SMTP_HOST=
+      - SMTP_PORT=587
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - ALERT_RECIPIENT_EMAIL=
+    volumes:
+      - meikural-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # [TIER 2 ROADMAP SERVICE] PostgreSQL Database
+  # Swapping SQLite for PostgreSQL in horizontal multi-instance deployments:
+  # 1. Uncomment this block
+  # 2. Set DATABASE_URL=postgresql://meikural:soc_pass@postgres:5432/meikural_audit
+  # ============================================================================
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: meikural-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: meikural
+  #     POSTGRES_PASSWORD: soc_password_change_me
+  #     POSTGRES_DB: meikural_audit
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+volumes:
+  meikural-data:
+    driver: local
+  # pgdata:
+  #   driver: local

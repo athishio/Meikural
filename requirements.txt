@@ -9,3 +9,5 @@ soundfile>=0.12.1
 python-dotenv>=1.0.0
 twilio>=8.0.0
 httpx>=0.24.0
+faster-whisper>=1.0.0
+slowapi>=0.1.9

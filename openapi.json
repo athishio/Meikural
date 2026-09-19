@@ -6,6 +6,40 @@
     "version": "2.0.0"
   },
   "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Healthz Probe",
+        "description": "Kubernetes / Docker liveness probe.\nConfirms process is active and running.",
+        "operationId": "healthz_probe_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "summary": "Readyz Probe",
+        "description": "Kubernetes / Docker readiness probe.\nConfirms all core subsystems are operational:\n- AASIST neural anti-spoofing model\n- ASR digit verification engine\n- SQLite database read/write\n- Multi-channel alert dispatchers",
+        "operationId": "readyz_probe_readyz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard": {
       "get": {
         "summary": "Get Dashboard",
@@ -766,7 +800,7 @@
     "/score": {
       "post": {
         "summary": "Score Audio File",
-        "description": "HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, etc.) with full telemetry and optional telephony codec simulation.\nAccepts audio binary in either 'file' or 'audio' multipart form field.",
+        "description": "HTTP POST endpoint to score an uploaded audio file (WAV, FLAC, MP3, etc.) with full telemetry and optional telephony codec simulation.\nAccepts audio binary in either 'file' or 'audio' multipart form field.",
         "operationId": "score_audio_file_score_post",
         "parameters": [
           {

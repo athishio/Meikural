@@ -252,11 +252,14 @@ class ChallengeEngine:
         session_id: str,
         is_speech: bool,
         rms_db: float,
+        detected_answer: Optional[str] = None,
+        asr_confidence: Optional[float] = None,
         manual_passed: Optional[bool] = None,
         timestamp: Optional[float] = None,
     ) -> Tuple[bool, float, float]:
         """
         Evaluates the caller's acoustic response to the issued challenge.
+        Supports automated ASR digit verification and manual operator override.
         """
         record = self._active_challenges.get(session_id)
         if not record or record.status != ChallengeStatus.ISSUED:
@@ -268,8 +271,21 @@ class ChallengeEngine:
         record.latency_ms = turnaround_ms
 
         if manual_passed is not None:
+            # Operator escalation override
             passed = manual_passed
             liveness_score = 0.95 if passed else 0.10
+        elif detected_answer is not None and len(detected_answer) > 0:
+            # Automated ASR digit verification against expected_answer
+            exp = record.expected_answer or ""
+            # Match if expected digits are exact, or contained in detected digits
+            matched = (exp == detected_answer) or (exp in detected_answer) or (detected_answer in exp and len(detected_answer) >= len(exp) - 1)
+            if matched and is_speech:
+                passed = True
+                conf = asr_confidence if asr_confidence is not None else 0.85
+                liveness_score = min(0.99, max(0.88, 0.88 + (conf * 0.10)))
+            else:
+                passed = False
+                liveness_score = 0.12
         else:
             if not is_speech or rms_db < -45.0:
                 passed = False
@@ -289,7 +305,9 @@ class ChallengeEngine:
         # Enforce cooldown period after resolving
         self._session_cooldown_until[session_id] = now + self.CHALLENGE_COOLDOWN_SECONDS
         logger.info(
-            f"Challenge [{record.challenge_id}] resolved: passed={passed}, liveness={liveness_score:.2f}, latency={turnaround_ms:.1f}ms. Cooldown active until {self._session_cooldown_until[session_id]:.1f}"
+            f"Challenge [{record.challenge_id}] resolved: passed={passed}, liveness={liveness_score:.2f}, "
+            f"latency={turnaround_ms:.1f}ms, expected='{record.expected_answer}', detected='{detected_answer}'. "
+            f"Cooldown active until {self._session_cooldown_until[session_id]:.1f}"
         )
         return passed, liveness_score, turnaround_ms
 
@@ -330,6 +348,8 @@ class FusionEngine:
         rms_db: float = -20.0,
         manual_challenge_action: Optional[str] = None,
         manual_liveness_passed: Optional[bool] = None,
+        detected_answer: Optional[str] = None,
+        asr_confidence: Optional[float] = None,
         timestamp: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
@@ -372,11 +392,13 @@ class FusionEngine:
                 prompt_text=ch_record.prompt_text,
                 liveness_passed=None,
             )
-        elif manual_challenge_action == "resolve_challenge":
+        elif manual_challenge_action == "resolve_challenge" or (detected_answer is not None and current_challenge and current_challenge.status == ChallengeStatus.ISSUED):
             passed, liveness, lat_ms = self.challenge_engine.evaluate_response(
                 session_id=session_id,
                 is_speech=is_speech,
                 rms_db=rms_db,
+                detected_answer=detected_answer,
+                asr_confidence=asr_confidence,
                 manual_passed=manual_liveness_passed,
                 timestamp=now,
             )

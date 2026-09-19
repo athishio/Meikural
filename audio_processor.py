@@ -130,6 +130,43 @@ class TelephonyCodecEngine:
         return waveform
 
 
+def load_audio_any_format(audio_source: Union[str, bytes, os.PathLike, io.BytesIO]) -> Tuple[np.ndarray, int]:
+    """
+    Robust audio loader supporting WAV, FLAC, OGG, MP3, M4A, AAC, WebM.
+    Uses soundfile first, then falls back to PyAV for formats unsupported by libsndfile.
+    """
+    bio = io.BytesIO(audio_source) if isinstance(audio_source, bytes) else audio_source
+    try:
+        data, sr = sf.read(bio)
+        return np.asarray(data, dtype=np.float32), sr
+    except Exception:
+        pass
+
+    # Try PyAV for MP3, M4A, WebM, AAC
+    try:
+        import av
+        container_input = io.BytesIO(audio_source) if isinstance(audio_source, bytes) else str(audio_source)
+        container = av.open(container_input)
+        audio_stream = next(s for s in container.streams if s.type == "audio")
+        resampler = av.AudioResampler(format="fltp", layout="mono", rate=TARGET_SAMPLE_RATE)
+        frames = []
+        for frame in container.decode(audio_stream):
+            for resampled_frame in resampler.resample(frame):
+                frames.append(resampled_frame.to_ndarray())
+        if frames:
+            data = np.concatenate(frames, axis=1).squeeze(0)
+            return data.astype(np.float32), TARGET_SAMPLE_RATE
+    except Exception:
+        pass
+
+    # Fallback: assume raw 16-bit PCM mono
+    if isinstance(audio_source, bytes):
+        data = np.frombuffer(audio_source, dtype=np.int16).astype(np.float32) / 32768.0
+        return data, TARGET_SAMPLE_RATE
+
+    raise ValueError("Unable to decode audio data with soundfile or PyAV")
+
+
 class AASISTWrapper:
     """
     Singleton wrapper for the AASIST Anti-Spoofing PyTorch model.
@@ -177,21 +214,9 @@ class AASISTWrapper:
         - Measures RMS energy and duration
         - Pads/slices to fixed AASIST length: 64,600 samples
         """
-        # Case 0: File path string or PathLike
-        if isinstance(waveform, (str, os.PathLike)) and os.path.isfile(str(waveform)):
-            data, sr = sf.read(str(waveform))
-            sample_rate = sr
-            waveform = data
-
-        # Case 1: Raw bytes
-        if isinstance(waveform, bytes):
-            try:
-                data, sr = sf.read(io.BytesIO(waveform))
-                sample_rate = sr
-                waveform = data
-            except Exception:
-                # Fallback: assume raw 16-bit PCM mono
-                waveform = np.frombuffer(waveform, dtype=np.int16).astype(np.float32) / 32768.0
+        # Case 0/1: File path string, PathLike, or raw bytes
+        if isinstance(waveform, (str, os.PathLike)) or isinstance(waveform, bytes):
+            waveform, sample_rate = load_audio_any_format(waveform)
 
         # Case 2: Torch Tensor
         if isinstance(waveform, torch.Tensor):
