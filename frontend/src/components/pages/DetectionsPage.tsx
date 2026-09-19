@@ -1,125 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Download, Filter, Play, Pause, ShieldAlert, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Search, Download, Play, Pause, ShieldAlert, ShieldCheck, HelpCircle, RefreshCw } from 'lucide-react';
 import type { RecentAnalysis } from '../../types/dashboard';
 
 interface DetectionsPageProps {
   onSelectDetection: (item: RecentAnalysis) => void;
 }
 
-const allDetections: RecentAnalysis[] = [
-  {
-    id: 'det-001',
-    fileName: 'Executive Voice Cloning Intercept',
-    title: 'Executive Voice Cloning Intercept',
-    time: '2 mins ago',
-    timestamp: '2 mins ago',
-    riskScore: 92,
-    result: 'Deepfake',
-    status: 'Deepfake',
-    confidence: 98.4,
-    duration: '0:14',
-    channel: 'Inbound SIP Trunk',
-  },
-  {
-    id: 'det-002',
-    fileName: 'VIP Banking Auth Attempt',
-    title: 'VIP Banking Auth Attempt',
-    time: '14 mins ago',
-    timestamp: '14 mins ago',
-    riskScore: 14,
-    result: 'Authentic',
-    status: 'Authentic',
-    confidence: 99.1,
-    duration: '0:22',
-    channel: 'Mobile App SDK',
-  },
-  {
-    id: 'det-003',
-    fileName: 'Customer Service Inquiry #882',
-    title: 'Customer Service Inquiry #882',
-    time: '42 mins ago',
-    timestamp: '42 mins ago',
-    riskScore: 48,
-    result: 'Uncertain',
-    status: 'Uncertain',
-    confidence: 72.0,
-    duration: '0:35',
-    channel: 'Twilio Connector',
-  },
-  {
-    id: 'det-004',
-    fileName: 'Wire Transfer Verification Stream',
-    title: 'Wire Transfer Verification Stream',
-    time: '1 hour ago',
-    timestamp: '1 hour ago',
-    riskScore: 86,
-    result: 'Deepfake',
-    status: 'Deepfake',
-    confidence: 96.8,
-    duration: '0:18',
-    channel: 'Genesys Cloud Ingest',
-  },
-  {
-    id: 'det-005',
-    fileName: 'Branch Manager Authorization',
-    title: 'Branch Manager Authorization',
-    time: '2 hours ago',
-    timestamp: '2 hours ago',
-    riskScore: 8,
-    result: 'Authentic',
-    status: 'Authentic',
-    confidence: 99.5,
-    duration: '0:09',
-    channel: 'SIP Trunk Primary',
-  },
-  {
-    id: 'det-006',
-    fileName: 'Internal Helpdesk Voice Ticket',
-    title: 'Internal Helpdesk Voice Ticket',
-    time: '3 hours ago',
-    timestamp: '3 hours ago',
-    riskScore: 78,
-    result: 'Deepfake',
-    status: 'Deepfake',
-    confidence: 94.2,
-    duration: '0:41',
-    channel: 'WebRTC Agent Portal',
-  },
-  {
-    id: 'det-007',
-    fileName: 'Emergency Account Unlock Call',
-    title: 'Emergency Account Unlock Call',
-    time: '4 hours ago',
-    timestamp: '4 hours ago',
-    riskScore: 89,
-    result: 'Deepfake',
-    status: 'Deepfake',
-    confidence: 97.3,
-    duration: '0:27',
-    channel: 'PSTN Gateway',
-  },
-  {
-    id: 'det-008',
-    fileName: 'Routine KYC Voice Biometrics',
-    title: 'Routine KYC Voice Biometrics',
-    time: '5 hours ago',
-    timestamp: '5 hours ago',
-    riskScore: 5,
-    result: 'Authentic',
-    status: 'Authentic',
-    confidence: 99.8,
-    duration: '0:15',
-    channel: 'Mobile App SDK',
-  },
-];
-
 export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetection }) => {
+  const [detections, setDetections] = useState<RecentAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | 'Deepfake' | 'Authentic' | 'Uncertain'>('All');
   const [search, setSearch] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  const filtered = allDetections.filter((item) => {
+  const fetchCalls = async () => {
+    setLoading(true);
+    try {
+      const resp = await fetch('/calls?limit=100');
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+          const mapped: RecentAnalysis[] = data.map((c: any) => {
+            const risk = c.final_risk_score ?? 0;
+            const isFake = c.final_verdict === 'STEP_UP_VERIFICATION' || risk > 0.5;
+            const isWarn = c.final_verdict === 'WARN' || (risk >= 0.35 && risk <= 0.5);
+            const result: 'Authentic' | 'Deepfake' | 'Uncertain' = isFake ? 'Deepfake' : isWarn ? 'Uncertain' : 'Authentic';
+            const riskScore = Math.round(risk * 100);
+            const dateStr = c.start_time ? new Date(c.start_time * 1000).toLocaleString() : 'In Progress';
+            const channel = c.session_id.startsWith('batch_')
+              ? 'Batch Audio Ingest'
+              : c.session_id.startsWith('call_')
+              ? 'SIP Trunk Telephony'
+              : 'Live Voice Stream';
+            return {
+              id: c.session_id,
+              sessionId: c.session_id,
+              fileName: `Session ${c.session_id}`,
+              title: `Forensic Audio Session ${c.session_id}`,
+              time: dateStr,
+              timestamp: dateStr,
+              riskScore,
+              result,
+              status: result,
+              confidence: Math.round(Math.max(risk, 1 - risk) * 1000) / 10,
+              channel,
+            };
+          });
+          setDetections(mapped);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch call detections:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalls();
+  }, []);
+
+  const exportLedgerCsv = () => {
+    const headers = ['Session ID', 'Timestamp', 'Risk Score (%)', 'Verdict', 'Confidence (%)', 'Channel'];
+    const rows = detections.map((d) => [
+      d.sessionId || d.id,
+      d.timestamp || d.time,
+      d.riskScore ?? 0,
+      d.result || d.status,
+      d.confidence ?? 0,
+      d.channel || 'Standard Ingest',
+    ]);
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.map((c) => `"${c}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `meikural_detection_ledger_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filtered = detections.filter((item) => {
     const itemResult = item.result || item.status;
     const itemTitle = item.title || item.fileName;
     const matchesFilter = filter === 'All' || itemResult === filter;
@@ -153,11 +117,19 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => alert('Exporting full forensic audit ledger (CSV)...')}
-            className="px-3.5 py-2 rounded-lg bg-surface-elevated border border-card-border hover:border-card-border-hover text-12 font-medium text-text-secondary flex items-center gap-2 transition-all"
+            onClick={fetchCalls}
+            className="p-2 rounded-lg bg-surface-ground border border-card-border hover:border-card-border-hover text-text-muted hover:text-text-primary transition-all"
+            title="Refresh Detection Registry"
           >
-            <Download className="w-3.5 h-3.5" />
-            Export Ledger
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={exportLedgerCsv}
+            disabled={detections.length === 0}
+            className="px-3.5 py-2 rounded-lg bg-surface-elevated border border-card-border hover:border-card-border-hover text-12 font-medium text-text-secondary flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-accent-primary" />
+            Export Ledger (CSV)
           </button>
         </div>
       </div>
@@ -169,7 +141,7 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-lg text-12 font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-12 font-medium transition-all cursor-pointer ${
                 filter === tab
                   ? 'bg-surface-elevated text-text-primary border border-card-border shadow-sm'
                   : 'text-text-muted hover:text-text-primary hover:bg-surface-elevated/50'
@@ -180,20 +152,15 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
           ))}
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-72">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-text-subtle absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Filter by title, ID, or channel..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-surface-ground border border-card-border rounded-lg pl-8 pr-3 py-1.5 text-12 text-text-primary placeholder:text-text-subtle focus:outline-none focus:border-accent-border transition-colors"
-            />
-          </div>
-          <button className="p-2 rounded-lg bg-surface-ground border border-card-border text-text-muted hover:text-text-primary">
-            <Filter className="w-3.5 h-3.5" />
-          </button>
+        <div className="relative w-full md:w-72">
+          <Search className="w-3.5 h-3.5 text-text-subtle absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search by session ID, title or channel..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-surface-ground border border-card-border rounded-lg pl-8 pr-3 py-1.5 text-12 text-text-primary placeholder:text-text-subtle focus:outline-none focus:border-accent-border transition-colors"
+          />
         </div>
       </div>
 
@@ -213,75 +180,90 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
               </tr>
             </thead>
             <tbody className="divide-y divide-card-border font-normal">
-              {filtered.map((item) => {
-                const isFake = (item.result || item.status) === 'Deepfake';
-                const isAuth = (item.result || item.status) === 'Authentic';
-                const isPlaying = playingId === item.id;
-                const displayScore = item.riskScore ?? (isFake ? 85 : 12);
+              {loading && detections.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-text-muted font-mono">
+                    <RefreshCw className="w-4 h-4 animate-spin inline mr-2 text-accent-primary" />
+                    Synchronizing detection ledger from database...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-text-muted">
+                    No matching detection records found. Process or ingest audio to populate ledger.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item) => {
+                  const isFake = (item.result || item.status) === 'Deepfake';
+                  const isAuth = (item.result || item.status) === 'Authentic';
+                  const isPlaying = playingId === item.id;
+                  const displayScore = item.riskScore ?? (isFake ? 85 : 12);
 
-                return (
-                  <tr
-                    key={item.id}
-                    onClick={() => onSelectDetection(item)}
-                    className="hover:bg-surface-elevated/40 transition-colors cursor-pointer group"
-                  >
-                    <td className="py-3.5 pl-5 pr-3">
-                      <button
-                        onClick={(e) => togglePlay(item.id, e)}
-                        className="w-7 h-7 rounded-full bg-surface-elevated border border-card-border flex items-center justify-center text-text-muted hover:text-accent-primary hover:border-accent-border transition-colors"
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-3.5 h-3.5 fill-current text-accent-primary" />
-                        ) : (
-                          <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                        )}
-                      </button>
-                    </td>
+                  return (
+                    <tr
+                      key={item.id}
+                      onClick={() => onSelectDetection(item)}
+                      className="hover:bg-surface-elevated/40 transition-colors cursor-pointer group"
+                    >
+                      <td className="py-3.5 pl-5 pr-3">
+                        <button
+                          onClick={(e) => togglePlay(item.id, e)}
+                          className="w-7 h-7 rounded-full bg-surface-elevated border border-card-border flex items-center justify-center text-text-muted hover:text-accent-primary hover:border-accent-border transition-colors cursor-pointer"
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-3.5 h-3.5 fill-current text-accent-primary" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                          )}
+                        </button>
+                      </td>
 
-                    <td className="py-3.5 px-3">
-                      <div className="font-medium text-text-primary group-hover:text-accent-primary transition-colors">
-                        {item.title || item.fileName}
-                      </div>
-                      <div className="text-11 font-mono text-text-subtle">ID: {item.id}</div>
-                    </td>
+                      <td className="py-3.5 px-3">
+                        <div className="font-medium text-text-primary group-hover:text-accent-primary transition-colors">
+                          {item.title || item.fileName}
+                        </div>
+                        <div className="text-11 font-mono text-text-subtle">Session: {item.sessionId || item.id}</div>
+                      </td>
 
-                    <td className="py-3.5 px-3 text-text-muted">{item.channel || 'Standard Ingest'}</td>
+                      <td className="py-3.5 px-3 text-text-muted">{item.channel || 'Standard Ingest'}</td>
 
-                    <td className="py-3.5 px-3 font-mono text-text-muted">{item.time || item.timestamp}</td>
+                      <td className="py-3.5 px-3 font-mono text-text-muted">{item.time || item.timestamp}</td>
 
-                    <td className="py-3.5 px-3 font-mono">
-                      <span
-                        className={`font-semibold ${
-                          isFake ? 'text-accent-danger' : isAuth ? 'text-accent-success' : 'text-accent-warning'
-                        }`}
-                      >
-                        {displayScore}/100
-                      </span>
-                    </td>
+                      <td className="py-3.5 px-3 font-mono">
+                        <span
+                          className={`font-semibold ${
+                            isFake ? 'text-accent-danger' : isAuth ? 'text-accent-success' : 'text-accent-warning'
+                          }`}
+                        >
+                          {displayScore}/100
+                        </span>
+                      </td>
 
-                    <td className="py-3.5 px-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-11 font-medium border ${
-                          isFake
-                            ? 'bg-accent-danger/10 border-accent-danger/30 text-accent-danger'
-                            : isAuth
-                            ? 'bg-accent-success/10 border-accent-success/30 text-accent-success'
-                            : 'bg-accent-warning/10 border-accent-warning/30 text-accent-warning'
-                        }`}
-                      >
-                        {isFake && <ShieldAlert className="w-3 h-3" />}
-                        {isAuth && <ShieldCheck className="w-3 h-3" />}
-                        {!isFake && !isAuth && <HelpCircle className="w-3 h-3" />}
-                        {item.result || item.status}
-                      </span>
-                    </td>
+                      <td className="py-3.5 px-3">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-11 font-medium border ${
+                            isFake
+                              ? 'bg-accent-danger/10 border-accent-danger/30 text-accent-danger'
+                              : isAuth
+                              ? 'bg-accent-success/10 border-accent-success/30 text-accent-success'
+                              : 'bg-accent-warning/10 border-accent-warning/30 text-accent-warning'
+                          }`}
+                        >
+                          {isFake && <ShieldAlert className="w-3 h-3" />}
+                          {isAuth && <ShieldCheck className="w-3 h-3" />}
+                          {!isFake && !isAuth && <HelpCircle className="w-3 h-3" />}
+                          {item.result || item.status}
+                        </span>
+                      </td>
 
-                    <td className="py-3.5 pr-5 pl-3 text-right font-mono text-text-muted">
-                      {item.confidence}%
-                    </td>
-                  </tr>
-                );
-              })}
+                      <td className="py-3.5 pr-5 pl-3 text-right font-mono text-text-muted">
+                        {item.confidence}%
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

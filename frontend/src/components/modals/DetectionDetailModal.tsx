@@ -151,10 +151,10 @@ export const DetectionDetailModal: React.FC<DetectionDetailModalProps> = ({
                 </span>
               </div>
               <div className="text-10 text-text-muted truncate">
-                Digest: sha256:8f4c2b901aef9845d0124b893a771c504e76a0d2f939e658
+                Session ID: {analysis.sessionId || analysis.id}
               </div>
               <div className="text-10 text-text-subtle truncate">
-                Prev Block: sha256:1a8e9903bc776d5421fa409e5124b77f12e8310d...
+                Algorithm: SHA-256 Appendable Event Hash-Chain (DPDP Act 2023 Compliant)
               </div>
             </div>
           </div>
@@ -169,13 +169,14 @@ export const DetectionDetailModal: React.FC<DetectionDetailModalProps> = ({
             </button>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => alert(`Report for ${title} downloaded.`)}
-                className="px-4 py-2 rounded-lg text-12 font-medium bg-accent-primary hover:bg-accent-primary/90 text-white shadow-glow transition-all flex items-center gap-1.5"
+              <a
+                href={`/calls/${analysis.sessionId || analysis.id}/report`}
+                download={`meikural_forensic_report_${analysis.sessionId || analysis.id}.txt`}
+                className="px-4 py-2 rounded-lg text-12 font-medium bg-accent-primary hover:bg-accent-primary/90 text-white shadow-glow transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                Download Forensic PDF
-              </button>
+                Download Forensic Report
+              </a>
             </div>
           </div>
         </motion.div>

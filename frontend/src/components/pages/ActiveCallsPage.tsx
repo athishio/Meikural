@@ -12,90 +12,64 @@ interface ActiveCallsPageProps {
   isOffline?: boolean;
 }
 
-const mockTrunks: TrunkSession[] = [
-  {
-    id: 'trk-01',
-    gateway: 'SIP Trunk 16kHz Ingest Node #1',
-    sessionId: 'call_02db11a4',
-    callerHash: '7f9e8a12bc44d019f8e23a4b9102c98d761234ef',
-    startTime: Date.now() - 48000,
-    durationSeconds: 48,
-    voiceTrust: 88,
-    channelState: 'Streaming',
-    isIsolated: false,
-    codec: 'G.711u / PCM',
-  },
-  {
-    id: 'trk-02',
-    gateway: 'Genesys SIP Interconnect Primary',
-    sessionId: 'call_948f2190',
-    callerHash: '1a8e9903bc776d5421fa409e5124b77f12e8310d',
-    startTime: Date.now() - 114000,
-    durationSeconds: 114,
-    voiceTrust: 18,
-    channelState: 'Isolated',
-    isIsolated: true,
-    codec: 'AMR-WB 16k',
-  },
-  {
-    id: 'trk-03',
-    gateway: 'Twilio Media Stream WebSocket Ingest',
-    sessionId: 'call_33e082ba',
-    callerHash: '8b4d00129fca554e120d998234ab120938491029',
-    startTime: Date.now() - 25000,
-    durationSeconds: 25,
-    voiceTrust: 94,
-    channelState: 'Streaming',
-    isIsolated: false,
-    codec: 'Opus 24k',
-  },
-  {
-    id: 'trk-04',
-    gateway: 'Avaya Edge Session Border Controller',
-    sessionId: 'call_77c129ab',
-    callerHash: '3f2199bba7890cd1234567890abcdef12345678',
-    startTime: Date.now() - 72000,
-    durationSeconds: 72,
-    voiceTrust: 52,
-    channelState: 'Streaming',
-    isIsolated: false,
-    codec: 'G.711a / PCM',
-  },
-];
-
 export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
   onSelectSession,
   onInspectSession,
   onIsolateTrunk,
   isOffline = false,
 }) => {
-  const [trunks, setTrunks] = useState<TrunkSession[]>(mockTrunks);
+  const [trunks, setTrunks] = useState<TrunkSession[]>([]);
   const [search, setSearch] = useState('');
   const [fullHashView, setFullHashView] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch live calls from backend
-  useEffect(() => {
-    fetch('/calls')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const liveTrunks: TrunkSession[] = data.map((c: any, idx: number) => ({
-            id: `trk-db-${idx}`,
-            gateway: 'SIP Trunk 16kHz Ingest Node',
-            sessionId: c.session_id,
-            callerHash: c.caller_id_hash ? `${c.caller_id_hash.slice(0, 16)}...` : '7f9e8a12bc44d019...',
-            startTime: c.start_time ? c.start_time * 1000 : Date.now() - 30000,
-            durationSeconds: c.start_time ? Math.floor(c.end_time ? (c.end_time - c.start_time) : (Date.now() / 1000 - c.start_time)) : 30,
-            voiceTrust: Math.max(1, Math.min(99, Math.round((1 - (c.final_risk_score ?? 0.15)) * 100))),
-            channelState: (c.end_time ? 'Isolated' : 'Streaming') as 'Streaming' | 'Isolated',
-            isIsolated: Boolean(c.end_time),
-            codec: 'G.711u / PCM',
-          }));
+  const loadData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [callsRes, isolatedRes] = await Promise.all([
+        fetch('/calls?limit=100').catch(() => null),
+        fetch('/api/trunks/isolated').catch(() => null),
+      ]);
+
+      const isolatedSet = new Set<string>();
+      if (isolatedRes && isolatedRes.ok) {
+        const isoList = await isolatedRes.json();
+        if (Array.isArray(isoList)) {
+          isoList.forEach((id: string) => isolatedSet.add(id));
+        }
+      }
+
+      if (callsRes && callsRes.ok) {
+        const data = await callsRes.json();
+        if (Array.isArray(data)) {
+          const liveTrunks: TrunkSession[] = data.map((c: any, idx: number) => {
+            const isIsolated = isolatedSet.has(c.session_id);
+            const isStreaming = !c.end_time && !isIsolated;
+            return {
+              id: `trk-db-${idx}`,
+              gateway: c.session_id.startsWith('batch_') ? 'Forensic Batch Ingest Node' : 'SIP Trunk 16kHz Ingest Node',
+              sessionId: c.session_id,
+              callerHash: c.caller_id_hash ? `${c.caller_id_hash.slice(0, 16)}...` : '7f9e8a12bc44d019...',
+              startTime: c.start_time ? c.start_time * 1000 : Date.now() - 30000,
+              durationSeconds: c.start_time ? Math.floor(c.end_time ? (c.end_time - c.start_time) : (Date.now() / 1000 - c.start_time)) : 30,
+              voiceTrust: Math.max(1, Math.min(99, Math.round((1 - (c.final_risk_score ?? 0.15)) * 100))),
+              channelState: (isStreaming ? 'Streaming' : 'Isolated') as 'Streaming' | 'Isolated',
+              isIsolated: isIsolated || Boolean(c.end_time),
+              codec: 'G.711u / PCM',
+            };
+          });
           setTrunks(liveTrunks);
         }
-      })
-      .catch(() => {});
+      }
+    } catch (e) {
+      console.error('Failed to load active call sessions:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   // Live-ticking durations
@@ -112,7 +86,7 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const handleIsolate = (sessionId: string) => {
+  const handleIsolate = async (sessionId: string) => {
     setTrunks((prev) =>
       prev.map((t) =>
         t.sessionId === sessionId
@@ -120,12 +94,19 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
           : t
       )
     );
+    try {
+      await fetch(`/api/trunks/${sessionId}/isolate`, {
+        method: 'POST',
+        headers: { 'X-Meikural-Key': 'meikural-dev-key-2026' },
+      });
+    } catch (e) {
+      console.error('Failed to isolate trunk:', e);
+    }
     onIsolateTrunk(sessionId);
   };
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 500);
+    loadData();
   };
 
   const activeCount = trunks.filter((t) => t.channelState === 'Streaming').length;

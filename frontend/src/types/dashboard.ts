@@ -128,6 +128,7 @@ export interface ActiveCallSummary {
 // Backward compatibility interfaces
 export interface RecentAnalysis {
   id: string;
+  sessionId?: string;
   fileName: string;
   result: 'Authentic' | 'Deepfake' | 'Uncertain';
   confidence: number;

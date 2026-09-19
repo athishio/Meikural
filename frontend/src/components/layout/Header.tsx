@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, Menu, X, CheckCircle2, AlertTriangle, ShieldAlert, AlertOctagon } from 'lucide-react';
+import { Search, Bell, Menu, X, CheckCircle2, AlertTriangle, ShieldAlert, AlertOctagon, ChevronDown } from 'lucide-react';
 import type { NotificationItem, WebSocketState } from '../../types/dashboard';
 
 interface HeaderProps {
@@ -15,14 +15,24 @@ interface HeaderProps {
   onMarkNotificationsRead: () => void;
 }
 
-const navTabs = [
+const primaryNavTabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'active-calls', label: 'Active Calls' },
+  { id: 'detections', label: 'Detections' },
   { id: 'incidents', label: 'Incidents' },
   { id: 'audit-trail', label: 'Audit Trail' },
-  { id: 'rules', label: 'Rules' },
-  { id: 'integrations', label: 'Integrations' },
+  { id: 'reports', label: 'Reports' },
 ];
+
+const secondaryNavTabs = [
+  { id: 'rules', label: 'Rules & Policy' },
+  { id: 'integrations', label: 'Integrations' },
+  { id: 'audio-lab', label: 'Audio Lab' },
+  { id: 'people', label: 'People (Preview)' },
+  { id: 'settings', label: 'Settings' },
+];
+
+const allNavTabs = [...primaryNavTabs, ...secondaryNavTabs];
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
@@ -36,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMarkNotificationsRead,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -109,13 +120,13 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Center: Pill Navigation (Desktop) */}
       <nav className="hidden lg:flex items-center bg-[#0D0F11] border border-[#1E2225] p-1 rounded-full">
-        {navTabs.map((tab) => {
+        {primaryNavTabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
-              className={`relative px-4 py-1.5 text-[13px] font-medium transition-colors duration-150 rounded-full select-none ${
+              className={`relative px-3.5 py-1.5 text-[13px] font-medium transition-colors duration-150 rounded-full select-none cursor-pointer ${
                 isActive ? 'text-[#F2F4F5]' : 'text-[#9BA3A8] hover:text-[#F2F4F5]'
               }`}
             >
@@ -130,6 +141,51 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           );
         })}
+
+        {/* More Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            className={`relative flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 rounded-full select-none cursor-pointer ${
+              secondaryNavTabs.some((t) => t.id === activeTab)
+                ? 'text-[#FF4713] bg-[#1E2225]'
+                : 'text-[#9BA3A8] hover:text-[#F2F4F5]'
+            }`}
+          >
+            <span>
+              {secondaryNavTabs.find((t) => t.id === activeTab)?.label || 'More'}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          <AnimatePresence>
+            {showMoreMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="absolute top-full right-0 mt-2 w-44 bg-[#0D0F11] border border-[#1E2225] rounded-xl p-1.5 shadow-2xl z-50 divide-y divide-[#1E2225]/40"
+              >
+                {secondaryNavTabs.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      onSelectTab(t.id);
+                      setShowMoreMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-[12px] font-medium transition-colors cursor-pointer ${
+                      activeTab === t.id
+                        ? 'bg-[#1E2225] text-[#FF4713]'
+                        : 'text-[#9BA3A8] hover:text-[#F2F4F5] hover:bg-[#141719]'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </nav>
 
       {/* Right: Backend Live Pill + Escalate + Search + Notifications */}
@@ -269,7 +325,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="mb-2">
               {renderWsBadge()}
             </div>
-            {navTabs.map((tab) => (
+            {allNavTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {

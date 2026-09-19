@@ -12,11 +12,16 @@ const commandItems = [
   // Navigation Routes
   { id: 'nav-overview', title: 'Overview', category: 'Navigation', subtitle: 'Voice Trust Index, signal visualizer & sentinel controls', type: 'nav' },
   { id: 'nav-active-calls', title: 'Active Calls', category: 'Navigation', subtitle: 'Live SIP media streams and trunk isolation', type: 'nav' },
+  { id: 'nav-detections', title: 'Detections Registry', category: 'Navigation', subtitle: 'Forensic detection log with real-time verdicts & CSV ledger export', type: 'nav' },
   { id: 'nav-incidents', title: 'Incidents', category: 'Navigation', subtitle: 'High-risk deepfake interceptions & forensic certificates', type: 'nav' },
   { id: 'nav-audit-trail', title: 'Audit Trail', category: 'Navigation', subtitle: 'Cryptographic hash-chain ledger & block verifier', type: 'nav' },
+  { id: 'nav-reports', title: 'Compliance & Forensic Reports', category: 'Navigation', subtitle: 'Regulatory documentation, compliance packages & per-call reports', type: 'nav' },
   { id: 'nav-rules', title: 'Rules & Thresholds', category: 'Navigation', subtitle: 'Contiguous allow, step-up challenge & alert bands', type: 'nav' },
   { id: 'nav-integrations', title: 'Integrations', category: 'Navigation', subtitle: 'SIP Ingest Node, Twilio SMS & SMTP mailer gateways', type: 'nav' },
+  { id: 'nav-people', title: 'Identity & Biometrics (Preview)', category: 'Navigation', subtitle: 'Tier 2 DPDP Act 2023 zero-trust architecture specification', type: 'nav' },
+  { id: 'nav-audio-lab', title: 'Acoustic Research & Signal Lab', category: 'Navigation', subtitle: 'Benchmark audio vector playback and Mel-frequency spectrograms', type: 'nav' },
   { id: 'nav-privacy', title: 'Privacy & Compliance', category: 'Navigation', subtitle: 'Salted SHA-256 caller ID & 90-day retention auto-purge', type: 'nav' },
+  { id: 'nav-settings', title: 'Settings & Security Engine', category: 'Navigation', subtitle: 'Neural detection thresholds, API credentials & notification webhooks', type: 'nav' },
 
   // Active Sessions
   { id: 'sess-1', title: 'call_02db11a4', category: 'Session ID', subtitle: 'Voice Trust: 88/100 · ALLOW · Inbound SIP Trunk #1', type: 'session' },

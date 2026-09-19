@@ -7,11 +7,16 @@ import { SiteBackgroundWave } from './components/layout/SiteBackgroundWave';
 // Views
 import { OverviewView } from './components/dashboard/OverviewView';
 import { ActiveCallsPage } from './components/pages/ActiveCallsPage';
+import { DetectionsPage } from './components/pages/DetectionsPage';
 import { IncidentsPage } from './components/pages/IncidentsPage';
 import { AuditTrailPage } from './components/pages/AuditTrailPage';
+import { ReportsPage } from './components/pages/ReportsPage';
 import { RulesPage } from './components/pages/RulesPage';
 import { IntegrationsPage } from './components/pages/IntegrationsPage';
+import { PeoplePage } from './components/pages/PeoplePage';
+import { AudioLabPage } from './components/pages/AudioLabPage';
 import { PrivacyCompliancePage } from './components/pages/PrivacyCompliancePage';
+import { SettingsPage } from './components/pages/SettingsPage';
 
 // Modals
 import { DynamicVoiceChallengeModal } from './components/modals/DynamicVoiceChallengeModal';
@@ -21,6 +26,8 @@ import { SearchCommandPalette } from './components/modals/SearchCommandPalette';
 import { UploadModal } from './components/modals/UploadModal';
 import { BatchAnalysisModal } from './components/modals/BatchAnalysisModal';
 import { AuditionModal } from './components/modals/AuditionModal';
+import { DetectionDetailModal } from './components/modals/DetectionDetailModal';
+import type { RecentAnalysis } from './types/dashboard';
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -70,6 +77,7 @@ export const App: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [isAuditionOpen, setIsAuditionOpen] = useState(false);
+  const [selectedDetection, setSelectedDetection] = useState<RecentAnalysis | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -92,7 +100,7 @@ export const App: React.FC = () => {
         setIsBatchOpen(true);
         break;
       case 'reports':
-        setActiveTab('audit-trail');
+        setActiveTab('reports');
         break;
       default:
         break;
@@ -104,15 +112,20 @@ export const App: React.FC = () => {
     if (actLower.includes('audition') || actLower.includes('clip')) setIsAuditionOpen(true);
     else if (actLower.includes('overview')) setActiveTab('overview');
     else if (actLower.includes('active call')) setActiveTab('active-calls');
+    else if (actLower.includes('detection')) setActiveTab('detections');
     else if (actLower.includes('incident')) setActiveTab('incidents');
     else if (actLower.includes('audit')) setActiveTab('audit-trail');
+    else if (actLower.includes('report')) setActiveTab('reports');
     else if (actLower.includes('rule')) setActiveTab('rules');
     else if (actLower.includes('integration')) setActiveTab('integrations');
+    else if (actLower.includes('people') || actLower.includes('identity')) setActiveTab('people');
+    else if (actLower.includes('audio lab') || actLower.includes('lab') || actLower.includes('spectral')) setActiveTab('audio-lab');
     else if (actLower.includes('privacy')) setActiveTab('privacy');
+    else if (actLower.includes('setting')) setActiveTab('settings');
     else if (actLower.includes('monitoring')) toggleMonitoring();
     else if (actLower.includes('challenge')) triggerChallenge();
     else if (actLower.includes('escalate')) setIsEscalateOpen(true);
-    else if (actLower.includes('call_')) {
+    else if (actLower.includes('call_') || actLower.includes('batch_')) {
       setSessionId(action);
       setActiveTab('overview');
     }
@@ -209,6 +222,12 @@ export const App: React.FC = () => {
           />
         )}
 
+        {activeTab === 'detections' && (
+          <DetectionsPage
+            onSelectDetection={(item) => setSelectedDetection(item)}
+          />
+        )}
+
         {activeTab === 'incidents' && (
           <IncidentsPage
             onViewCert={(certData) => setSelectedCert(certData)}
@@ -220,6 +239,10 @@ export const App: React.FC = () => {
             onViewCert={(certData) => setSelectedCert(certData)}
             onSyncDb={syncDb}
           />
+        )}
+
+        {activeTab === 'reports' && (
+          <ReportsPage />
         )}
 
         {activeTab === 'rules' && (
@@ -246,6 +269,14 @@ export const App: React.FC = () => {
           />
         )}
 
+        {activeTab === 'people' && (
+          <PeoplePage />
+        )}
+
+        {activeTab === 'audio-lab' && (
+          <AudioLabPage />
+        )}
+
         {activeTab === 'privacy' && (
           <PrivacyCompliancePage
             onRunPurge={async () => {
@@ -254,6 +285,10 @@ export const App: React.FC = () => {
               return res;
             }}
           />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPage />
         )}
       </main>
 
@@ -319,6 +354,13 @@ export const App: React.FC = () => {
         onClose={() => setIsAuditionOpen(false)}
         onSimulateScenario={setSimulationScenario}
         onTriggerChallenge={triggerChallenge}
+      />
+
+      {/* Forensic Detection Detail Modal */}
+      <DetectionDetailModal
+        isOpen={Boolean(selectedDetection)}
+        analysis={selectedDetection}
+        onClose={() => setSelectedDetection(null)}
       />
     </div>
   );

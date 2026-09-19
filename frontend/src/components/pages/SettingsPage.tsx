@@ -7,6 +7,8 @@ export const SettingsPage: React.FC = () => {
   const [threshold, setThreshold] = useState(65);
   const [autoQuarantine, setAutoQuarantine] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleSave = () => {
     setSaved(true);
@@ -180,25 +182,49 @@ export const SettingsPage: React.FC = () => {
               <div>
                 <h3 className="text-14 font-semibold text-text-primary">Enterprise REST & WebSocket Credentials</h3>
                 <p className="text-11 text-text-muted mt-0.5">
-                  Secure access keys for Meikural FastAPI microservice
+                  Access credentials for administrative endpoints (Header: <code className="text-accent-primary">X-Meikural-Key</code>)
                 </p>
               </div>
 
               <div className="p-4 rounded-xl bg-surface-ground border border-card-border space-y-3 font-mono text-12">
-                <div className="text-text-subtle text-11">Production API Key (Header: X-Meikural-Key)</div>
+                <div className="text-text-subtle text-11 flex items-center justify-between">
+                  <span>Administrative API Key</span>
+                  <button
+                    onClick={() => setShowKey(!showKey)}
+                    className="text-10 text-text-muted hover:text-text-primary transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    {showKey ? 'Mask Secret' : 'Reveal Value'}
+                  </button>
+                </div>
                 <div className="flex items-center gap-2">
                   <input
-                    type="password"
+                    type="text"
                     readOnly
-                    value="mk_live_8923409823480923840923840923"
-                    className="flex-1 bg-surface-elevated border border-card-border rounded px-3 py-1.5 text-text-primary"
+                    value={showKey ? 'meikural-dev-key-2026' : 'mk_live_••••••••••••••••••••••••3840'}
+                    className="flex-1 bg-surface-elevated border border-card-border rounded px-3 py-1.5 text-text-primary select-all"
                   />
                   <button
-                    onClick={() => alert('API Key copied to clipboard')}
-                    className="px-3 py-1.5 rounded bg-surface-elevated border border-card-border text-text-secondary hover:text-text-primary"
+                    onClick={() => {
+                      navigator.clipboard.writeText('meikural-dev-key-2026');
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2500);
+                    }}
+                    className="px-3 py-1.5 rounded bg-surface-elevated hover:bg-surface-elevated/80 border border-card-border text-text-secondary hover:text-text-primary transition-all cursor-pointer flex items-center gap-1"
                   >
-                    Copy
+                    {copied ? (
+                      <span className="text-accent-success flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        Copied!
+                      </span>
+                    ) : (
+                      'Copy'
+                    )}
                   </button>
+                </div>
+
+                <div className="p-3 rounded-lg bg-surface-elevated/50 border border-card-border text-11 text-text-subtle font-sans leading-relaxed">
+                  <span className="font-semibold text-text-muted">Client-Side Secret Transparency Notice: </span>
+                  This credential is used by this browser session to authenticate administrative management calls (such as trunk isolation and regulatory purging). Any user with access to this browser session or developer tools can inspect this key. In enterprise deployments, live secrets are configured on the backend via <code className="font-mono text-accent-primary">MEIKURAL_API_KEY</code> and secured behind network ingress ACLs or gateway mTLS.
                 </div>
               </div>
             </div>

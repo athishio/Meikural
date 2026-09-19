@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { UserPlus, ShieldCheck, Fingerprint, Search, MoreVertical, Phone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UserPlus, ShieldCheck, Fingerprint, Search, Phone, Info, X, Sparkles } from 'lucide-react';
 
 interface Person {
   id: string;
@@ -13,7 +13,7 @@ interface Person {
   avatarBg: string;
 }
 
-const enrolledPeople: Person[] = [
+const previewProfiles: Person[] = [
   {
     id: 'usr-1',
     name: 'Kamalesh S.',
@@ -54,22 +54,13 @@ const enrolledPeople: Person[] = [
     lastVerified: '3 days ago',
     avatarBg: '#EC4899',
   },
-  {
-    id: 'usr-5',
-    name: 'David Miller',
-    role: 'Managing Director, Risk',
-    department: 'Enterprise Compliance',
-    enrolledDate: 'Mar 10, 2026',
-    assuranceLevel: 'High',
-    lastVerified: '5 days ago',
-    avatarBg: '#F59E0B',
-  },
 ];
 
 export const PeoplePage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [roadmapModal, setRoadmapModal] = useState<{ title: string; desc: string } | null>(null);
 
-  const filtered = enrolledPeople.filter(
+  const filtered = previewProfiles.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.role.toLowerCase().includes(search.toLowerCase()) ||
@@ -83,20 +74,48 @@ export const PeoplePage: React.FC = () => {
       exit={{ opacity: 0, y: -12 }}
       className="space-y-6"
     >
+      {/* Concept Preview Notice Banner */}
+      <div className="p-4 rounded-xl bg-accent-primary/10 border border-accent-primary/30 flex items-start gap-3.5">
+        <div className="w-8 h-8 rounded-lg bg-accent-primary/20 border border-accent-primary/40 flex items-center justify-center text-accent-primary flex-shrink-0 mt-0.5">
+          <Sparkles className="w-4 h-4" />
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h4 className="text-13 font-semibold text-text-primary">
+              Concept Preview · Enterprise Tier 2 Biometric Roadmap
+            </h4>
+            <span className="text-10 font-mono font-medium px-2 py-0.5 rounded bg-accent-primary/20 text-accent-primary border border-accent-primary/40">
+              PLANNED Q3 2026
+            </span>
+          </div>
+          <p className="text-12 text-text-muted leading-relaxed">
+            In strict compliance with India&apos;s <strong>DPDP Act 2023</strong> and zero-trust privacy mandates,
+            MEIKURAL&apos;s active production defense pipeline avoids storing permanent raw biometric voiceprints.
+            Incoming callers are identified through <strong>salted SHA-256 hashes</strong>. Dedicated speaker-embedding enrollment
+            and automated outbound SIP re-verification will be delivered in Tier 2 with hardware-isolated biometric key storage.
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-20 font-bold text-text-primary tracking-tight">Enrolled Voiceprints & Identities</h1>
+          <h1 className="text-20 font-bold text-text-primary tracking-tight">Identity & Biometrics Directory</h1>
           <p className="text-12 text-text-muted mt-0.5">
-            Cryptographically sealed biometric voice templates for high-assurance executive and agent authorization
+            Architecture mockup for high-assurance executive voice profiles and automated step-up re-authentication
           </p>
         </div>
 
         <button
-          onClick={() => alert('Launching Voiceprint Enrollment Wizard...')}
-          className="px-4 py-2 rounded-lg bg-accent-primary hover:bg-accent-primary/90 text-white text-12 font-medium shadow-glow flex items-center gap-2 transition-all self-start sm:self-auto"
+          onClick={() =>
+            setRoadmapModal({
+              title: 'Voiceprint Biometric Enrollment Wizard',
+              desc: 'Biometric voiceprint enrollment is scheduled on the Tier 2 roadmap. Under our current zero-trust DPDP Act 2023 architecture, permanent audio recordings and speaker embeddings are deliberately not collected or stored. Future enterprise releases will support client-side HSM-sealed voice templates.',
+            })
+          }
+          className="px-4 py-2 rounded-lg bg-surface-elevated border border-card-border hover:border-accent-border text-text-primary text-12 font-medium flex items-center gap-2 transition-all self-start sm:self-auto cursor-pointer"
         >
-          <UserPlus className="w-3.5 h-3.5" />
-          Enroll New Identity
+          <UserPlus className="w-3.5 h-3.5 text-accent-primary" />
+          Enroll New Identity (Preview)
         </button>
       </div>
 
@@ -106,7 +125,7 @@ export const PeoplePage: React.FC = () => {
           <Search className="w-3.5 h-3.5 text-text-subtle absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search enrolled personnel by name, title, or department..."
+            placeholder="Search preview profiles by name, title, or department..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-surface-ground border border-card-border rounded-lg pl-8 pr-3 py-1.5 text-12 text-text-primary placeholder:text-text-subtle focus:outline-none focus:border-accent-border transition-colors"
@@ -114,7 +133,7 @@ export const PeoplePage: React.FC = () => {
         </div>
 
         <span className="text-11 font-mono text-text-muted">
-          Showing {filtered.length} of {enrolledPeople.length} Enrolled Profiles
+          Showing {filtered.length} of {previewProfiles.length} Conceptual Profiles
         </span>
       </div>
 
@@ -145,9 +164,9 @@ export const PeoplePage: React.FC = () => {
                   </div>
                 </div>
 
-                <button className="p-1 text-text-subtle hover:text-text-primary">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <span className="text-10 font-mono text-text-subtle px-1.5 py-0.5 rounded bg-surface-ground border border-card-border">
+                  Mockup
+                </span>
               </div>
 
               <div className="mt-4 pt-3 border-t border-card-border space-y-2 text-11 font-mono">
@@ -159,7 +178,7 @@ export const PeoplePage: React.FC = () => {
                   <span className="text-text-subtle">Voiceprint Assurance:</span>
                   <span className="inline-flex items-center gap-1 text-accent-success">
                     <ShieldCheck className="w-3 h-3" />
-                    {person.assuranceLevel} (99.8%)
+                    {person.assuranceLevel} (Target 99.8%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -172,19 +191,66 @@ export const PeoplePage: React.FC = () => {
             <div className="mt-4 pt-3 border-t border-card-border flex items-center justify-between">
               <span className="text-10 font-mono text-text-subtle flex items-center gap-1">
                 <Fingerprint className="w-3 h-3 text-accent-primary" />
-                RawNet3 SHA Sealed
+                RawNet3 Template
               </span>
               <button
-                onClick={() => alert(`Simulating outbound verification call to ${person.name}...`)}
-                className="px-2.5 py-1 rounded bg-surface-elevated hover:bg-surface-elevated/80 border border-card-border text-11 text-text-primary flex items-center gap-1.5 transition-colors"
+                onClick={() =>
+                  setRoadmapModal({
+                    title: `Outbound Biometric Verification Dialing (${person.name})`,
+                    desc: `Automated outbound dialer verification for ${person.name} is scheduled on the Tier 2 roadmap. In production, this service will connect to a SIP trunk or Twilio voice bridge to dispatch dynamic micro-challenges directly to enrolled executive phone endpoints.`,
+                  })
+                }
+                className="px-2.5 py-1 rounded bg-surface-elevated hover:bg-surface-elevated/80 border border-card-border text-11 text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Phone className="w-3 h-3 text-accent-primary" />
-                Test Auth
+                Auth Spec
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Roadmap Detail Modal */}
+      <AnimatePresence>
+        {roadmapModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-card-panel border border-card-border rounded-2xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-accent-primary" />
+                  <h3 className="text-14 font-semibold text-text-primary">{roadmapModal.title}</h3>
+                </div>
+                <button
+                  onClick={() => setRoadmapModal(null)}
+                  className="p-1 rounded text-text-subtle hover:text-text-primary"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-12 text-text-muted leading-relaxed">{roadmapModal.desc}</p>
+
+              <div className="p-3 rounded-lg bg-surface-ground border border-card-border text-11 font-mono text-text-subtle">
+                Status: Tier 2 Roadmap Design Specification
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => setRoadmapModal(null)}
+                  className="px-4 py-1.5 rounded-lg text-12 font-medium bg-accent-primary text-white hover:bg-accent-primary/90 transition-colors cursor-pointer"
+                >
+                  Understood
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
