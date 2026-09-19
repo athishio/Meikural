@@ -36,6 +36,7 @@ interface OverviewViewProps {
   onQuickAction: (actionId: string) => void;
   rules?: RulesConfig;
   isOffline?: boolean;
+  demoMode?: boolean;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -60,6 +61,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onQuickAction,
   rules,
   isOffline = false,
+  demoMode = false,
 }) => {
   return (
     <div className="space-y-6 select-none">
@@ -80,6 +82,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         onOpenAudition={onOpenAudition}
         activeScenario={activeScenario}
         isOffline={isOffline}
+        demoMode={demoMode}
       />
 
       {/* Row 2: Live Voice Signal Panel (Waveform / Spectrum / Model Evidence + 6 Telemetry Tiles) & Voice Trust Index Gauge */}

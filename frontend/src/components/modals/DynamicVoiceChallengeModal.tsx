@@ -165,9 +165,16 @@ export const DynamicVoiceChallengeModal: React.FC<ChallengeModalProps> = ({
                   "Please repeat the verification digits:"
                 </p>
                 <div className="mt-1.5 inline-block py-1.5 px-3 rounded-lg bg-[#141719] border border-[#FF4713]/40">
-                  <span className="text-[22px] font-black font-mono tracking-[0.25em] text-[#FF4713]">
-                    {digits}
-                  </span>
+                  {digits.includes('Issuing') || digits.includes('Awaiting') ? (
+                    <span className="text-[13px] font-mono tracking-wider text-[#FF4713] animate-pulse flex items-center gap-2 py-0.5">
+                      <Zap className="w-3.5 h-3.5 animate-bounce text-[#FF4713]" />
+                      {digits}
+                    </span>
+                  ) : (
+                    <span className="text-[22px] font-black font-mono tracking-[0.25em] text-[#FF4713]">
+                      {digits}
+                    </span>
+                  )}
                 </div>
               </div>
 

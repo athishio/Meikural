@@ -38,6 +38,30 @@ class TestAutomatedLiveness(unittest.TestCase):
             actual = self.asr.normalize_to_digits(phrase)
             self.assertEqual(actual, expected, f"Failed on phrase: {phrase}")
 
+    def test_spoken_digit_filler_homophones_excluded(self):
+        """Validates that common sentence filler words ('for', 'to', 'too', 'ate', 'won') are NOT converted to digits."""
+        filler_phrases = [
+            ("Please wait for two minutes", "2"),  # 'for' is ignored, 'two' is 2
+            ("Proceed to the transfer window", ""),  # 'to' is ignored
+            ("That is too much to authorize", ""),  # 'too' and 'to' ignored
+            ("I ate lunch already", ""),  # 'ate' ignored
+            ("We won the competition", ""),  # 'won' ignored
+        ]
+        for phrase, expected in filler_phrases:
+            actual = self.asr.normalize_to_digits(phrase)
+            self.assertEqual(actual, expected, f"Failed on phrase: {phrase}")
+
+    def test_asr_singleton_thread_safety(self):
+        """Validates that concurrent get_instance calls return the exact same ASREngine singleton."""
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(ASREngine.get_instance) for _ in range(16)]
+            instances = [f.result() for f in futures]
+
+        first_instance = instances[0]
+        for inst in instances:
+            self.assertIs(inst, first_instance)
+
     def test_asr_audio_transcription(self):
         """Validates faster-whisper transcription on challenge_response_digits.wav."""
         audio, sr = sf.read(self.digits_wav)

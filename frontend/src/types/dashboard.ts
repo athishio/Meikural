@@ -70,7 +70,7 @@ export interface AuditRecord {
   verdict: VerdictType;
   challenge: 'Yes' | 'No';
   recordedTime: string;
-  hashChainIntegrity: 'Valid Block' | 'Broken Chain';
+  hashChainIntegrity: 'Valid Block' | 'Broken Chain' | 'Verification Failed';
   blockHash: string;
   prevHash: string;
   score: number;

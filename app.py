@@ -1212,12 +1212,24 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     active_websockets.add(websocket)
     session_id = f"call_{uuid.uuid4().hex[:8]}"
     chunk_counter = 0
-    logger.info(f"WebSocket client connected. Session ID: {session_id}")
+    logger.info(
+        f"WebSocket client connected. Session ID: {session_id}",
+        extra={"session_id": session_id, "event_type": "websocket_connect"},
+    )
 
     # Register call session in database
     database.create_call(
         session_id=session_id,
         caller_id_hash=database.hash_caller_id(f"caller_{session_id}"),
+    )
+
+    # Send immediate connection established handshake with DEMO_MODE flag and session_id
+    await websocket.send_text(
+        json.dumps({
+            "event": "connection_established",
+            "demo_mode": DEMO_MODE,
+            "metadata": {"session_id": session_id, "timestamp": round(time.time(), 3)},
+        })
     )
 
     mode = "live"  # "live" or "dummy"
@@ -1384,10 +1396,16 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         codec_override = data["codec"]
                     if "scenario" in data:
                         if not DEMO_MODE:
-                            logger.warning(f"Rejecting scenario override for {session_id}: DEMO_MODE is not enabled.")
+                            logger.warning(
+                                f"Rejecting scenario override for {session_id}: DEMO_MODE is not enabled.",
+                                extra={"session_id": session_id, "event_type": "scenario_override_rejected"},
+                            )
                         else:
                             scenario_override = data["scenario"]
-                            logger.info(f"[DEMO_MODE] Scenario override set: {scenario_override}")
+                            logger.info(
+                                f"[DEMO_MODE] Scenario override set: {scenario_override}",
+                                extra={"session_id": session_id, "event_type": "scenario_override_set"},
+                            )
                         if data.get("action") == "set_scenario":
                             continue
 
@@ -1407,6 +1425,43 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                             prompt_text=ch_rec.prompt_text,
                             liveness_passed=None,
                         )
+                        chunk_counter += 1
+                        database.record_event(
+                            session_id=session_id,
+                            score=max_risk if max_risk > 0 else 0.50,
+                            smoothed_score=round(smoothed_score, 4),
+                            verdict=final_verdict,
+                            challenge_id=current_challenge.challenge_id,
+                            timestamp=ts,
+                        )
+                        broadcast = ScoreBroadcast(
+                            timestamp=round(ts, 3),
+                            score=max_risk if max_risk > 0 else 0.50,
+                            event=current_challenge.event,
+                            metadata=MetadataInfo(
+                                session_id=session_id,
+                                chunk_id=chunk_counter,
+                                timestamp=round(ts, 3),
+                                inference_latency_ms=0.5,
+                            ),
+                            audio_health=AudioHealth(
+                                is_speech=True,
+                                rms_db=-22.0,
+                                duration_ms=0.0,
+                            ),
+                            anti_spoofing=AntiSpoofingResult(
+                                passive_score=max_risk,
+                                verdict=VerdictType.SPOOF if max_risk >= 0.65 else (VerdictType.BONAFIDE if max_risk <= 0.35 else VerdictType.UNCERTAIN),
+                                confidence=ConfidenceLevel.HIGH,
+                                threshold_used=0.50,
+                            ),
+                            challenge_state=current_challenge,
+                            risk_verdict=RiskVerdict(final_verdict),
+                            demo_mode=DEMO_MODE,
+                            codec_profile=codec_override or "uncompressed_pcm_16k",
+                        )
+                        await broadcast_telemetry(broadcast.model_dump_json())
+                        continue
                     elif "action" in data and data["action"] == "resolve_challenge":
                         passed = data.get("liveness_passed", True)
                         fusion_res = fusion_engine.process_chunk(

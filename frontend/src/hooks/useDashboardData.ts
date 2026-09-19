@@ -25,7 +25,8 @@ export function useDashboardData() {
   const [spoofProbability, setSpoofProbability] = useState(0.084);
   const [confidence, setConfidence] = useState(98.4);
   const [verdict, setVerdict] = useState<VerdictType>('ALLOW');
-  const [chainedBlocksCount, setChainedBlocksCount] = useState(24190);
+  const [chainedBlocksCount, setChainedBlocksCount] = useState(0);
+  const [hasReceivedSignal, setHasReceivedSignal] = useState(false);
 
   // WebSocket State
   const [wsState, setWsState] = useState<WebSocketState>('offline');
@@ -41,7 +42,7 @@ export function useDashboardData() {
 
   // Challenge HUD State
   const [showChallengeModal, setShowChallengeModal] = useState(false);
-  const [challengeDigits, setChallengeDigits] = useState('7 - 2 - 9 - 4');
+  const [challengeDigits, setChallengeDigits] = useState('Awaiting challenge...');
 
   // Simulation State
   const [activeScenario, setActiveScenario] = useState<string | null>('safe');
@@ -113,7 +114,19 @@ export function useDashboardData() {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
+          if (data.event === 'connection_established') {
+            if (data.metadata?.session_id) {
+              setSessionId(data.metadata.session_id);
+            }
+            if (data.demo_mode !== undefined) {
+              setIsDemoMode(Boolean(data.demo_mode));
+            }
+            return;
+          }
+
           if (data.score !== undefined) {
+            setHasReceivedSignal(true);
             const currentScore = data.score;
             setRawLogit(data.anti_spoofing?.passive_score ?? currentScore);
             setSpoofProbability(currentScore);
@@ -214,13 +227,22 @@ export function useDashboardData() {
     };
   }, [connectWebSocket]);
 
-  // Fetch persisted rules once on mount
+  // Fetch persisted rules and compliance totals once on mount
   useEffect(() => {
     fetch('/api/rules')
       .then((r) => r.json())
       .then((data) => {
         if (data && data.bonafide_allow_threshold !== undefined) {
           setRules(data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/compliance/stats')
+      .then((r) => r.json())
+      .then((stats) => {
+        if (stats && typeof stats.total_calls === 'number') {
+          setChainedBlocksCount(stats.total_calls);
         }
       })
       .catch(() => {});
@@ -312,13 +334,9 @@ export function useDashboardData() {
     }
   }, []);
 
-  // Sentinel: Trigger Dynamic Challenge
+  // Sentinel: Trigger Dynamic Challenge (Relies strictly on backend challenge engine)
   const triggerChallenge = useCallback(() => {
-    const d1 = Math.floor(Math.random() * 9) + 1;
-    const d2 = Math.floor(Math.random() * 9) + 1;
-    const d3 = Math.floor(Math.random() * 9) + 1;
-    const d4 = Math.floor(Math.random() * 9) + 1;
-    setChallengeDigits(`${d1} - ${d2} - ${d3} - ${d4}`);
+    setChallengeDigits('Issuing security challenge...');
     setShowChallengeModal(true);
 
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -461,29 +479,29 @@ export function useDashboardData() {
     {
       id: 'kpi-trust',
       title: 'Voice Trust Index',
-      value: `${voiceTrust}/100`,
-      numericValue: voiceTrust,
-      delta: voiceTrust > 70 ? '+4%' : '-12%',
+      value: hasReceivedSignal ? `${voiceTrust}/100` : '--',
+      numericValue: hasReceivedSignal ? voiceTrust : 0,
+      delta: hasReceivedSignal ? (voiceTrust > 70 ? '+4%' : '-12%') : 'Standby',
       isPositive: voiceTrust > 70,
-      deltaLabel: 'vs baseline',
-      semanticColor: voiceTrust > 70 ? 'green' : voiceTrust > 40 ? 'neutral' : 'red',
-      sparkline: [72, 76, 80, 78, 82, 85, 84, 88, 86, 90, voiceTrust],
+      deltaLabel: hasReceivedSignal ? 'vs baseline' : 'Awaiting signal',
+      semanticColor: hasReceivedSignal ? (voiceTrust > 70 ? 'green' : voiceTrust > 40 ? 'neutral' : 'red') : 'neutral',
+      sparkline: hasReceivedSignal ? [72, 76, 80, 78, 82, 85, 84, 88, 86, 90, voiceTrust] : [50, 50, 50, 50, 50, 50],
     },
     {
       id: 'kpi-spoof',
       title: 'Spoof Probability',
-      value: `${(spoofProbability * 100).toFixed(1)}%`,
-      numericValue: Math.round(spoofProbability * 100),
-      delta: spoofProbability > 0.5 ? '+18%' : '-8%',
+      value: hasReceivedSignal ? `${(spoofProbability * 100).toFixed(1)}%` : '--',
+      numericValue: hasReceivedSignal ? Math.round(spoofProbability * 100) : 0,
+      delta: hasReceivedSignal ? (spoofProbability > 0.5 ? '+18%' : '-8%') : 'Standby',
       isPositive: spoofProbability < 0.5,
-      deltaLabel: 'AASIST Logit',
-      semanticColor: spoofProbability > 0.5 ? 'red' : 'green',
-      sparkline: [22, 18, 14, 16, 12, 10, 8, 11, 9, 7, Math.round(spoofProbability * 100)],
+      deltaLabel: hasReceivedSignal ? 'AASIST Logit' : 'Awaiting audio',
+      semanticColor: hasReceivedSignal ? (spoofProbability > 0.5 ? 'red' : 'green') : 'neutral',
+      sparkline: hasReceivedSignal ? [22, 18, 14, 16, 12, 10, 8, 11, 9, 7, Math.round(spoofProbability * 100)] : [10, 10, 10, 10, 10, 10],
     },
     {
       id: 'kpi-lat',
       title: 'Neural Inference',
-      value: `${diagnostics.inferenceMs} ms`,
+      value: hasReceivedSignal ? `${diagnostics.inferenceMs} ms` : 'Ready',
       numericValue: diagnostics.inferenceMs,
       delta: '-28ms',
       isPositive: true,

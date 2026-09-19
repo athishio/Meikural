@@ -4,11 +4,16 @@ import { Calendar, ShieldCheck } from 'lucide-react';
 
 interface HeroBandProps {
   dateString?: string;
+  dayString?: string;
 }
 
 export const HeroBand: React.FC<HeroBandProps> = React.memo(({
-  dateString = '17 Sept 2026',
+  dateString,
+  dayString,
 }) => {
+  const today = new Date();
+  const displayDate = dateString || today.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const displayDay = dayString || today.toLocaleDateString('en-US', { weekday: 'long' });
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -132,10 +137,10 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
           </div>
           <div className="flex flex-col text-left">
             <span className="text-[10px] text-[#5E666B] uppercase tracking-wider font-semibold leading-none">
-              Wednesday
+              {displayDay}
             </span>
             <span className="text-[12px] font-medium text-[#F2F4F5] leading-tight mt-0.5">
-              {dateString}
+              {displayDate}
             </span>
           </div>
         </div>

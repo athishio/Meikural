@@ -234,7 +234,10 @@ class ChallengeEngine:
         )
         self._active_challenges[session_id] = record
         self._session_challenge_count[session_id] = self._session_challenge_count.get(session_id, 0) + 1
-        logger.info(f"Challenge issued for session {session_id}: [{ch_id}] '{prompt_text}' (total: {self._session_challenge_count[session_id]})")
+        logger.info(
+            f"Challenge issued for session {session_id}: [{ch_id}] '{prompt_text}' (total: {self._session_challenge_count[session_id]})",
+            extra={"session_id": session_id, "event_type": "challenge_issued"}
+        )
         return record
 
     def get_current_challenge(self, session_id: str, timestamp: Optional[float] = None) -> Optional[ChallengeRecord]:
@@ -244,7 +247,10 @@ class ChallengeEngine:
             if (now - record.issued_at) > record.timeout_seconds:
                 record.status = ChallengeStatus.EXPIRED
                 self._session_cooldown_until[session_id] = now + self.CHALLENGE_COOLDOWN_SECONDS
-                logger.warning(f"Challenge [{record.challenge_id}] expired for session {session_id}. Cooldown active for {self.CHALLENGE_COOLDOWN_SECONDS}s")
+                logger.warning(
+                    f"Challenge [{record.challenge_id}] expired for session {session_id}. Cooldown active for {self.CHALLENGE_COOLDOWN_SECONDS}s",
+                    extra={"session_id": session_id, "event_type": "challenge_expired"}
+                )
         return record
 
     def evaluate_response(
@@ -306,7 +312,17 @@ class ChallengeEngine:
         logger.info(
             f"Challenge [{record.challenge_id}] resolved: passed={passed}, liveness={liveness_score:.2f}, "
             f"latency={turnaround_ms:.1f}ms, expected='{record.expected_answer}', detected='{detected_answer}'. "
-            f"Cooldown active until {self._session_cooldown_until[session_id]:.1f}"
+            f"Cooldown active until {self._session_cooldown_until[session_id]:.1f}",
+            extra={
+                "session_id": session_id,
+                "event_type": "challenge_resolved",
+                "payload": {
+                    "challenge_id": record.challenge_id,
+                    "passed": passed,
+                    "liveness": round(liveness_score, 2),
+                    "latency_ms": round(turnaround_ms, 1),
+                },
+            },
         )
         return passed, liveness_score, turnaround_ms
 

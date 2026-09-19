@@ -25,8 +25,8 @@ RUN python -c "from faster_whisper import WhisperModel; WhisperModel('tiny.en', 
 # Copy application code and assets
 COPY --chown=meikural:meikural . /app
 
-# Ensure proper permissions
-RUN chown -R meikural:meikural /app
+# Create persistent data directory and ensure proper ownership
+RUN mkdir -p /app/data && chown -R meikural:meikural /app/data /app
 
 USER meikural
 

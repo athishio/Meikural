@@ -16,6 +16,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - DEMO_MODE=0
+      - MEIKURAL_DB_PATH=/app/data/meikural_audit.db
       - MEIKURAL_API_KEY=change-me-to-a-secure-production-key-in-prod
       - MEIKURAL_SALT=change-me-to-a-64-byte-production-salt-hex
       - ASR_MODEL=tiny.en

@@ -21,15 +21,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
         </div>
 
         {/* Big Wordmark Section (Watermark-like legibility rgba(255,255,255,0.12-0.16), aria-hidden) */}
-        <div className="relative py-4 flex flex-col items-center justify-center text-center overflow-hidden">
+        <div className="relative py-2 flex flex-col items-center justify-center text-center overflow-hidden gap-3 sm:gap-4">
           <div
             aria-hidden="true"
-            className="text-[72px] sm:text-[110px] md:text-[150px] lg:text-[180px] font-black tracking-[0.14em] text-transparent bg-clip-text bg-gradient-to-b from-white/[0.16] via-white/[0.11] to-[#FF4713]/[0.08] pointer-events-none select-none leading-none -mb-8 sm:-mb-12 md:-mb-16"
+            className="text-[72px] sm:text-[110px] md:text-[150px] lg:text-[180px] font-black tracking-[0.14em] text-transparent bg-clip-text bg-gradient-to-b from-white/[0.16] via-white/[0.11] to-[#FF4713]/[0.08] pointer-events-none select-none leading-none"
           >
             MEIKURAL
           </div>
 
-          <div className="z-10 flex flex-col items-center space-y-1">
+          <div className="z-10 flex flex-col items-center space-y-1 px-4">
             <p className="text-[12px] text-[#5E666B] font-mono">
               Enterprise Voice Security Operations Center & Acoustic Anti-Spoofing Infrastructure
             </p>

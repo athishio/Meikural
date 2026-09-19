@@ -11,6 +11,7 @@ interface SentinelControlsProps {
   onOpenAudition?: () => void;
   activeScenario?: string | null;
   isOffline?: boolean;
+  demoMode?: boolean;
 }
 
 export const SentinelControls: React.FC<SentinelControlsProps> = ({
@@ -23,8 +24,15 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
   onOpenAudition,
   activeScenario,
   isOffline = false,
+  demoMode = false,
 }) => {
   const offlineTooltip = isOffline ? 'Unavailable — backend disconnected' : undefined;
+  const isSimulationDisabled = isOffline || demoMode === false;
+  const simTooltip = isOffline
+    ? 'Unavailable — backend disconnected'
+    : demoMode === false
+    ? 'Simulation disabled: server DEMO_MODE=0 (AASIST pure neural inference path)'
+    : undefined;
 
   return (
     <div className="bg-[#0D0F11] border border-[#1E2225] hover:border-[#2A2F33] rounded-[16px] p-4 shadow-card flex flex-col md:flex-row items-center justify-between gap-4 transition-all">
@@ -90,11 +98,11 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
 
         {/* Human Chip */}
         <button
-          disabled={isOffline}
-          title={offlineTooltip}
+          disabled={isSimulationDisabled}
+          title={simTooltip}
           onClick={() => onSimulationScenario('safe')}
           className={`px-3 py-1.5 rounded-lg text-[11.5px] font-mono font-medium border flex items-center gap-1.5 transition-all ${
-            isOffline
+            isSimulationDisabled
               ? 'opacity-40 cursor-not-allowed bg-[#141719] border-[#1E2225] text-[#5E666B]'
               : activeScenario === 'safe'
               ? 'bg-[#22C55E]/20 text-[#22C55E] border-[#22C55E]/50 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
@@ -107,11 +115,11 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
 
         {/* Deepfake Chip */}
         <button
-          disabled={isOffline}
-          title={offlineTooltip}
+          disabled={isSimulationDisabled}
+          title={simTooltip}
           onClick={() => onSimulationScenario('deepfake')}
           className={`px-3 py-1.5 rounded-lg text-[11.5px] font-mono font-medium border flex items-center gap-1.5 transition-all ${
-            isOffline
+            isSimulationDisabled
               ? 'opacity-40 cursor-not-allowed bg-[#141719] border-[#1E2225] text-[#5E666B]'
               : activeScenario === 'deepfake'
               ? 'bg-[#EF4444]/20 text-[#EF4444] border-[#EF4444]/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
@@ -124,11 +132,11 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
 
         {/* Jitter Chip */}
         <button
-          disabled={isOffline}
-          title={offlineTooltip}
+          disabled={isSimulationDisabled}
+          title={simTooltip}
           onClick={() => onSimulationScenario('caution')}
           className={`px-3 py-1.5 rounded-lg text-[11.5px] font-mono font-medium border flex items-center gap-1.5 transition-all ${
-            isOffline
+            isSimulationDisabled
               ? 'opacity-40 cursor-not-allowed bg-[#141719] border-[#1E2225] text-[#5E666B]'
               : activeScenario === 'caution'
               ? 'bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
@@ -158,7 +166,7 @@ export const SentinelControls: React.FC<SentinelControlsProps> = ({
         <button
           onClick={onOpenAudition}
           className="px-3 py-1.5 rounded-lg text-[11.5px] font-mono font-medium border flex items-center gap-1.5 bg-[#FF4713]/15 hover:bg-[#FF4713]/25 text-[#FF4713] border-[#FF4713]/40 shadow-[0_0_12px_rgba(255,71,19,0.2)] transition-all cursor-pointer"
-          title="Audition 60-second reference clips: Natural Human vs Generative Deepfake"
+          title="Audition 30-second reference clips: Natural Human vs Generative Deepfake"
         >
           <Headphones className="w-3.5 h-3.5" />
           <span>Audition Clips</span>

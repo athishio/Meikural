@@ -87,7 +87,9 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
       }
     } catch {}
     setRecords((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, verified: true } : r))
+      prev.map((r) =>
+        r.id === id ? { ...r, verified: true, hashChainIntegrity: 'Verification Failed' } : r
+      )
     );
   };
 
@@ -96,24 +98,62 @@ export const AuditTrailPage: React.FC<AuditTrailPageProps> = ({
     setChainResult(null);
 
     try {
-      const targetSession = records[0]?.sessionId;
-      if (targetSession) {
-        const resp = await fetch(`/calls/${targetSession}/verify`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.valid) {
-            setChainResult(`Sequential Hash-Chain Verified: 100% Cryptographic Integrity (${data.total_events} events sealed, zero breaks)`);
-          } else {
-            setChainResult(`Integrity Violation: Hash mismatch detected at event index ${data.broken_index}`);
-          }
-          setVerifyingChain(false);
-          return;
-        }
+      const sessionIds = Array.from(new Set(records.map((r) => r.sessionId).filter(Boolean)));
+      if (sessionIds.length === 0) {
+        setChainResult('No ledger sessions available to verify.');
+        setVerifyingChain(false);
+        return;
       }
-    } catch {}
 
-    setChainResult('Sequential Hash-Chain Verified: 100% Cryptographic Integrity (Zero Breaks Across Ledger)');
-    setVerifyingChain(false);
+      const results = await Promise.all(
+        sessionIds.map(async (sid) => {
+          try {
+            const resp = await fetch(`/calls/${sid}/verify`);
+            if (resp.ok) {
+              const data = await resp.json();
+              return { sessionId: sid, valid: Boolean(data.valid), totalEvents: data.total_events || 0 };
+            }
+            return { sessionId: sid, valid: false, totalEvents: 0, error: true };
+          } catch {
+            return { sessionId: sid, valid: false, totalEvents: 0, error: true };
+          }
+        })
+      );
+
+      const validSessions = results.filter((r) => r.valid);
+      const brokenSessions = results.filter((r) => !r.valid);
+      const totalEvents = results.reduce((acc, r) => acc + r.totalEvents, 0);
+
+      // Update per-row verification indicators
+      const resultMap = new Map(results.map((r) => [r.sessionId, r.valid]));
+      setRecords((prev) =>
+        prev.map((r) => {
+          const isValid = resultMap.get(r.sessionId);
+          if (isValid !== undefined) {
+            return {
+              ...r,
+              verified: true,
+              hashChainIntegrity: isValid ? 'Valid Block' : 'Broken Chain',
+            };
+          }
+          return r;
+        })
+      );
+
+      if (brokenSessions.length === 0) {
+        setChainResult(
+          `Sequential Hash-Chain Verified: 100% Cryptographic Integrity (${validSessions.length}/${sessionIds.length} sessions valid, ${totalEvents} sealed events, zero breaks)`
+        );
+      } else {
+        setChainResult(
+          `Integrity Violation Detected: ${brokenSessions.length} broken session(s) out of ${sessionIds.length} checked (${validSessions.length} valid).`
+        );
+      }
+    } catch {
+      setChainResult('Verification Query Failed: Network or backend error during ledger audit.');
+    } finally {
+      setVerifyingChain(false);
+    }
   };
 
   const handleSync = async () => {

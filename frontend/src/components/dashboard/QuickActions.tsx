@@ -11,7 +11,7 @@ const defaultActions: QuickActionItem[] = [
   {
     id: 'audition',
     title: 'Audition Clips',
-    subtitle: '60s human vs deepfake audio',
+    subtitle: '30s human vs deepfake audio',
     icon: 'Headphones',
   },
   {

@@ -71,6 +71,9 @@ def get_db_connection(db_path: str = DB_PATH):
     """
     Context manager for SQLite database connection.
     """
+    db_dir = os.path.dirname(os.path.abspath(db_path))
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     conn = sqlite3.connect(db_path, timeout=10.0)
     conn.row_factory = sqlite3.Row
     try:
@@ -379,7 +382,8 @@ def verify_chain(session_id: str, db_path: str = DB_PATH) -> ChainVerificationRe
         if ev.get("prev_hash") != expected_prev:
             logger.warning(
                 f"Hash-chain link broken at event index {idx} (event_id={ev.get('event_id')}): "
-                f"expected prev_hash={expected_prev}, found={ev.get('prev_hash')}"
+                f"expected prev_hash={expected_prev}, found={ev.get('prev_hash')}",
+                extra={"session_id": session_id, "event_type": "chain_link_broken"}
             )
             return ChainVerificationResult(False, idx, total_events=len(events))
 
@@ -394,7 +398,8 @@ def verify_chain(session_id: str, db_path: str = DB_PATH) -> ChainVerificationRe
         if ev.get("record_hash") != recomputed_hash:
             logger.warning(
                 f"Record hash mismatch at event index {idx} (event_id={ev.get('event_id')}): "
-                f"recomputed={recomputed_hash}, stored={ev.get('record_hash')}"
+                f"recomputed={recomputed_hash}, stored={ev.get('record_hash')}",
+                extra={"session_id": session_id, "event_type": "record_hash_mismatch"}
             )
             return ChainVerificationResult(False, idx, total_events=len(events))
 

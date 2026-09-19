@@ -196,6 +196,7 @@ export const App: React.FC = () => {
             onQuickAction={handleQuickAction}
             rules={rules}
             isOffline={wsState === 'offline'}
+            demoMode={isDemoMode}
           />
         )}
 

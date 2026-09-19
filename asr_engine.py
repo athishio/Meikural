@@ -10,22 +10,23 @@ import io
 import logging
 import os
 import re
+import threading
 from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 
 logger = logging.getLogger("meikural_asr")
 
-# Word-to-digit normalization mapping (including common phonetic ASR confusions)
+# Unambiguous spoken English digit words (filler homophones like 'for', 'to', 'too', 'ate', 'won' excluded to prevent spurious matching)
 DIGIT_MAP: Dict[str, str] = {
-    "zero": "0", "oh": "0", "o": "0",
-    "one": "1", "won": "1",
-    "two": "2", "to": "2", "too": "2",
+    "zero": "0",
+    "one": "1",
+    "two": "2",
     "three": "3",
-    "four": "4", "for": "4", "fore": "4",
+    "four": "4",
     "five": "5",
     "six": "6",
     "seven": "7",
-    "eight": "8", "ate": "8",
+    "eight": "8",
     "nine": "9",
 }
 
@@ -36,6 +37,7 @@ class ASREngine:
     Runs offline on CPU with INT8 quantization for sub-100ms turnaround on short digit bursts.
     """
     _instance: Optional["ASREngine"] = None
+    _lock: threading.Lock = threading.Lock()
 
     def __init__(self, model_size: Optional[str] = None):
         from faster_whisper import WhisperModel
@@ -53,7 +55,9 @@ class ASREngine:
     @classmethod
     def get_instance(cls) -> "ASREngine":
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
 
     @staticmethod
@@ -89,18 +93,22 @@ class ASREngine:
         Returns:
           Tuple[detected_digits: str, raw_transcript: str, confidence: float]
         """
-        if isinstance(audio, bytes):
-            import soundfile as sf
+        if isinstance(audio, (bytes, str)):
             try:
-                audio_np, sr = sf.read(io.BytesIO(audio))
+                from audio_processor import load_audio_any_format
+                audio_np, sr = load_audio_any_format(audio)
                 if sr != 16000:
                     import scipy.signal as signal
                     import math
                     gcd = math.gcd(int(sr), 16000)
                     audio_np = signal.resample_poly(audio_np, 16000 // gcd, int(sr) // gcd).astype(np.float32)
                 audio = audio_np.astype(np.float32)
-            except Exception:
-                audio = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768.0
+            except Exception as e:
+                logger.warning(f"Audio decode fallback in ASR: {e}")
+                if isinstance(audio, bytes):
+                    audio = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768.0
+                else:
+                    raise
 
         if isinstance(audio, np.ndarray):
             if audio.ndim > 1:

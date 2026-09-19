@@ -56,7 +56,10 @@ def send_sms_alert(
 
     if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER and recipient):
         msg = "Twilio credentials or recipient phone number not fully configured. SMS alert simulated."
-        logger.warning(f"{msg} | Session: {session_id} | Risk: {risk_score:.2f} | Verdict: {verdict}")
+        logger.warning(
+            f"{msg} | Session: {session_id} | Risk: {risk_score:.2f} | Verdict: {verdict}",
+            extra={"session_id": session_id, "event_type": "sms_alert_simulated"},
+        )
         return {
             "status": "simulated",
             "message": msg,
@@ -76,7 +79,10 @@ def send_sms_alert(
             from_=TWILIO_PHONE_NUMBER,
             to=recipient,
         )
-        logger.info(f"Twilio SMS sent successfully! SID: {message.sid} to {recipient}")
+        logger.info(
+            f"Twilio SMS sent successfully! SID: {message.sid} to {recipient}",
+            extra={"session_id": session_id, "event_type": "sms_alert_delivered"},
+        )
         return {
             "status": "delivered",
             "sid": message.sid,
@@ -87,7 +93,10 @@ def send_sms_alert(
             "body": body,
         }
     except Exception as e:
-        logger.error(f"Failed to deliver Twilio SMS alert: {e}")
+        logger.error(
+            f"Failed to deliver Twilio SMS alert: {e}",
+            extra={"session_id": session_id, "event_type": "sms_alert_failed"},
+        )
         return {
             "status": "error",
             "error": str(e),
@@ -115,7 +124,10 @@ def send_email_alert(
 
     if not (SMTP_USER and SMTP_PASSWORD and recipient):
         msg = "SMTP credentials or recipient email not fully configured. Email alert simulated."
-        logger.warning(f"{msg} | Session: {session_id} | Risk: {risk_score:.2f} | Verdict: {verdict}")
+        logger.warning(
+            f"{msg} | Session: {session_id} | Risk: {risk_score:.2f} | Verdict: {verdict}",
+            extra={"session_id": session_id, "event_type": "email_alert_simulated"},
+        )
         return {
             "status": "simulated",
             "message": msg,
@@ -151,7 +163,10 @@ def send_email_alert(
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.sendmail(ALERT_EMAIL_FROM, [recipient], msg.as_string())
-            logger.info(f"SMTP Security Alert Email successfully sent to {recipient}")
+            logger.info(
+                f"SMTP Security Alert Email successfully sent to {recipient}",
+                extra={"session_id": session_id, "event_type": "email_alert_delivered"},
+            )
             return {
                 "status": "delivered",
                 "session_id": session_id,
@@ -161,7 +176,10 @@ def send_email_alert(
                 "subject": email_subject,
             }
     except Exception as e:
-        logger.error(f"Failed to send SMTP email alert: {e}")
+        logger.error(
+            f"Failed to send SMTP email alert: {e}",
+            extra={"session_id": session_id, "event_type": "email_alert_failed"},
+        )
         return {
             "status": "error",
             "error": str(e),
@@ -182,7 +200,8 @@ def dispatch_step_up_alerts(
     Dispatches multi-channel alerts (Twilio SMS + SMTP Email) when STEP_UP_VERIFICATION is triggered.
     """
     logger.warning(
-        f"[STEP_UP_VERIFICATION] Triggering multi-channel alert delivery for session: {session_id} with risk: {risk_score:.2f}"
+        f"[STEP_UP_VERIFICATION] Triggering multi-channel alert delivery for session: {session_id} with risk: {risk_score:.2f}",
+        extra={"session_id": session_id, "event_type": "step_up_alert_triggered"},
     )
 
     sms_res = send_sms_alert(session_id=session_id, risk_score=risk_score, verdict=verdict)
