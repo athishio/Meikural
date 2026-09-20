@@ -63,10 +63,11 @@ http_bearer = HTTPBearer(auto_error=False)
 
 
 async def verify_admin_auth(
+    request: Request,
     api_key: Optional[str] = Security(api_key_header),
     bearer: Optional[HTTPAuthorizationCredentials] = Security(http_bearer),
 ) -> str:
-    token = api_key or (bearer.credentials if bearer else None)
+    token = api_key or request.headers.get("x-meikural-key") or request.headers.get("x-api-key") or (bearer.credentials if bearer else None)
     if not token or not hmac.compare_digest(token, MEIKURAL_API_KEY):
         raise HTTPException(
             status_code=401,

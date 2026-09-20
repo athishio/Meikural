@@ -27,6 +27,8 @@ import { UploadModal } from './components/modals/UploadModal';
 import { BatchAnalysisModal } from './components/modals/BatchAnalysisModal';
 import { AuditionModal } from './components/modals/AuditionModal';
 import { DetectionDetailModal } from './components/modals/DetectionDetailModal';
+import { RecordLiveModal } from './components/modals/RecordLiveModal';
+import { CallForensicsDrawer } from './components/modals/CallForensicsDrawer';
 import type { RecentAnalysis } from './types/dashboard';
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -77,6 +79,8 @@ export const App: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [isAuditionOpen, setIsAuditionOpen] = useState(false);
+  const [isRecordLiveOpen, setIsRecordLiveOpen] = useState(false);
+  const [selectedForensicSession, setSelectedForensicSession] = useState<string | null>(null);
   const [selectedDetection, setSelectedDetection] = useState<RecentAnalysis | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -94,7 +98,7 @@ export const App: React.FC = () => {
         setIsUploadOpen(true);
         break;
       case 'record':
-        toggleMonitoring();
+        setIsRecordLiveOpen(true);
         break;
       case 'batch':
         setIsBatchOpen(true);
@@ -122,6 +126,7 @@ export const App: React.FC = () => {
     else if (actLower.includes('audio lab') || actLower.includes('lab') || actLower.includes('spectral')) setActiveTab('audio-lab');
     else if (actLower.includes('privacy')) setActiveTab('privacy');
     else if (actLower.includes('setting')) setActiveTab('settings');
+    else if (actLower.includes('record') || actLower.includes('microphone') || actLower.includes('live recording')) setIsRecordLiveOpen(true);
     else if (actLower.includes('monitoring')) toggleMonitoring();
     else if (actLower.includes('challenge')) triggerChallenge();
     else if (actLower.includes('escalate')) setIsEscalateOpen(true);
@@ -184,7 +189,10 @@ export const App: React.FC = () => {
             spoofProbability={spoofProbability}
             isMonitoring={isMonitoring}
             onToggleMonitoring={toggleMonitoring}
-            onRunVerification={runVerification}
+            onRunVerification={async () => {
+              await runVerification();
+              showToast(`Cryptographic ledger verification executed for ${sessionId}. Chain integrity confirmed.`);
+            }}
             onEscalate={() => setIsEscalateOpen(true)}
             onSimulationScenario={setSimulationScenario}
             onTriggerChallenge={triggerChallenge}
@@ -208,14 +216,7 @@ export const App: React.FC = () => {
               setActiveTab('overview');
             }}
             onInspectSession={(sess) => {
-              setSelectedCert({
-                sessionId: sess,
-                prevHash: '7f9e8a12bc44d019f8e23a4b9102c98d761234ef',
-                blockHash: 'da5c6a8b1276e1582c66251e75127b9b1d6c4b0f2b673176d903ad9d68f64f66',
-                score: 0.14,
-                verdict: 'ALLOW',
-                timestamp: 'Live Active Stream',
-              });
+              setSelectedForensicSession(sess);
             }}
             onIsolateTrunk={(sess) => {
               showToast(`Trunk ${sess} isolated. Dispatched emergency alert.`);
@@ -362,6 +363,22 @@ export const App: React.FC = () => {
         isOpen={Boolean(selectedDetection)}
         analysis={selectedDetection}
         onClose={() => setSelectedDetection(null)}
+      />
+
+      {/* Real-time Microphone Record & Score Modal */}
+      <RecordLiveModal
+        isOpen={isRecordLiveOpen}
+        onClose={() => setIsRecordLiveOpen(false)}
+        onAnalysisComplete={(res) => {
+          showToast(`Microphone stream scored: ${res.verdict} (${res.overall_risk_score}/100)`);
+        }}
+      />
+
+      {/* Call Telemetry & Hash-Chain Forensics Drawer */}
+      <CallForensicsDrawer
+        sessionId={selectedForensicSession}
+        isOpen={Boolean(selectedForensicSession)}
+        onClose={() => setSelectedForensicSession(null)}
       />
     </div>
   );

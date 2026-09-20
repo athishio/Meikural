@@ -1,18 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Key, Bell, Cpu, Save, Radio, Check } from 'lucide-react';
+import { Key, Bell, Cpu, Save, Radio, Check, Trash2, RefreshCw } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'neural' | 'telephony' | 'api' | 'alerts'>('neural');
   const [threshold, setThreshold] = useState(65);
   const [autoQuarantine, setAutoQuarantine] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purgeResult, setPurgeResult] = useState<number | null>(null);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    fetch('/api/rules')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && typeof data.critical_deepfake_threshold === 'number') {
+          setThreshold(Math.round(data.critical_deepfake_threshold * 100));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await fetch('/api/rules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': 'meikural-dev-key-2026',
+        },
+        body: JSON.stringify({
+          critical_deepfake_threshold: threshold / 100,
+          step_up_challenge_threshold: threshold / 100,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      console.error('Failed to save settings:', e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRunPurge = async () => {
+    setPurging(true);
+    setPurgeResult(null);
+    try {
+      const resp = await fetch('/purge-expired', {
+        method: 'POST',
+        headers: {
+          'X-API-Key': 'meikural-dev-key-2026',
+        },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setPurgeResult(data.purged_count ?? 0);
+      }
+    } catch (e) {
+      console.error('Purge error:', e);
+    } finally {
+      setPurging(false);
+    }
   };
 
   return (
@@ -32,10 +85,11 @@ export const SettingsPage: React.FC = () => {
 
         <button
           onClick={handleSave}
-          className="px-4 py-2 rounded-lg bg-accent-primary hover:bg-accent-primary/90 text-white text-12 font-medium shadow-glow flex items-center gap-2 transition-all self-start sm:self-auto"
+          disabled={isSaving}
+          className="px-4 py-2 rounded-lg bg-accent-primary hover:bg-accent-primary/90 text-white text-12 font-medium shadow-glow flex items-center gap-2 transition-all self-start sm:self-auto cursor-pointer disabled:opacity-50"
         >
-          {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-          {saved ? 'Configuration Saved' : 'Save Changes'}
+          {saved ? <Check className="w-4 h-4" /> : isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saved ? 'Configuration Saved' : isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -145,6 +199,43 @@ export const SettingsPage: React.FC = () => {
                   <input type="checkbox" defaultChecked className="w-4 h-4 accent-accent-primary cursor-pointer" />
                 </label>
               </div>
+
+              {/* DPDP 90-Day Auto-Purge Control */}
+              <div className="p-4 rounded-xl bg-surface-ground border border-card-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-accent-primary font-semibold text-13">
+                    <Trash2 className="w-4 h-4" />
+                    <span>DPDP Act 2023 90-Day Retention Auto-Purge</span>
+                  </div>
+                  <span className="text-10 font-mono px-2 py-0.5 rounded bg-accent-success/10 border border-accent-success/30 text-accent-success font-medium">
+                    ACTIVE RETENTION POLICY
+                  </span>
+                </div>
+                <p className="text-11 text-text-muted">
+                  Permanently expunges call sessions and associated telemetry blocks older than 90 calendar days to guarantee zero unnecessary data hoarding.
+                </p>
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    onClick={handleRunPurge}
+                    disabled={purging}
+                    className="px-3.5 py-1.5 rounded-lg bg-surface-elevated hover:bg-surface-elevated/80 border border-card-border hover:border-accent-primary/40 text-text-primary text-12 font-medium flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {purging ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-accent-primary" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5 text-accent-primary" />
+                    )}
+                    <span>{purging ? 'Purging Expired Records...' : 'Execute 90-Day Retention Purge'}</span>
+                  </button>
+
+                  {purgeResult !== null && (
+                    <span className="text-11 font-mono text-accent-success flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5" />
+                      {purgeResult} expired records purged
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -182,7 +273,7 @@ export const SettingsPage: React.FC = () => {
               <div>
                 <h3 className="text-14 font-semibold text-text-primary">Enterprise REST & WebSocket Credentials</h3>
                 <p className="text-11 text-text-muted mt-0.5">
-                  Access credentials for administrative endpoints (Header: <code className="text-accent-primary">X-Meikural-Key</code>)
+                  Access credentials for administrative endpoints (Header: <code className="text-accent-primary">X-API-Key</code> or <code className="text-accent-primary">X-Meikural-Key</code>)
                 </p>
               </div>
 

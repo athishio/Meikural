@@ -13,6 +13,7 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
   const [filter, setFilter] = useState<'All' | 'Deepfake' | 'Authentic' | 'Uncertain'>('All');
   const [search, setSearch] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [playNotice, setPlayNotice] = useState<string | null>(null);
 
   const fetchCalls = async () => {
     setLoading(true);
@@ -97,6 +98,10 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
   const togglePlay = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setPlayingId((prev) => (prev === id ? null : id));
+    setPlayNotice(
+      "Zero-Audio Stored: Under DPDP Act 2023 zero-trust architecture, raw conversational audio is scored in volatile RAM and never written to disk. Click on any record row to inspect full acoustic and hash-chain telemetry."
+    );
+    setTimeout(() => setPlayNotice(null), 6000);
   };
 
   return (
@@ -106,6 +111,23 @@ export const DetectionsPage: React.FC<DetectionsPageProps> = ({ onSelectDetectio
       exit={{ opacity: 0, y: -12 }}
       className="space-y-6"
     >
+      {playNotice && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          className="p-3.5 rounded-xl bg-accent-primary/10 border border-accent-primary/30 text-12 font-mono text-text-primary flex items-center justify-between gap-3 shadow-md"
+        >
+          <span>{playNotice}</span>
+          <button
+            onClick={() => setPlayNotice(null)}
+            className="text-10 uppercase px-2 py-0.5 rounded bg-accent-primary/20 text-accent-primary hover:bg-accent-primary/30 transition-colors"
+          >
+            Dismiss
+          </button>
+        </motion.div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

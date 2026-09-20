@@ -159,12 +159,14 @@ export const RecentAnalyses: React.FC<RecentAnalysesProps> = ({
                         >
                           Open Analysis
                         </button>
-                        <button
+                        <a
+                          href={`/calls/${item.sessionId || item.id}/report`}
+                          download={`meikural_forensic_report_${item.sessionId || item.id}.txt`}
                           onClick={() => setActiveMenuId(null)}
-                          className="w-full px-2.5 py-1.5 text-[11.5px] text-[#9BA3A8] hover:text-[#F2F4F5] hover:bg-[#141719] rounded-md transition-colors"
+                          className="w-full block px-2.5 py-1.5 text-[11.5px] text-[#9BA3A8] hover:text-[#F2F4F5] hover:bg-[#141719] rounded-md transition-colors"
                         >
                           Download Report
-                        </button>
+                        </a>
                         <div className="border-t border-[#1E2225] my-1" />
                         <button
                           onClick={() => setActiveMenuId(null)}

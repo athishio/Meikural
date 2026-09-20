@@ -97,7 +97,7 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
     try {
       await fetch(`/api/trunks/${sessionId}/isolate`, {
         method: 'POST',
-        headers: { 'X-Meikural-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
       });
     } catch (e) {
       console.error('Failed to isolate trunk:', e);
