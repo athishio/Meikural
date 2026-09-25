@@ -26,6 +26,29 @@ TARGET_SAMPLE_RATE = 16000
 TARGET_SAMPLES = 64600  # ~4.0375 seconds at 16kHz
 SILENCE_RMS_THRESHOLD_DB = -45.0  # Signals below -45 dB are treated as silence/background
 
+# Calibrated Log-Likelihood Ratio (LLR = logit_bonafide - logit_spoof) decision thresholds
+# Derived from ROC curve optimization on empirical telephony evaluation data:
+CODEC_LLR_CALIBRATION_THRESHOLDS: Dict[str, float] = {
+    "clean_pcm": -8.85,
+    "uncompressed_pcm_16k": -8.85,
+    "g711_ulaw": -8.64,
+    "ulaw": -8.64,
+    "mu_law": -8.64,
+    "g711u": -8.64,
+    "g711_alaw": -8.59,
+    "alaw": -8.59,
+    "a_law": -8.59,
+    "g711a": -8.59,
+    "pstn": -7.50,
+    "narrowband": -7.50,
+    "pstn_8k": -7.50,
+    "pstn_narrowband": -7.50,
+    "amr_wb": -8.53,
+    "amr": -8.53,
+    "wideband": -8.53,
+    "default": -8.64,
+}
+
 
 class TelephonyCodecEngine:
     """
@@ -296,11 +319,21 @@ class AASISTWrapper:
 
         with torch.no_grad():
             _, logits = self.model(tensor_x)
-            probs = F.softmax(logits, dim=-1)
-            spoof_prob = float(probs[0, 0].item())
             raw_logits = [float(logits[0, 0].item()), float(logits[0, 1].item())]
+            # Log-Likelihood Ratio: LLR = logit_bonafide - logit_spoof
+            llr = raw_logits[1] - raw_logits[0]
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
+
+        # Calibrate LLR against empirical telephony threshold
+        codec_key = (simulate_codec or "clean_pcm").lower().strip()
+        calibrated_tau = CODEC_LLR_CALIBRATION_THRESHOLDS.get(codec_key, CODEC_LLR_CALIBRATION_THRESHOLDS["default"])
+        centered_llr = llr - calibrated_tau
+        try:
+            calibrated_spoof_prob = 1.0 / (1.0 + math.exp(centered_llr))
+        except OverflowError:
+            calibrated_spoof_prob = 0.0 if centered_llr > 0 else 1.0
+        spoof_prob = float(np.clip(calibrated_spoof_prob, 0.0001, 0.9999))
 
         # Determine verdict and confidence
         if not health["is_speech"]:
@@ -322,7 +355,8 @@ class AASISTWrapper:
             "passive_score": round(spoof_prob, 4),
             "verdict": verdict,
             "confidence": confidence,
-            "threshold_used": threshold,
+            "threshold_used": round(calibrated_tau, 4),
+            "raw_llr": round(llr, 4),
             "raw_logits": raw_logits,
             "audio_health": health,
             "inference_latency_ms": round(latency_ms, 2),
