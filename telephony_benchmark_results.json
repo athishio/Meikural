@@ -1,0 +1,57 @@
+{
+  "Clean PCM 16kHz": {
+    "bonafide_mean_score": 0.9291817396879196,
+    "spoof_mean_score": 0.005057474770984172,
+    "EER_percent": 0.0,
+    "EER_threshold": 0.0367,
+    "Accuracy_standard_50": 100.0,
+    "Accuracy_optimal": 92.86,
+    "Mean_Latency_ms": 405.79,
+    "P95_Latency_ms": 424.61,
+    "Samples_evaluated": 14
+  },
+  "G.711 mu-law": {
+    "bonafide_mean_score": 0.9281869679689407,
+    "spoof_mean_score": 0.004912026869776653,
+    "EER_percent": 0.0,
+    "EER_threshold": 0.0353,
+    "Accuracy_standard_50": 100.0,
+    "Accuracy_optimal": 92.86,
+    "Mean_Latency_ms": 467.45,
+    "P95_Latency_ms": 507.83,
+    "Samples_evaluated": 14
+  },
+  "G.711 A-law": {
+    "bonafide_mean_score": 0.9307904839515686,
+    "spoof_mean_score": 0.00465000540057865,
+    "EER_percent": 0.0,
+    "EER_threshold": 0.0356,
+    "Accuracy_standard_50": 100.0,
+    "Accuracy_optimal": 92.86,
+    "Mean_Latency_ms": 509.61,
+    "P95_Latency_ms": 573.74,
+    "Samples_evaluated": 14
+  },
+  "PSTN Narrowband (8kHz bandpass)": {
+    "bonafide_mean_score": 0.8992903381586075,
+    "spoof_mean_score": 9.0586495110756e-05,
+    "EER_percent": 0.0,
+    "EER_threshold": 0.0003,
+    "Accuracy_standard_50": 100.0,
+    "Accuracy_optimal": 85.71,
+    "Mean_Latency_ms": 507.27,
+    "P95_Latency_ms": 667.99,
+    "Samples_evaluated": 14
+  },
+  "AMR Wideband": {
+    "bonafide_mean_score": 0.9290006756782532,
+    "spoof_mean_score": 0.003197433292922014,
+    "EER_percent": 0.0,
+    "EER_threshold": 0.0215,
+    "Accuracy_standard_50": 100.0,
+    "Accuracy_optimal": 92.86,
+    "Mean_Latency_ms": 561.11,
+    "P95_Latency_ms": 871.18,
+    "Samples_evaluated": 14
+  }
+}

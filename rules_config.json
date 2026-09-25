@@ -1,0 +1,14 @@
+{
+  "bonafide_allow_threshold": 0.35,
+  "step_up_challenge_threshold": 0.65,
+  "critical_deepfake_threshold": 0.65,
+  "alert_recipients": [
+    "(+91) 9344100180",
+    "athishm2007@gmail.com"
+  ],
+  "last_dispatch": {
+    "sip": 1789828683.473904,
+    "twilio": 1789828982793,
+    "smtp": 1789829004.187802
+  }
+}
