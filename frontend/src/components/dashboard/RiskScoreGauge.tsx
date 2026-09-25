@@ -200,25 +200,48 @@ export const RiskScoreGauge: React.FC<RiskScoreGaugeProps> = ({
                 filter="url(#needleGlow)"
               />
               {/* Needle Tip Arrowhead/Cap */}
-              <circle cx="245" cy="150" r="3.5" fill="#F59E0B" />
+              <circle
+                cx="245"
+                cy="150"
+                r="3.5"
+                fill={score < 35 ? '#22C55E' : score < 65 ? '#F59E0B' : '#EF4444'}
+              />
               {/* Needle Base Pivot Circle */}
               <circle cx="150" cy="150" r="7" fill="#1E2225" stroke="#F2F4F5" strokeWidth="2" />
             </motion.g>
           </svg>
 
-          {/* Center Text Score & Level Readout */}
+          {/* Center Text Score & Level Readout (High-contrast for demo viewing) */}
           <div className="absolute inset-x-0 bottom-1 flex flex-col items-center justify-center text-center">
             <div className="flex items-baseline justify-center gap-1">
-              <span className="text-[48px] md:text-[52px] font-semibold text-[#F2F4F5] tracking-tight leading-none tabular-nums">
+              <span
+                className={`text-[52px] font-bold tracking-tight leading-none tabular-nums ${
+                  score < 35 ? 'text-[#22C55E]' : score < 65 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
+                }`}
+              >
                 {animatedScore}
               </span>
               <span className="text-[18px] text-[#5E666B] font-medium">
                 /{maxScore}
               </span>
             </div>
-            <span className="text-[14px] font-semibold text-[#F59E0B] tracking-wide mt-0.5">
-              {label}
-            </span>
+            <div className="mt-1.5 flex items-center justify-center">
+              <span
+                className={`px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-wider shadow-md transition-all ${
+                  score < 35
+                    ? 'bg-[#052e16] text-[#22C55E] border border-[#22C55E]/40'
+                    : score < 65
+                    ? 'bg-[#451a03] text-[#F59E0B] border border-[#F59E0B]/40'
+                    : 'bg-[#450a0a] text-[#EF4444] border border-[#EF4444]/60 animate-pulse'
+                }`}
+              >
+                {score < 35
+                  ? `ALLOW • ${label.toUpperCase()}`
+                  : score < 65
+                  ? `WARN • ${label.toUpperCase()}`
+                  : `STEP-UP • ${label.toUpperCase()}`}
+              </span>
+            </div>
           </div>
         </div>
 

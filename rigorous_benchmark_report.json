@@ -1,0 +1,326 @@
+{
+  "metadata": {
+    "total_chunks": 49,
+    "bonafide_chunks": 23,
+    "spoof_chunks": 26,
+    "unique_sources": 7,
+    "limitation": "Evaluation set size <100 per class; local empirical verification only."
+  },
+  "profiles": {
+    "Clean PCM 16kHz": {
+      "accuracy_percent": 53.06,
+      "EER_percent": 18.31,
+      "EER_threshold": 0.0,
+      "confusion_matrix": {
+        "TP_spoof_caught": 26,
+        "TN_bonafide_passed": 0,
+        "FP_false_alarm": 23,
+        "FN_missed_spoof": 0
+      },
+      "rates": {
+        "FAR_percent": 100.0,
+        "FRR_percent": 0.0
+      },
+      "confidence_means": {
+        "mean_bonafide_score": 0.0524,
+        "mean_spoof_score": 0.0
+      },
+      "score_distribution_histograms": {
+        "bins": [
+          "0.0-0.1",
+          "0.1-0.2",
+          "0.2-0.3",
+          "0.3-0.4",
+          "0.4-0.5",
+          "0.5-0.6",
+          "0.6-0.7",
+          "0.7-0.8",
+          "0.8-0.9",
+          "0.9-1.0"
+        ],
+        "bonafide_counts": [
+          19,
+          2,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "spoof_counts": [
+          26,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "end_to_end_latency_ms": {
+        "mean": 682.97,
+        "p95": 1065.3,
+        "min": 389.66,
+        "max": 1124.98
+      }
+    },
+    "G.711 mu-law": {
+      "accuracy_percent": 53.06,
+      "EER_percent": 22.41,
+      "EER_threshold": 0.0,
+      "confusion_matrix": {
+        "TP_spoof_caught": 26,
+        "TN_bonafide_passed": 0,
+        "FP_false_alarm": 23,
+        "FN_missed_spoof": 0
+      },
+      "rates": {
+        "FAR_percent": 100.0,
+        "FRR_percent": 0.0
+      },
+      "confidence_means": {
+        "mean_bonafide_score": 0.0477,
+        "mean_spoof_score": 0.0
+      },
+      "score_distribution_histograms": {
+        "bins": [
+          "0.0-0.1",
+          "0.1-0.2",
+          "0.2-0.3",
+          "0.3-0.4",
+          "0.4-0.5",
+          "0.5-0.6",
+          "0.6-0.7",
+          "0.7-0.8",
+          "0.8-0.9",
+          "0.9-1.0"
+        ],
+        "bonafide_counts": [
+          20,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "spoof_counts": [
+          26,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "end_to_end_latency_ms": {
+        "mean": 813.67,
+        "p95": 1058.82,
+        "min": 489.0,
+        "max": 1115.06
+      }
+    },
+    "G.711 A-law": {
+      "accuracy_percent": 53.06,
+      "EER_percent": 22.41,
+      "EER_threshold": 0.0,
+      "confusion_matrix": {
+        "TP_spoof_caught": 26,
+        "TN_bonafide_passed": 0,
+        "FP_false_alarm": 23,
+        "FN_missed_spoof": 0
+      },
+      "rates": {
+        "FAR_percent": 100.0,
+        "FRR_percent": 0.0
+      },
+      "confidence_means": {
+        "mean_bonafide_score": 0.0431,
+        "mean_spoof_score": 0.0
+      },
+      "score_distribution_histograms": {
+        "bins": [
+          "0.0-0.1",
+          "0.1-0.2",
+          "0.2-0.3",
+          "0.3-0.4",
+          "0.4-0.5",
+          "0.5-0.6",
+          "0.6-0.7",
+          "0.7-0.8",
+          "0.8-0.9",
+          "0.9-1.0"
+        ],
+        "bonafide_counts": [
+          20,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "spoof_counts": [
+          26,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "end_to_end_latency_ms": {
+        "mean": 1014.5,
+        "p95": 1107.5,
+        "min": 853.65,
+        "max": 1180.29
+      }
+    },
+    "PSTN Narrowband (8kHz 300-3400Hz)": {
+      "accuracy_percent": 55.1,
+      "EER_percent": 30.6,
+      "EER_threshold": 0.0001,
+      "confusion_matrix": {
+        "TP_spoof_caught": 26,
+        "TN_bonafide_passed": 1,
+        "FP_false_alarm": 22,
+        "FN_missed_spoof": 0
+      },
+      "rates": {
+        "FAR_percent": 95.65,
+        "FRR_percent": 0.0
+      },
+      "confidence_means": {
+        "mean_bonafide_score": 0.1391,
+        "mean_spoof_score": 0.0059
+      },
+      "score_distribution_histograms": {
+        "bins": [
+          "0.0-0.1",
+          "0.1-0.2",
+          "0.2-0.3",
+          "0.3-0.4",
+          "0.4-0.5",
+          "0.5-0.6",
+          "0.6-0.7",
+          "0.7-0.8",
+          "0.8-0.9",
+          "0.9-1.0"
+        ],
+        "bonafide_counts": [
+          14,
+          2,
+          1,
+          4,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "spoof_counts": [
+          25,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "end_to_end_latency_ms": {
+        "mean": 663.13,
+        "p95": 1023.63,
+        "min": 382.04,
+        "max": 1091.01
+      }
+    },
+    "AMR-WB (Wideband 50-7000Hz)": {
+      "accuracy_percent": 53.06,
+      "EER_percent": 22.41,
+      "EER_threshold": 0.0,
+      "confusion_matrix": {
+        "TP_spoof_caught": 26,
+        "TN_bonafide_passed": 0,
+        "FP_false_alarm": 23,
+        "FN_missed_spoof": 0
+      },
+      "rates": {
+        "FAR_percent": 100.0,
+        "FRR_percent": 0.0
+      },
+      "confidence_means": {
+        "mean_bonafide_score": 0.0195,
+        "mean_spoof_score": 0.0
+      },
+      "score_distribution_histograms": {
+        "bins": [
+          "0.0-0.1",
+          "0.1-0.2",
+          "0.2-0.3",
+          "0.3-0.4",
+          "0.4-0.5",
+          "0.5-0.6",
+          "0.6-0.7",
+          "0.7-0.8",
+          "0.8-0.9",
+          "0.9-1.0"
+        ],
+        "bonafide_counts": [
+          22,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "spoof_counts": [
+          26,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "end_to_end_latency_ms": {
+        "mean": 1204.42,
+        "p95": 2707.81,
+        "min": 432.16,
+        "max": 3180.47
+      }
+    }
+  }
+}

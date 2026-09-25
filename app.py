@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import hashlib
 import hmac
 import json
@@ -7,6 +8,8 @@ import os
 import time
 import uuid
 from typing import List, Optional, Set
+
+import numpy as np
 
 from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, Security, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -1243,6 +1246,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     final_verdict = RiskVerdict.ALLOW.value
     max_risk = 0.0
     alert_dispatched = False
+    audio_ring_buffer = bytearray()
 
     try:
         while True:
@@ -1386,6 +1390,75 @@ async def websocket_audio_endpoint(websocket: WebSocket):
             elif "text" in message and message["text"] is not None:
                 try:
                     data = json.loads(message["text"])
+
+                    # Native support for Twilio Media Streams / Asterisk WebSocket format
+                    if data.get("event") == "start":
+                        logger.info(f"Telephony stream started for {session_id}: {data.get('streamSid', '')}", extra={"session_id": session_id})
+                        continue
+                    elif data.get("event") == "media" and "media" in data and "payload" in data["media"]:
+                        b64_payload = data["media"]["payload"]
+                        ulaw_bytes = base64.b64decode(b64_payload)
+                        # Expand 8kHz G.711 mu-law bytes to 16kHz PCM
+                        u = np.frombuffer(ulaw_bytes, dtype=np.uint8)
+                        u_inv = ~u
+                        sign = (u_inv & 0x80)
+                        exponent = (u_inv >> 4) & 0x07
+                        mantissa = u_inv & 0x0F
+                        sample = ((mantissa << 3) + 0x84) << exponent
+                        sample = sample - 0x84
+                        pcm_8k = np.where(sign != 0, -sample, sample).astype(np.int16)
+                        pcm_16k = np.repeat(pcm_8k, 2).tobytes()
+                        audio_ring_buffer.extend(pcm_16k)
+                        # Score when rolling buffer reaches at least 1.0s (32,000 bytes)
+                        if len(audio_ring_buffer) >= 32000:
+                            chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
+                            detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override)
+                            chunk_counter += 1
+                            score = detailed["passive_score"]
+                            fusion_res = fusion_engine.process_chunk(
+                                session_id=session_id,
+                                passive_score=score,
+                                is_speech=detailed["audio_health"]["is_speech"],
+                                rms_db=detailed["audio_health"]["rms_db"],
+                                timestamp=ts,
+                            )
+                            fused_risk = fusion_res["fused_risk_score"]
+                            final_verdict = fusion_res["verdict"]
+                            broadcast = ScoreBroadcast(
+                                timestamp=round(ts, 3),
+                                score=fused_risk,
+                                event=fusion_res["challenge_state"].event,
+                                metadata=MetadataInfo(
+                                    session_id=session_id,
+                                    chunk_id=chunk_counter,
+                                    timestamp=round(ts, 3),
+                                    inference_latency_ms=detailed["inference_latency_ms"],
+                                ),
+                                audio_health=AudioHealth(
+                                    is_speech=detailed["audio_health"]["is_speech"],
+                                    rms_db=detailed["audio_health"]["rms_db"],
+                                    duration_ms=detailed["audio_health"]["duration_ms"],
+                                ),
+                                anti_spoofing=AntiSpoofingResult(
+                                    passive_score=score,
+                                    verdict=VerdictType(detailed["verdict"]),
+                                    confidence=ConfidenceLevel(detailed["confidence"]),
+                                    threshold_used=detailed["threshold_used"],
+                                    raw_logits=detailed["raw_logits"],
+                                ),
+                                challenge_state=fusion_res["challenge_state"],
+                                risk_verdict=RiskVerdict(final_verdict),
+                                demo_mode=DEMO_MODE,
+                                timing_profile=fusion_res.get("timing_profile"),
+                                codec_profile="g711_ulaw",
+                            )
+                            await websocket.send_text(broadcast.model_dump_json())
+                            await broadcast_telemetry(broadcast.model_dump_json())
+                        continue
+                    elif data.get("event") == "stop":
+                        logger.info(f"Telephony stream stopped for {session_id}.", extra={"session_id": session_id})
+                        break
+
                     if "mode" in data:
                         if not DEMO_MODE and data["mode"] == "dummy":
                             logger.warning(f"Rejecting dummy mode for {session_id}: DEMO_MODE is not enabled.")
