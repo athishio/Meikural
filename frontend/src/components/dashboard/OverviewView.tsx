@@ -65,8 +65,19 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 }) => {
   return (
     <div className="space-y-6 select-none">
-      {/* Hero Banner (Neutral, no personalized name or greeting) */}
-      <HeroBand />
+      {/* Hero Banner (Master SOC Real-Time Status & Benchmark HUD) */}
+      <HeroBand
+        verdict={verdict}
+        spoofProbability={spoofProbability}
+        voiceTrust={voiceTrust}
+        sessionId={sessionId}
+        isMonitoring={isMonitoring}
+        activeScenario={activeScenario}
+        codec={diagnostics.codec}
+        inferenceMs={diagnostics.inferenceMs}
+        onTriggerChallenge={onTriggerChallenge}
+        onEscalate={onEscalate}
+      />
 
       {/* Row 1: Hero Stat Blocks (Voice Trust Index, Spoof Probability, Neural Inference, Chained Blocks) */}
       <KPIGrid kpis={kpis} />

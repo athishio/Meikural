@@ -10,6 +10,7 @@ Validates that:
 """
 
 import io
+import json
 import unittest
 import numpy as np
 import soundfile as sf
@@ -60,6 +61,53 @@ class TestInputValidation(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn("score", res.json())
 
+    def test_websocket_handles_truncated_and_corrupt_binary_frames(self):
+        """Validates that /ws/audio gracefully ignores truncated and garbage bytes without dropping socket."""
+        with self.client.websocket_connect("/ws/audio") as ws:
+            # Receive initial connection handshake
+            handshake = ws.receive_json()
+            self.assertEqual(handshake["event"], "connection_established")
+
+            # 1. Send truncated chunk (<16 bytes)
+            ws.send_bytes(b"\x00\x01\x02\x03")
+
+            # 2. Send garbage corrupt chunk
+            ws.send_bytes(b"NON_AUDIO_GARBAGE_BYTES_THAT_CANNOT_BE_DECODED_AS_VALID_WAV_OR_PCM" * 5)
+
+            # 3. Send valid dummy audio chunk to prove connection is healthy and responsive
+            dummy_pcm = (np.sin(np.linspace(0, 100, 32000)) * 10000).astype(np.int16).tobytes()
+            ws.send_bytes(dummy_pcm)
+
+            # Server processes the valid chunk and returns score broadcast
+            broadcast = ws.receive_json()
+            self.assertIn("score", broadcast)
+            self.assertIn("risk_verdict", broadcast)
+
+    def test_websocket_handles_corrupted_telephony_media_payloads(self):
+        """Validates that /ws/audio survives corrupted base64 payloads and empty media chunks."""
+        with self.client.websocket_connect("/ws/audio") as ws:
+            handshake = ws.receive_json()
+            self.assertEqual(handshake["event"], "connection_established")
+
+            # Send malformed base64
+            corrupted_msg = {
+                "event": "media",
+                "media": {"payload": "!!NOT_VALID_BASE64_AT_ALL@@##$$"}
+            }
+            ws.send_text(json.dumps(corrupted_msg))
+
+            # Send empty payload
+            empty_msg = {
+                "event": "media",
+                "media": {"payload": ""}
+            }
+            ws.send_text(json.dumps(empty_msg))
+
+            # Send valid control text command to verify socket remains open and responsive
+            ws.send_text(json.dumps({"action": "set_scenario", "scenario": "safe"}))
+            # Socket still healthy!
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -1,0 +1,20 @@
+{
+  "timestamp": 1790352298.770997,
+  "concurrent_channels": 12,
+  "frames_per_worker": 150,
+  "total_frames_sent": 1800,
+  "total_audio_duration_seconds": 36.0,
+  "wall_clock_seconds": 14.21,
+  "frame_throughput_fps": 126.6,
+  "total_scores_received": 52,
+  "error_count": 0,
+  "packet_drop_rate": 0.0,
+  "latency_metrics_ms": {
+    "mean": 645.26,
+    "p50": 638.84,
+    "p95": 678.97,
+    "p99": 678.97
+  },
+  "real_time_factor": 0.21,
+  "status": "PASS"
+}

@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import binascii
 import hashlib
 import hmac
 import json
@@ -21,6 +22,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 import database
+import sip_signaler
 from alerts import dispatch_step_up_alerts, RISK_THRESHOLD_STEP_UP
 from asr_engine import ASREngine
 from audio_processor import (
@@ -1063,6 +1065,28 @@ def purge_expired_endpoint(request: Request, _admin: str = Depends(verify_admin_
     return PurgeResponse(purged_count=count, timestamp=time.time())
 
 
+@app.post("/api/sip/action")
+@limiter.limit("60/minute")
+def sip_action_endpoint(request: Request, payload: dict, _admin: str = Depends(verify_admin_auth)):
+    """
+    Dispatches RFC 3261 compliant SIP signaling packets (200 OK, 183 Session Progress, 488 Not Acceptable).
+    Used by telephony gateways and enterprise PBX session border controllers (SBCs).
+    """
+    session_id = payload.get("session_id", f"call_{uuid.uuid4().hex[:8]}")
+    verdict = payload.get("verdict", "ALLOW")
+    call_id = payload.get("call_id")
+    challenge_prompt = payload.get("challenge_prompt")
+    risk_score = float(payload.get("risk_score", 0.0))
+    packet = sip_signaler.trigger_sip_action(
+        session_id=session_id,
+        verdict=verdict,
+        call_id=call_id,
+        challenge_prompt=challenge_prompt,
+        risk_score=risk_score,
+    )
+    return packet
+
+
 @app.post("/score", response_model=ScoreBroadcast)
 @limiter.limit("30/minute")
 async def score_audio_file(
@@ -1173,6 +1197,21 @@ async def score_audio_file(
         end_time=ts,
     )
 
+    logger.info(
+        f"Scoring decision: {session_id} score={passive_score:.4f} verdict={risk_verdict}",
+        extra={
+            "session_id": session_id,
+            "event_type": "SCORING_DECISION",
+            "payload": {
+                "score": round(passive_score, 4),
+                "threshold_used": round(detailed.get("threshold_used", 0.50), 4),
+                "codec_profile": detailed.get("codec_profile", "uncompressed_pcm_16k"),
+                "verdict": risk_verdict,
+                "inference_latency_ms": round(detailed.get("inference_latency_ms", 0.0), 2),
+            },
+        },
+    )
+
     broadcast = ScoreBroadcast(
         timestamp=round(ts, 3),
         score=passive_score,
@@ -1259,7 +1298,14 @@ async def websocket_audio_endpoint(websocket: WebSocket):
 
             if "bytes" in message and message["bytes"] is not None:
                 audio_bytes = message["bytes"]
-                # Chunk size validation: 1MB maximum per audio chunk
+                # Chunk size & sanity validation
+                if len(audio_bytes) < 16:
+                    logger.warning(
+                        f"Discarding truncated or empty audio frame ({len(audio_bytes)} bytes).",
+                        extra={"session_id": session_id, "event_type": "TRUNCATED_FRAME"}
+                    )
+                    continue
+
                 if len(audio_bytes) > 1024 * 1024:
                     logger.warning(f"Chunk size {len(audio_bytes)} exceeds 1MB limit. Discarding.", extra={"session_id": session_id})
                     continue
@@ -1277,7 +1323,14 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         "inference_latency_ms": 1.2,
                     }
                 else:
-                    detailed = score_audio_chunk_detailed(audio_bytes, simulate_codec=codec_override)
+                    try:
+                        detailed = score_audio_chunk_detailed(audio_bytes, simulate_codec=codec_override)
+                    except Exception as decode_err:
+                        logger.warning(
+                            f"Malformed or unprocessable audio chunk received: {decode_err}",
+                            extra={"session_id": session_id, "event_type": "MALFORMED_CHUNK"}
+                        )
+                        continue
 
                 # Calibrate demo scenarios ONLY if DEMO_MODE is explicitly enabled
                 if DEMO_MODE and scenario_override:
@@ -1357,6 +1410,22 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                     timestamp=ts,
                 )
 
+                # Structured SOC JSON telemetry logging
+                logger.info(
+                    f"Scoring decision: {session_id} score={fused_risk:.4f} verdict={verdict_str}",
+                    extra={
+                        "session_id": session_id,
+                        "event_type": "SCORING_DECISION",
+                        "payload": {
+                            "score": round(fused_risk, 4),
+                            "threshold_used": round(detailed.get("threshold_used", 0.50), 4),
+                            "codec_profile": detailed.get("codec_profile", "uncompressed_pcm_16k"),
+                            "verdict": verdict_str,
+                            "inference_latency_ms": round(detailed.get("inference_latency_ms", 0.0), 2),
+                        },
+                    },
+                )
+
                 broadcast = ScoreBroadcast(
                     timestamp=round(ts, 3),
                     score=fused_risk,
@@ -1397,7 +1466,19 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         continue
                     elif data.get("event") == "media" and "media" in data and "payload" in data["media"]:
                         b64_payload = data["media"]["payload"]
-                        ulaw_bytes = base64.b64decode(b64_payload)
+                        try:
+                            ulaw_bytes = base64.b64decode(b64_payload)
+                        except (binascii.Error, ValueError, Exception) as b64_err:
+                            logger.warning(
+                                f"Corrupted base64 payload in telephony stream: {b64_err}",
+                                extra={"session_id": session_id, "event_type": "CORRUPTED_BASE64"}
+                            )
+                            continue
+
+                        if len(ulaw_bytes) == 0:
+                            logger.warning("Empty audio payload in telephony stream.", extra={"session_id": session_id})
+                            continue
+
                         # Expand 8kHz G.711 mu-law bytes to 16kHz PCM
                         u = np.frombuffer(ulaw_bytes, dtype=np.uint8)
                         u_inv = ~u
@@ -1412,7 +1493,12 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         # Score when rolling buffer reaches at least 1.0s (32,000 bytes)
                         if len(audio_ring_buffer) >= 32000:
                             chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
-                            detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override)
+                            try:
+                                detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override)
+                            except Exception as ring_err:
+                                logger.warning(f"Failed to score telephony ring buffer: {ring_err}", extra={"session_id": session_id})
+                                continue
+
                             chunk_counter += 1
                             score = detailed["passive_score"]
                             fusion_res = fusion_engine.process_chunk(
@@ -1424,6 +1510,23 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                             )
                             fused_risk = fusion_res["fused_risk_score"]
                             final_verdict = fusion_res["verdict"]
+
+                            # Structured SOC JSON telemetry logging
+                            logger.info(
+                                f"Scoring decision (telephony): {session_id} score={fused_risk:.4f} verdict={final_verdict}",
+                                extra={
+                                    "session_id": session_id,
+                                    "event_type": "SCORING_DECISION",
+                                    "payload": {
+                                        "score": round(fused_risk, 4),
+                                        "threshold_used": round(detailed.get("threshold_used", 0.50), 4),
+                                        "codec_profile": "g711_ulaw",
+                                        "verdict": final_verdict,
+                                        "inference_latency_ms": round(detailed.get("inference_latency_ms", 0.0), 2),
+                                    },
+                                },
+                            )
+
                             broadcast = ScoreBroadcast(
                                 timestamp=round(ts, 3),
                                 score=fused_risk,
