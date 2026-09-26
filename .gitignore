@@ -28,6 +28,9 @@ Thumbs.db
 *.db
 *.sqlite3
 
+# Archives
+*.zip
+
 # Scratch
 frontend/scratch/
 scratch/
