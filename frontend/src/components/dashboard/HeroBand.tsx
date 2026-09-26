@@ -232,7 +232,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
         <div className="bg-[#0D0F11] border border-[#1E2225] rounded-xl p-3 flex flex-col">
           <span className="text-[10.5px] font-mono text-[#768087] uppercase">G.711 Telephony Accuracy</span>
           <span className="text-[19px] font-mono font-extrabold text-[#F2F4F5] mt-0.5">84.6%</span>
-          <span className="text-[10px] font-mono text-[#22C55E]">0.0% Clone Miss (FAR)</span>
+          <span className="text-[10px] font-mono text-[#22C55E]">0.0% False Reject (FRR)</span>
         </div>
         <div className="bg-[#0D0F11] border border-[#1E2225] rounded-xl p-3 flex flex-col">
           <span className="text-[10.5px] font-mono text-[#768087] uppercase">Calibrated LLR Margin</span>

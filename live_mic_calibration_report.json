@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "total_chunks": 65,
+    "bonafide_chunks": 32,
+    "spoof_chunks": 33
+  },
+  "stats": {
+    "bonafide_llr_mean": -5.92614026425872,
+    "bonafide_llr_std": 3.676114569536696,
+    "spoof_llr_mean": -10.576962340961803,
+    "spoof_llr_std": 1.6427365083856118,
+    "eer": 0.7537878787878788,
+    "optimal_llr_tau": -8.94043254852295,
+    "existing_g711_tau": -8.64
+  },
+  "before_calibration": {
+    "tau": -8.64,
+    "acc": 0.7538461538461538,
+    "far": 0.28125,
+    "frr": 0.21212121212121213,
+    "tp": 26,
+    "fn": 7,
+    "tn": 23,
+    "fp": 9
+  },
+  "after_calibration": {
+    "tau": -8.94043254852295,
+    "acc": 0.7384615384615385,
+    "far": 0.28125,
+    "frr": 0.24242424242424243,
+    "tp": 25,
+    "fn": 8,
+    "tn": 23,
+    "fp": 9
+  }
+}

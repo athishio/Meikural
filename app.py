@@ -998,6 +998,31 @@ def save_rules(rules: dict):
     with open(RULES_FILE, "w") as f:
         json.dump(rules, f, indent=2)
 
+def parse_rules_thresholds(cfg: dict) -> tuple:
+    # Safe/Allow threshold: check bonafide_allow_threshold (float) or warn_threshold (pct/float)
+    safe = cfg.get("bonafide_allow_threshold")
+    if safe is None:
+        raw_warn = float(cfg.get("warn_threshold", 35))
+        safe = raw_warn / 100.0 if raw_warn > 1.0 else raw_warn
+    else:
+        safe = float(safe) / 100.0 if float(safe) > 1.0 else float(safe)
+
+    # Step-Up threshold: check step_up_challenge_threshold (float) or step_up_threshold (pct/float)
+    step_up = cfg.get("step_up_challenge_threshold")
+    if step_up is None:
+        step_up = cfg.get("critical_deepfake_threshold")
+    if step_up is None:
+        raw_step = float(cfg.get("step_up_threshold", 65))
+        step_up = raw_step / 100.0 if raw_step > 1.0 else raw_step
+    else:
+        step_up = float(step_up) / 100.0 if float(step_up) > 1.0 else float(step_up)
+
+    return safe, step_up
+
+# Synchronize live FusionEngine runtime thresholds on module load
+_init_safe, _init_step = parse_rules_thresholds(load_rules())
+fusion_engine.set_thresholds(safe_threshold=_init_safe, step_up_threshold=_init_step)
+
 @app.get("/api/rules")
 def get_rules():
     return load_rules()
@@ -1008,6 +1033,8 @@ def update_rules(request: Request, rules: dict, _admin: str = Depends(verify_adm
     current = load_rules()
     current.update(rules)
     save_rules(current)
+    safe_t, step_t = parse_rules_thresholds(current)
+    fusion_engine.set_thresholds(safe_threshold=safe_t, step_up_threshold=step_t)
     return {"status": "ok", "rules": current}
 
 @app.get("/api/compliance/stats")
@@ -1173,11 +1200,11 @@ async def score_audio_file(
 
     passive_score = detailed["passive_score"]
 
-    # Classify verdict
-    if passive_score > RISK_THRESHOLD_STEP_UP:
+    # Classify verdict using dynamically loaded thresholds from fusion_engine
+    if passive_score > fusion_engine.step_up_threshold:
         risk_verdict = RiskVerdict.STEP_UP_VERIFICATION.value
         await asyncio.to_thread(dispatch_step_up_alerts, session_id=session_id, risk_score=passive_score)
-    elif passive_score >= 0.35:
+    elif passive_score >= fusion_engine.safe_threshold:
         risk_verdict = RiskVerdict.WARN.value
     else:
         risk_verdict = RiskVerdict.ALLOW.value
@@ -1286,6 +1313,7 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     max_risk = 0.0
     alert_dispatched = False
     audio_ring_buffer = bytearray()
+    last_scored_len = 0
 
     try:
         while True:
@@ -1479,9 +1507,9 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                             logger.warning("Empty audio payload in telephony stream.", extra={"session_id": session_id})
                             continue
 
-                        # Expand 8kHz G.711 mu-law bytes to 16kHz PCM
-                        u = np.frombuffer(ulaw_bytes, dtype=np.uint8)
-                        u_inv = ~u
+                        # Expand 8kHz G.711 mu-law bytes to 16kHz PCM (using int32 to prevent 8-bit overflow)
+                        u = np.frombuffer(ulaw_bytes, dtype=np.uint8).astype(np.int32)
+                        u_inv = ~u & 0xFF
                         sign = (u_inv & 0x80)
                         exponent = (u_inv >> 4) & 0x07
                         mantissa = u_inv & 0x0F
@@ -1490,14 +1518,20 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         pcm_8k = np.where(sign != 0, -sample, sample).astype(np.int16)
                         pcm_16k = np.repeat(pcm_8k, 2).tobytes()
                         audio_ring_buffer.extend(pcm_16k)
-                        # Score when rolling buffer reaches at least 1.0s (32,000 bytes)
-                        if len(audio_ring_buffer) >= 32000:
+                        # Score when rolling buffer reaches at least 1.0s (32,000 bytes) and at least 0.5s has elapsed since last score
+                        if len(audio_ring_buffer) >= 32000 and (len(audio_ring_buffer) - last_scored_len >= 16000):
+                            last_scored_len = len(audio_ring_buffer)
                             chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
                             try:
-                                detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override)
+                                detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override or "live_mic")
                             except Exception as ring_err:
                                 logger.warning(f"Failed to score telephony ring buffer: {ring_err}", extra={"session_id": session_id})
                                 continue
+
+                            # Prune ring buffer to prevent unbounded memory growth
+                            if len(audio_ring_buffer) > 64600 * 4:
+                                audio_ring_buffer = bytearray(audio_ring_buffer[-64600 * 2:])
+                                last_scored_len = len(audio_ring_buffer)
 
                             chunk_counter += 1
                             score = detailed["passive_score"]

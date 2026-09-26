@@ -1,7 +1,7 @@
 import React from 'react';
 import { HeroBand } from './HeroBand';
 import { KPIGrid } from './KPIGrid';
-import { SentinelControls } from './SentinelControls';
+import { UnifiedInputStudio } from './UnifiedInputStudio';
 import { LiveVoiceSignalPanel } from './LiveVoiceSignalPanel';
 import { VoiceTrustIndexPanel } from './VoiceTrustIndexPanel';
 import { ThreatTimeline } from './ThreatTimeline';
@@ -12,6 +12,7 @@ import type {
   TelemetryDiagnostics,
   ModelEvidenceItem,
   RulesConfig,
+  ForensicUploadResult,
 } from '../../types/dashboard';
 
 interface OverviewViewProps {
@@ -24,6 +25,12 @@ interface OverviewViewProps {
   spoofProbability: number;
   isMonitoring: boolean;
   onToggleMonitoring: () => void;
+  micError?: string | null;
+  onClearMicError?: () => void;
+  uploadLoading?: boolean;
+  uploadError?: string | null;
+  lastUploadResult?: ForensicUploadResult | null;
+  onFileUpload: (file: File, codec?: string) => Promise<any>;
   onRunVerification: () => void;
   onEscalate: () => void;
   onSimulationScenario: (scenario: 'safe' | 'deepfake' | 'caution') => void;
@@ -37,6 +44,8 @@ interface OverviewViewProps {
   rules?: RulesConfig;
   isOffline?: boolean;
   demoMode?: boolean;
+  activeInputMode?: 'upload' | 'mic' | 'telephony';
+  onInputModeChange?: (mode: 'upload' | 'mic' | 'telephony') => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -49,6 +58,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   spoofProbability,
   isMonitoring,
   onToggleMonitoring,
+  micError,
+  onClearMicError,
+  uploadLoading,
+  uploadError,
+  lastUploadResult,
+  onFileUpload,
   onRunVerification,
   onEscalate,
   onSimulationScenario,
@@ -82,10 +97,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       {/* Row 1: Hero Stat Blocks (Voice Trust Index, Spoof Probability, Neural Inference, Chained Blocks) */}
       <KPIGrid kpis={kpis} />
 
-      {/* Sentinel Controls & Simulation Bar */}
-      <SentinelControls
+      {/* Unified Input Studio: File Upload Mode, Live Mic Mode, Telephony Simulation */}
+      <UnifiedInputStudio
         isMonitoring={isMonitoring}
         onToggleMonitoring={onToggleMonitoring}
+        micError={micError}
+        onClearMicError={onClearMicError}
+        uploadLoading={uploadLoading}
+        uploadError={uploadError}
+        lastUploadResult={lastUploadResult}
+        onFileUpload={onFileUpload}
         onRunVerification={onRunVerification}
         onEscalate={onEscalate}
         onSimulationScenario={onSimulationScenario}

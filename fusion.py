@@ -334,14 +334,31 @@ class FusionEngine:
     Implements adaptive speech-gated EMA smoothing and Schmitt-trigger temporal hysteresis.
     """
 
-    def __init__(self, ema_alpha: float = 0.20):
+    def __init__(
+        self,
+        ema_alpha: float = 0.20,
+        safe_threshold: float = SAFE_THRESHOLD,
+        step_up_threshold: float = STEP_UP_THRESHOLD,
+    ):
         self.ema_alpha = ema_alpha
+        self.safe_threshold = float(safe_threshold)
+        self.step_up_threshold = float(step_up_threshold)
         self._session_smoothed: Dict[str, float] = {}
         self._session_consecutive_high: Dict[str, int] = {}
         self._session_challenge_dispatched: Dict[str, Optional[str]] = {}
         self._session_verdict: Dict[str, str] = {}
         self.challenge_engine = ChallengeEngine()
         self.timing_profiler = TurnaroundLatencyProfiler()
+
+    def set_thresholds(self, safe_threshold: float, step_up_threshold: float) -> None:
+        """
+        Dynamically updates operational decision thresholds used across live streaming and batch scoring.
+        """
+        self.safe_threshold = float(safe_threshold)
+        self.step_up_threshold = float(step_up_threshold)
+        logger.info(
+            f"FusionEngine operational thresholds updated dynamically: safe={self.safe_threshold:.3f}, step_up={self.step_up_threshold:.3f}"
+        )
 
     def cleanup_session(self, session_id: str) -> None:
         """
@@ -379,7 +396,7 @@ class FusionEngine:
             self._session_smoothed[session_id] = smoothed
 
             # Track consecutive high-risk speech frames for temporal hysteresis
-            if smoothed >= STEP_UP_THRESHOLD:
+            if smoothed >= self.step_up_threshold:
                 self._session_consecutive_high[session_id] = self._session_consecutive_high.get(session_id, 0) + 1
             else:
                 self._session_consecutive_high[session_id] = max(0, self._session_consecutive_high.get(session_id, 0) - 1)
@@ -477,10 +494,10 @@ class FusionEngine:
         prev_verdict = self._session_verdict.get(session_id, RiskVerdict.ALLOW.value)
         consecutive_high = self._session_consecutive_high.get(session_id, 0)
 
-        if fused_risk_score > STEP_UP_THRESHOLD and consecutive_high >= 3:
+        if fused_risk_score > self.step_up_threshold and consecutive_high >= 3:
             verdict = RiskVerdict.STEP_UP_VERIFICATION.value
             acoustic_type = VerdictType.SPOOF.value
-        elif fused_risk_score >= SAFE_THRESHOLD or (prev_verdict == RiskVerdict.STEP_UP_VERIFICATION.value and fused_risk_score >= 0.50):
+        elif fused_risk_score >= self.safe_threshold or (prev_verdict == RiskVerdict.STEP_UP_VERIFICATION.value and fused_risk_score >= 0.50):
             verdict = RiskVerdict.WARN.value
             acoustic_type = VerdictType.UNCERTAIN.value
         else:

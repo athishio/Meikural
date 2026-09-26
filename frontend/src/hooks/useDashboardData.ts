@@ -7,7 +7,25 @@ import type {
   ModelEvidenceItem,
   NotificationItem,
   RulesConfig,
+  ForensicUploadResult,
 } from '../types/dashboard';
+
+// ITU-T G.711 mu-law encoder for 16-bit PCM samples
+function encodeSampleToMuLaw(sample: number): number {
+  const BIAS = 0x84;
+  const CLIP = 32635;
+  let sign = (sample >> 8) & 0x80;
+  if (sign !== 0) sample = -sample;
+  if (sample > CLIP) sample = CLIP;
+  sample += BIAS;
+  let exponent = 7;
+  for (let expMask = 0x4000; (sample & expMask) === 0 && exponent > 0; expMask >>= 1) {
+    exponent--;
+  }
+  const mantissa = (sample >> (exponent + 3)) & 0x0f;
+  const ulawByte = ~(sign | (exponent << 4) | mantissa);
+  return ulawByte & 0xff;
+}
 
 const initialEvidence: ModelEvidenceItem[] = [
   { feature: 'Spectral Flatness', value: '0.042 (Organic Harmonic Peak)', percentage: 92, weight: 0.28, contribution: 'safe' },
@@ -43,6 +61,19 @@ export function useDashboardData() {
   // Challenge HUD State
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [challengeDigits, setChallengeDigits] = useState('Awaiting challenge...');
+
+  // Microphone & Upload Mode States
+  const [micError, setMicError] = useState<string | null>(null);
+  const clearMicError = useCallback(() => setMicError(null), []);
+  const micStreamSidRef = useRef<string | null>(null);
+  const micSeqRef = useRef<number>(1);
+  const micChunkRef = useRef<number>(1);
+  const muLawBufferRef = useRef<number[]>([]);
+
+  // Forensic Upload State
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [lastUploadResult, setLastUploadResult] = useState<ForensicUploadResult | null>(null);
 
   // Simulation State
   const [activeScenario, setActiveScenario] = useState<string | null>('safe');
@@ -248,10 +279,20 @@ export function useDashboardData() {
       .catch(() => {});
   }, []);
 
-  // Start / Stop Microphone Monitoring
+  // Start / Stop Live Microphone Test
+  // Streams 20ms G.711 mu-law frames over WebSocket in Twilio Media Streams format to hit identical backend telephony path
   const toggleMonitoring = useCallback(async () => {
     if (isMonitoring) {
       // Stop
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && micStreamSidRef.current) {
+        try {
+          wsRef.current.send(JSON.stringify({
+            event: 'stop',
+            sequenceNumber: String(micSeqRef.current++),
+            streamSid: micStreamSidRef.current,
+          }));
+        } catch {}
+      }
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
         mediaStreamRef.current = null;
@@ -264,12 +305,19 @@ export function useDashboardData() {
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
+      micStreamSidRef.current = null;
+      muLawBufferRef.current = [];
       setIsMonitoring(false);
       return;
     }
 
     // Start
+    setMicError(null);
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Your browser does not support microphone capture via navigator.mediaDevices.getUserMedia');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
@@ -285,31 +333,186 @@ export function useDashboardData() {
       const source = audioCtx.createMediaStreamSource(stream);
       source.connect(analyser);
 
-      // Stream raw PCM chunks to WebSocket if connected
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      const streamSid = `MZ_MIC_${Date.now()}`;
+      micStreamSidRef.current = streamSid;
+      micSeqRef.current = 1;
+      micChunkRef.current = 1;
+      muLawBufferRef.current = [];
+
+      // Send initial Twilio Media Streams start handshake over WebSocket to hit identical telephony backend path
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          event: 'start',
+          sequenceNumber: '1',
+          streamSid: streamSid,
+          start: {
+            streamSid: streamSid,
+            accountSid: 'AC_live_browser_mic',
+            callSid: 'CA_live_browser_call',
+            tracks: ['inbound'],
+            mediaFormat: { encoding: 'audio/x-mulaw', sampleRate: 8000, channels: 1 },
+          },
+        }));
+      }
+
+      // Stream 20ms G.711 mu-law frames (160 bytes each at 8kHz)
+      const processor = audioCtx.createScriptProcessor(2048, 1, 1);
       scriptProcessorRef.current = processor;
 
+      // Fractional resampler state across audio buffer chunks to eliminate phase discontinuities
+      const inSampleRate = audioCtx.sampleRate;
+      const targetSampleRate = 8000;
+      const resampleRatio = inSampleRate / targetSampleRate;
+      let resamplePhase = 0;
+
       processor.onaudioprocess = (e) => {
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-          const inputData = e.inputBuffer.getChannelData(0);
-          // Convert float32 to int16 PCM
-          const pcmData = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32767));
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+        const inputData = e.inputBuffer.getChannelData(0);
+
+        // Dynamically resample from audioCtx.sampleRate (48kHz/44.1kHz/16kHz) to 8kHz with linear interpolation
+        const muLawSamples: number[] = [];
+        let srcIdx = resamplePhase;
+        while (srcIdx < inputData.length) {
+          const i0 = Math.floor(srcIdx);
+          const i1 = Math.min(i0 + 1, inputData.length - 1);
+          const frac = srcIdx - i0;
+          const s = inputData[i0] + frac * (inputData[i1] - inputData[i0]);
+          const clamped = Math.max(-1, Math.min(1, s));
+          const pcm16 = clamped < 0 ? Math.round(clamped * 32768) : Math.round(clamped * 32767);
+          muLawSamples.push(encodeSampleToMuLaw(pcm16));
+          srcIdx += resampleRatio;
+        }
+        resamplePhase = srcIdx - inputData.length;
+
+        muLawBufferRef.current.push(...muLawSamples);
+
+        // Slice into 20ms frames (160 samples at 8kHz)
+        while (muLawBufferRef.current.length >= 160) {
+          const frame = muLawBufferRef.current.splice(0, 160);
+          const u8 = new Uint8Array(frame);
+          let binaryStr = '';
+          for (let b = 0; b < u8.length; b++) {
+            binaryStr += String.fromCharCode(u8[b]);
           }
-          wsRef.current.send(pcmData.buffer);
+          const b64 = window.btoa(binaryStr);
+
+          wsRef.current.send(JSON.stringify({
+            event: 'media',
+            sequenceNumber: String(++micSeqRef.current),
+            streamSid: streamSid,
+            media: {
+              track: 'inbound',
+              chunk: String(micChunkRef.current++),
+              timestamp: String(Date.now()),
+              payload: b64,
+            },
+          }));
         }
       };
 
       source.connect(processor);
       processor.connect(audioCtx.destination);
-
       setIsMonitoring(true);
-    } catch (err) {
-      console.warn('Microphone permission denied or unavailable, running simulated stream:', err);
-      setIsMonitoring(true);
+      setHasReceivedSignal(true);
+    } catch (err: any) {
+      console.warn('Microphone permission or hardware error:', err);
+      let errorMsg = 'Microphone access was denied or device is unavailable.';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMsg = 'Microphone permission denied: Please allow microphone access in your browser address bar to test live voice input.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMsg = 'No microphone detected: Please connect an audio input device.';
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      setMicError(errorMsg);
+      setIsMonitoring(false);
     }
   }, [isMonitoring]);
+
+  // File Upload Mode: Runs uploaded file through backend /score pipeline with calibrated threshold
+  const handleFileUpload = useCallback(async (file: File, codec: string = 'clean_pcm') => {
+    setUploadLoading(true);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const url = `/score${codec && codec !== 'auto' ? `?codec=${encodeURIComponent(codec)}` : ''}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!resp.ok) {
+        let errMsg = `Upload failed (HTTP ${resp.status})`;
+        try {
+          const errJson = await resp.json();
+          if (errJson.detail) errMsg = errJson.detail;
+        } catch {}
+        throw new Error(errMsg);
+      }
+
+      const data = await resp.json();
+      const scoreVal = typeof data.score === 'number' ? data.score : 0.0;
+      const trustVal = Math.round((1 - scoreVal) * 100);
+
+      // Update live overview state so the entire dashboard reflects the analyzed audio
+      setSpoofProbability(scoreVal);
+      setVoiceTrust(trustVal);
+      setHasReceivedSignal(true);
+      if (data.metadata?.session_id) {
+        setSessionId(data.metadata.session_id);
+      }
+      if (data.anti_spoofing?.passive_score !== undefined) {
+        setRawLogit(data.anti_spoofing.passive_score);
+      }
+      if (data.anti_spoofing?.confidence) {
+        const confStr = String(data.anti_spoofing.confidence).toUpperCase();
+        setConfidence(confStr === 'HIGH' ? 96.4 : confStr === 'MEDIUM' ? 78.5 : 62.0);
+      }
+      setVerdict(
+        data.risk_verdict === 'STEP_UP_VERIFICATION' ? 'ALERT' :
+        data.risk_verdict === 'WARN' ? 'WARN' : 'ALLOW'
+      );
+
+      if (data.metadata?.inference_latency_ms) {
+        setDiagnostics((prev) => ({
+          ...prev,
+          inferenceMs: Math.round(data.metadata.inference_latency_ms * 10) / 10,
+          turnaroundMs: Math.round(data.metadata.inference_latency_ms + 24),
+          codec: data.codec_profile || codec,
+          speechVad: data.audio_health?.is_speech ? 'ACTIVE' : 'SILENCE',
+          rmsEnergy: `${(data.audio_health?.rms_db ?? -22.0).toFixed(1)} dB`,
+        }));
+      }
+
+      const result: ForensicUploadResult = {
+        filename: file.name,
+        fileSize: file.size,
+        sessionId: data.metadata?.session_id || 'N/A',
+        score: scoreVal,
+        voiceTrust: trustVal,
+        verdict: data.risk_verdict,
+        confidence: data.anti_spoofing?.confidence ? data.anti_spoofing.confidence.toUpperCase() : 'HIGH',
+        thresholdUsed: data.anti_spoofing?.threshold_used ?? -8.64,
+        codecProfile: data.codec_profile || codec,
+        inferenceLatencyMs: data.metadata?.inference_latency_ms ?? 0,
+        audioHealth: data.audio_health,
+        rawLogits: data.anti_spoofing?.raw_logits || [],
+        timestamp: data.timestamp || Date.now() / 1000,
+      };
+
+      setLastUploadResult(result);
+      return { success: true, data: result };
+    } catch (err: any) {
+      const errorMsg = err.message || 'File analysis failed. Please verify audio file format and size.';
+      setUploadError(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setUploadLoading(false);
+    }
+  }, []);
 
   // Sentinel: Run Verification
   const runVerification = useCallback(async () => {
@@ -557,5 +760,11 @@ export function useDashboardData() {
     testDispatch,
     updateRecipients,
     syncDb,
+    micError,
+    clearMicError,
+    uploadLoading,
+    uploadError,
+    lastUploadResult,
+    handleFileUpload,
   };
 }

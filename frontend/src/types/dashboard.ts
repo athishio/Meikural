@@ -159,3 +159,24 @@ export interface QuickActionItem {
   iconName?: 'upload' | 'mic' | 'files' | 'bar-chart';
   actionType?: 'upload' | 'record' | 'batch' | 'reports';
 }
+
+export interface ForensicUploadResult {
+  filename: string;
+  fileSize: number;
+  sessionId: string;
+  score: number;
+  voiceTrust: number;
+  verdict: 'ALLOW' | 'WARN' | 'STEP_UP_VERIFICATION';
+  confidence: string;
+  thresholdUsed: number;
+  codecProfile: string;
+  inferenceLatencyMs: number;
+  audioHealth?: {
+    is_speech: boolean;
+    rms_db: number;
+    duration_ms: number;
+  };
+  rawLogits?: number[];
+  timestamp: number;
+}
+

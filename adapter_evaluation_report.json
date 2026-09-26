@@ -1,0 +1,56 @@
+{
+  "architecture": "AASIST Frozen Backbone (160-dim) + 2-layer MLP Adapter (160->32->2)",
+  "folds": [
+    {
+      "fold": 1,
+      "train_loss_start": 0.8339560031890869,
+      "train_loss_final": 0.028297146782279015,
+      "val_loss": 0.39376938343048096,
+      "val_acc": 0.7575757575757576,
+      "far": 0.6666666666666666,
+      "frr": 0.0,
+      "eer": 0.06547619047619047,
+      "val_speakers": [
+        "speaker_ron_alt",
+        "clone_karthik_xtts",
+        "speaker_karthik_telecom"
+      ]
+    },
+    {
+      "fold": 2,
+      "train_loss_start": 0.8428805470466614,
+      "train_loss_final": 0.010142178274691105,
+      "val_loss": 0.6474833488464355,
+      "val_acc": 0.7474747474747475,
+      "far": 0.09523809523809523,
+      "frr": 0.3684210526315789,
+      "eer": 0.24185463659147868,
+      "val_speakers": [
+        "clone_digits_synth",
+        "speaker_ron_digits",
+        "clone_priya_xtts"
+      ]
+    },
+    {
+      "fold": 3,
+      "train_loss_start": 0.7133136987686157,
+      "train_loss_final": 0.013748954981565475,
+      "val_loss": 0.3159116506576538,
+      "val_acc": 0.8253968253968254,
+      "far": 0.2619047619047619,
+      "frr": 0.0,
+      "eer": 0.0,
+      "val_speakers": [
+        "speaker_karthik_clean",
+        "clone_rohan_xtts",
+        "speaker_rohan_transfer"
+      ]
+    }
+  ],
+  "summary": {
+    "mean_val_acc": 0.7768157768157767,
+    "mean_val_eer": 0.10244360902255638,
+    "mean_far": 0.3412698412698412,
+    "mean_frr": 0.12280701754385964
+  }
+}

@@ -7,8 +7,10 @@
     "athishm2007@gmail.com"
   ],
   "last_dispatch": {
-    "sip": 1789828683.473904,
-    "twilio": 1789828982793,
-    "smtp": 1789829004.187802
-  }
+    "sip": 1790413045.720307,
+    "twilio": 1790413046.3765686,
+    "smtp": 1790413047.0397341
+  },
+  "warn_threshold": 35,
+  "step_up_threshold": 65
 }

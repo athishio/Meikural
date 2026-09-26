@@ -11,31 +11,25 @@ const defaultActions: QuickActionItem[] = [
   {
     id: 'audition',
     title: 'Audition Clips',
-    subtitle: '30s human vs deepfake audio',
+    subtitle: 'Play 4 benchmark reference clips',
     icon: 'Headphones',
   },
   {
     id: 'upload',
     title: 'Upload Audio',
-    subtitle: 'Analyze voice recording',
+    subtitle: 'File Upload & Forensics Studio',
     icon: 'UploadCloud',
   },
   {
     id: 'record',
     title: 'Record Live',
-    subtitle: 'Real-time microphone stream',
+    subtitle: 'Live Microphone Test Studio',
     icon: 'Mic',
-  },
-  {
-    id: 'batch',
-    title: 'Batch Analysis',
-    subtitle: 'Queue multiple audio files',
-    icon: 'Layers',
   },
   {
     id: 'reports',
     title: 'View Reports',
-    subtitle: 'Export compliance summaries',
+    subtitle: 'Compliance & forensic dossiers',
     icon: 'FileText',
   },
 ];

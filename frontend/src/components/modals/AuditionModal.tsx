@@ -1,15 +1,31 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Headphones, Play, Info } from 'lucide-react';
+import { X, Headphones, Play, Info, RefreshCw } from 'lucide-react';
+
+export interface AuditionClip {
+  id: string;
+  badge: string;
+  badgeClass: string;
+  title: string;
+  duration: string;
+  description: string;
+  audioSrc: string;
+  codec: string;
+  targetProfile: string;
+  riskClass: string;
+  scenario: 'safe' | 'deepfake' | 'caution' | null;
+  actionLabel: string;
+}
 
 interface AuditionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSimulateScenario?: (scenario: 'safe' | 'deepfake' | 'caution') => void;
   onTriggerChallenge?: () => void;
+  onInjectClip?: (clip: AuditionClip) => Promise<any>;
 }
 
-const clips = [
+export const clips: AuditionClip[] = [
   {
     id: 'human',
     badge: 'BONAFIDE HUMAN',
@@ -18,7 +34,8 @@ const clips = [
     duration: '60.0s · 16kHz PCM',
     description: 'Dynamic pitch variance (~130Hz) with natural micro-jitter vibrato, organic vocal-tract formants, and natural breathing pauses every 4–5s.',
     audioSrc: '/demo_clips/bonafide_human_speech.wav',
-    expectedRisk: '2.1% · ALLOW / CLEARED',
+    codec: 'clean_pcm',
+    targetProfile: 'Benchmark Profile: Bonafide (~2.1% Risk)',
     riskClass: 'text-[#22C55E]',
     scenario: 'safe' as const,
     actionLabel: 'Inject Safe Simulation',
@@ -31,7 +48,8 @@ const clips = [
     duration: '60.0s · 16kHz PCM',
     description: 'Unnaturally rigid mechanical pitch (145Hz), high-frequency neural vocoder phase artifacts (>7.5kHz), and GAN frame clicks.',
     audioSrc: '/demo_clips/deepfake_voice_clone.wav',
-    expectedRisk: '96.4% · STEP-UP / REJECTED',
+    codec: 'g711_ulaw',
+    targetProfile: 'Benchmark Profile: AI Clone (~96.4% Risk)',
     riskClass: 'text-[#EF4444]',
     scenario: 'deepfake' as const,
     actionLabel: 'Inject Deepfake Attack',
@@ -44,7 +62,8 @@ const clips = [
     duration: '60.0s · 16kHz PCM',
     description: 'PSTN 50Hz electrical ground hum, GSM line static, and packet loss dropouts causing acoustic hesitation.',
     audioSrc: '/demo_clips/caution_noisy_telecom.wav',
-    expectedRisk: '48.0% · TRIGGER CHALLENGE',
+    codec: 'pstn_narrowband',
+    targetProfile: 'Benchmark Profile: PSTN Noise (~48.0% Risk)',
     riskClass: 'text-[#F59E0B]',
     scenario: 'caution' as const,
     actionLabel: 'Inject Jitter Scenario',
@@ -57,7 +76,8 @@ const clips = [
     duration: '60.0s · 16kHz PCM',
     description: 'Spoken security challenge tokens with rapid sub-second biological turnaround reflex (458ms), defeating generative AI pipelines.',
     audioSrc: '/demo_clips/challenge_response_digits.wav',
-    expectedRisk: '458ms (Natural Human Reflex)',
+    codec: 'clean_pcm',
+    targetProfile: 'Benchmark Profile: Human Reflex (<1.2s)',
     riskClass: 'text-[#0EA5E9]',
     scenario: null,
     actionLabel: 'Launch Dynamic Challenge',
@@ -69,7 +89,39 @@ export const AuditionModal: React.FC<AuditionModalProps> = ({
   onClose,
   onSimulateScenario,
   onTriggerChallenge,
+  onInjectClip,
 }) => {
+  const [injectingId, setInjectingId] = React.useState<string | null>(null);
+  const [injectedScores, setInjectedScores] = React.useState<Record<string, { score: number; verdict: string }>>({});
+
+  const handleInject = async (clip: AuditionClip) => {
+    setInjectingId(clip.id);
+    try {
+      if (onInjectClip) {
+        const res = await onInjectClip(clip);
+        if (res && typeof res.score === 'number') {
+          setInjectedScores((prev) => ({
+            ...prev,
+            [clip.id]: { score: res.score, verdict: res.verdict || res.risk_verdict || 'ALLOW' }
+          }));
+        }
+      } else {
+        if (clip.scenario && onSimulateScenario) {
+          onSimulateScenario(clip.scenario);
+        } else if (clip.id === 'challenge' && onTriggerChallenge) {
+          onTriggerChallenge();
+        }
+      }
+      setTimeout(() => {
+        setInjectingId(null);
+        onClose();
+      }, 400);
+    } catch (err) {
+      console.error('Failed to inject clip:', err);
+      setInjectingId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -151,28 +203,34 @@ export const AuditionModal: React.FC<AuditionModalProps> = ({
                     src={clip.audioSrc}
                   />
 
-                  <div className="flex items-center justify-between pt-2 border-t border-[#1E2225] text-[11px]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#1E2225] text-[11px]">
                     <div>
-                      <span className="text-[#5E666B]">Target Risk: </span>
-                      <span className={`font-mono font-semibold ${clip.riskClass}`}>
-                        {clip.expectedRisk}
+                      <span className="text-[#5E666B] block text-[9.5px] uppercase font-mono tracking-wider">
+                        {injectedScores[clip.id] ? 'Live Neural Score' : 'Benchmark Reference Profile'}
+                      </span>
+                      <span className={`font-mono text-[11px] ${clip.riskClass}`}>
+                        {injectedScores[clip.id]
+                          ? `${(injectedScores[clip.id].score * 100).toFixed(1)}% [${injectedScores[clip.id].verdict}] (Live AASIST)`
+                          : clip.targetProfile}
                       </span>
                     </div>
 
                     <button
-                      onClick={() => {
-                        if (clip.scenario && onSimulateScenario) {
-                          onSimulateScenario(clip.scenario);
-                          onClose();
-                        } else if (clip.id === 'challenge' && onTriggerChallenge) {
-                          onTriggerChallenge();
-                          onClose();
-                        }
-                      }}
-                      className="px-2.5 py-1 rounded bg-[#141719] hover:bg-[#1E2225] border border-[#1E2225] hover:border-[#FF4713]/40 text-[#F2F4F5] font-medium text-[11px] flex items-center gap-1 transition-all"
+                      disabled={injectingId !== null}
+                      onClick={() => handleInject(clip)}
+                      className="px-2.5 py-1 rounded bg-[#141719] hover:bg-[#1E2225] border border-[#1E2225] hover:border-[#FF4713]/40 text-[#F2F4F5] font-medium text-[11px] flex items-center gap-1.5 transition-all disabled:opacity-50"
                     >
-                      <Play className="w-3 h-3 text-[#FF4713]" />
-                      <span>{clip.actionLabel}</span>
+                      {injectingId === clip.id ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 text-[#FF4713] animate-spin" />
+                          <span className="text-[#FF4713]">Scoring...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3 text-[#FF4713]" />
+                          <span>{clip.actionLabel}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

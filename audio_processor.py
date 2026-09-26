@@ -46,6 +46,8 @@ CODEC_LLR_CALIBRATION_THRESHOLDS: Dict[str, float] = {
     "amr_wb": -8.53,
     "amr": -8.53,
     "wideband": -8.53,
+    "live_mic": -8.94,
+    "browser_mic": -8.94,
     "default": -8.64,
 }
 
@@ -150,14 +152,37 @@ class TelephonyCodecEngine:
             # Wideband telecom bandpass: 50 Hz to 7000 Hz
             sos = signal.butter(4, [50.0, 7000.0], btype="bandpass", fs=sample_rate, output="sos")
             return signal.sosfilt(sos, waveform).astype(np.float32)
+        elif codec in ("live_mic", "browser_mic"):
+            # Audio was already compressed and decoded by live-mic streaming path; preserve waveform without double compression
+            return waveform.astype(np.float32)
         return waveform
 
 
 def load_audio_any_format(audio_source: Union[str, bytes, os.PathLike, io.BytesIO]) -> Tuple[np.ndarray, int]:
     """
-    Robust audio loader supporting WAV, FLAC, OGG, MP3, M4A, AAC, WebM.
+    Robust audio loader supporting WAV, FLAC, OGG, MP3, M4A, AAC, WebM, and raw 16-bit PCM.
     Uses soundfile first, then falls back to PyAV for formats unsupported by libsndfile.
+    Raw headerless PCM bytes are parsed directly to prevent PyAV misdetecting them as ADPCM.
     """
+    if isinstance(audio_source, bytes):
+        raw_prefix = audio_source[:12]
+        is_container = (
+            raw_prefix.startswith(b"RIFF")
+            or raw_prefix.startswith(b"ID3")
+            or raw_prefix.startswith(b"\xff\xfb")
+            or raw_prefix.startswith(b"\xff\xf3")
+            or raw_prefix.startswith(b"\xff\xf2")
+            or raw_prefix.startswith(b"fLaC")
+            or raw_prefix.startswith(b"OggS")
+            or b"ftyp" in raw_prefix
+            or raw_prefix.startswith(b"\x1a\x45\xdf\xa3")
+            or raw_prefix.startswith(b"#!AMR")
+        )
+        if not is_container:
+            # Headerless raw 16-bit PCM audio stream (e.g. from telephony ring buffer)
+            data = np.frombuffer(audio_source, dtype=np.int16).astype(np.float32) / 32768.0
+            return data, TARGET_SAMPLE_RATE
+
     bio = io.BytesIO(audio_source) if isinstance(audio_source, bytes) else audio_source
     try:
         data, sr = sf.read(bio)

@@ -70,6 +70,12 @@ export const App: React.FC = () => {
     updateRecipients,
     syncDb,
     isDemoMode,
+    micError,
+    clearMicError,
+    uploadLoading,
+    uploadError,
+    lastUploadResult,
+    handleFileUpload,
   } = useDashboardData();
 
   // Modals state
@@ -189,6 +195,12 @@ export const App: React.FC = () => {
             spoofProbability={spoofProbability}
             isMonitoring={isMonitoring}
             onToggleMonitoring={toggleMonitoring}
+            micError={micError}
+            onClearMicError={clearMicError}
+            uploadLoading={uploadLoading}
+            uploadError={uploadError}
+            lastUploadResult={lastUploadResult}
+            onFileUpload={handleFileUpload}
             onRunVerification={async () => {
               await runVerification();
               showToast(`Cryptographic ledger verification executed for ${sessionId}. Chain integrity confirmed.`);
@@ -252,7 +264,9 @@ export const App: React.FC = () => {
             initialRules={rules}
             onSaveRules={async (r) => {
               await saveRulesConfig(r);
-              showToast('Decision rules persisted & active across all channels.');
+              const allowPct = Math.round((r.bonafide_allow_threshold ?? 0.35) * 100);
+              const stepUpPct = Math.round((r.step_up_challenge_threshold ?? 0.65) * 100);
+              showToast(`Decision rules updated: Allow ≤ ${allowPct}%, Warn = ${allowPct}-${stepUpPct}%, Step-Up ≥ ${stepUpPct}%. Live scoring synchronized.`);
             }}
           />
         )}
@@ -262,7 +276,7 @@ export const App: React.FC = () => {
             rules={rules}
             onTestDispatch={async (ch) => {
               await testDispatch(ch);
-              showToast(`Test dispatch for ${ch.toUpperCase()} gateway executed.`);
+              showToast(`[Sandbox Simulation] ${ch.toUpperCase()} gateway test logged. Live carrier delivery requires .env credentials.`);
             }}
             onUpdateRecipients={async (rec) => {
               await updateRecipients(rec);
@@ -356,6 +370,36 @@ export const App: React.FC = () => {
         onClose={() => setIsAuditionOpen(false)}
         onSimulateScenario={setSimulationScenario}
         onTriggerChallenge={triggerChallenge}
+        onInjectClip={async (clip) => {
+          try {
+            const resp = await fetch(clip.audioSrc);
+            if (!resp.ok) {
+              throw new Error(`Failed to load benchmark audio "${clip.audioSrc}" (HTTP ${resp.status})`);
+            }
+            const blob = await resp.blob();
+            const filename = clip.audioSrc.split('/').pop() || `${clip.id}.wav`;
+            const file = new File([blob], filename, { type: blob.type || 'audio/wav' });
+
+            if (clip.scenario) {
+              setSimulationScenario(clip.scenario);
+            }
+            if (clip.id === 'challenge') {
+              triggerChallenge();
+            }
+
+            const res = await handleFileUpload(file, clip.codec);
+            if (res?.success && res.data) {
+              showToast(`Neural Ingest: ${clip.title} scored as ${res.data.verdict} (${(res.data.score * 100).toFixed(1)}% risk)`);
+              return res.data;
+            } else {
+              showToast(`Scoring failed: ${res?.error || 'Unable to process clip'}`);
+              return null;
+            }
+          } catch (err: any) {
+            showToast(`Inject failed: ${err.message || 'Audio load error'}`);
+            return null;
+          }
+        }}
       />
 
       {/* Forensic Detection Detail Modal */}
