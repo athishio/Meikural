@@ -4,6 +4,7 @@ import { Radio, AlertOctagon, Search, RefreshCw, Eye, PhoneCall, Hash, Code } fr
 import type { TrunkSession } from '../../types/dashboard';
 import { ReferenceToken } from '../common/ReferenceToken';
 import { Tooltip } from '../common/Tooltip';
+import { getClientApiKey } from '../../utils/auth';
 
 interface ActiveCallsPageProps {
   onSelectSession: (sessionId: string) => void;
@@ -97,7 +98,7 @@ export const ActiveCallsPage: React.FC<ActiveCallsPageProps> = ({
     try {
       await fetch(`/api/trunks/${sessionId}/isolate`, {
         method: 'POST',
-        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': getClientApiKey() },
       });
     } catch (e) {
       console.error('Failed to isolate trunk:', e);

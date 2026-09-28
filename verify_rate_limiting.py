@@ -4,13 +4,18 @@ Sends rapid sequential requests to a rate-limited endpoint (/api/admin/purge-exp
 to confirm that requests exceeding the limit trigger HTTP 429 Too Many Requests.
 """
 
+import os
 import sys
 import time
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000"
 ENDPOINT = f"{BASE_URL}/purge-expired"
-HEADERS = {"X-API-Key": "meikural-dev-key-2026"}
+API_KEY = os.getenv("MEIKURAL_API_KEY", "meikural-dev-key-2026")
+HEADERS = {"X-API-Key": API_KEY}
 
 print("=" * 70)
 print(f"RATE LIMITING TEST: {ENDPOINT}")

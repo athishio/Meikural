@@ -16,9 +16,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any, Dict, Optional
-from dotenv import load_dotenv
-
-load_dotenv()
+if os.getenv("ENVIRONMENT", "").lower() != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
 logger = logging.getLogger("meikural_alerts")
 

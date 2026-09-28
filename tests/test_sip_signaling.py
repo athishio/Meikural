@@ -12,7 +12,7 @@ Validates:
 import unittest
 from starlette.testclient import TestClient
 
-from app import app
+from app import app, MEIKURAL_API_KEY
 import sip_signaler
 
 
@@ -80,7 +80,7 @@ class TestSIPSignaling(unittest.TestCase):
         res = self.client.post(
             "/api/sip/action",
             json={"session_id": "call_ep_005", "verdict": "STEP_UP_VERIFICATION", "risk_score": 0.88},
-            headers={"X-API-Key": "meikural-dev-key-2026"},
+            headers={"X-API-Key": MEIKURAL_API_KEY},
         )
         self.assertEqual(res.status_code, 200)
         data = res.json()

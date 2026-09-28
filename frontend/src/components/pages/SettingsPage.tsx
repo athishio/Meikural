@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Key, Bell, Cpu, Save, Radio, Check, Trash2, RefreshCw } from 'lucide-react';
 import { IntegrationsPage } from './IntegrationsPage';
 import type { RulesConfig } from '../../types/dashboard';
+import { getClientApiKey } from '../../utils/auth';
 
 interface SettingsPageProps {
   initialSubTab?: 'neural' | 'telephony' | 'api' | 'alerts' | 'integrations';
@@ -53,7 +54,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': 'meikural-dev-key-2026',
+          'X-API-Key': getClientApiKey(),
         },
         body: JSON.stringify({
           critical_deepfake_threshold: threshold / 100,
@@ -76,7 +77,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       const resp = await fetch('/purge-expired', {
         method: 'POST',
         headers: {
-          'X-API-Key': 'meikural-dev-key-2026',
+          'X-API-Key': getClientApiKey(),
         },
       });
       if (resp.ok) {
@@ -324,12 +325,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   <input
                     type="text"
                     readOnly
-                    value={showKey ? 'meikural-dev-key-2026' : 'mk_live_••••••••••••••••••••••••3840'}
+                    value={showKey ? getClientApiKey() : `mk_live_••••••••••••••••••••••••${getClientApiKey().slice(-4)}`}
                     className="flex-1 bg-surface-elevated border border-card-border rounded px-3 py-1.5 text-text-primary select-all"
                   />
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText('meikural-dev-key-2026');
+                      navigator.clipboard.writeText(getClientApiKey());
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2500);
                     }}

@@ -9,9 +9,9 @@ import os
 import time
 import uuid
 from typing import List, Optional, Set
-from dotenv import load_dotenv
-
-load_dotenv()
+if os.getenv("ENVIRONMENT", "").lower() != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
 import numpy as np
 
@@ -56,15 +56,26 @@ SERVICE_START_TIME = time.time()
 setup_soc_logging()
 logger = get_soc_logger("meikural_soc")
 
+DEFAULT_API_KEY = "meikural-dev-key-2026"
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 DEMO_MODE = os.getenv("DEMO_MODE", "0").lower() in ("1", "true", "yes")
 MEIKURAL_API_KEY = os.getenv("MEIKURAL_API_KEY", "")
 
-if not MEIKURAL_API_KEY:
-    if ENVIRONMENT == "production":
+# In production mode (ENVIRONMENT == "production" or DEMO_MODE not set/false):
+is_production = (ENVIRONMENT == "production") or (not DEMO_MODE)
+if is_production:
+    if not MEIKURAL_API_KEY or MEIKURAL_API_KEY == DEFAULT_API_KEY:
         raise RuntimeError("CRITICAL SECURITY ERROR: MEIKURAL_API_KEY must be configured in production environment.")
-    else:
-        MEIKURAL_API_KEY = "meikural-dev-key-2026"
+else:
+    if not MEIKURAL_API_KEY:
+        MEIKURAL_API_KEY = DEFAULT_API_KEY
+    if MEIKURAL_API_KEY == DEFAULT_API_KEY:
+        logger.warning(
+            "\n" + "=" * 78 + "\n"
+            "[SECURITY NOTICE] MEIKURAL_API_KEY using dev default ('meikural-dev-key-2026') in DEMO_MODE.\n"
+            "Configure MEIKURAL_API_KEY in your environment or .env file before production use.\n"
+            + "=" * 78
+        )
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 http_bearer = HTTPBearer(auto_error=False)
@@ -238,8 +249,18 @@ def readyz_probe():
 async def get_dashboard():
     react_index = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(react_index):
-        return FileResponse(react_index)
+        with open(react_index, "r", encoding="utf-8") as f:
+            html = f.read()
+        injected = f'<script>window.__MEIKURAL_API_KEY__ = {json.dumps(MEIKURAL_API_KEY)};</script>'
+        html = html.replace("<head>", f"<head>{injected}", 1)
+        return HTMLResponse(content=html, media_type="text/html")
     raise HTTPException(status_code=404, detail="Dashboard index not found in frontend/dist")
+
+
+@app.get("/api/client-auth")
+def get_client_auth():
+    """Returns active client administrative key for authenticated browser sessions in DEMO_MODE."""
+    return {"api_key": MEIKURAL_API_KEY if DEMO_MODE else None}
 
 
 @app.get("/favicon.svg")

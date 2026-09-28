@@ -9,6 +9,7 @@ import type {
   RulesConfig,
   ForensicUploadResult,
 } from '../types/dashboard';
+import { getClientApiKey } from '../utils/auth';
 
 // ITU-T G.711 mu-law encoder for 16-bit PCM samples
 function encodeSampleToMuLaw(sample: number): number {
@@ -573,13 +574,13 @@ export function useDashboardData() {
     try {
       await fetch(`/api/trunks/${sessionId}/isolate`, {
         method: 'POST',
-        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': getClientApiKey() },
       });
       await fetch('/alerts/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': 'meikural-dev-key-2026',
+          'X-API-Key': getClientApiKey(),
         },
         body: JSON.stringify({ session_id: sessionId, risk_score: 0.95 }),
       });
@@ -607,7 +608,7 @@ export function useDashboardData() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': 'meikural-dev-key-2026',
+          'X-API-Key': getClientApiKey(),
         },
         body: JSON.stringify(newRules),
       });
@@ -626,7 +627,7 @@ export function useDashboardData() {
     try {
       const resp = await fetch('/purge-expired', {
         method: 'POST',
-        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': getClientApiKey() },
       });
       if (resp.ok) {
         return await resp.json();
@@ -643,7 +644,7 @@ export function useDashboardData() {
     try {
       const resp = await fetch(`/api/test-dispatch?channel=${channel}`, {
         method: 'POST',
-        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': getClientApiKey() },
       });
       if (resp.ok) {
         const data = await resp.json();

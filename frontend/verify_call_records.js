@@ -231,7 +231,7 @@ async function verifyCallRecords() {
       const apiResp = await page.evaluate(async () => {
         const res = await fetch('/api/trunks/call_test_iso_99/isolate', {
           method: 'POST',
-          headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+          headers: { 'X-API-Key': (window.__MEIKURAL_API_KEY__ || 'meikural-dev-key-2026') },
         });
         return { status: res.status, body: await res.json() };
       });

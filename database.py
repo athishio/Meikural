@@ -18,16 +18,27 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("meikural_database")
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+if ENVIRONMENT != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
+
 DB_PATH = os.getenv("MEIKURAL_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "meikural_audit.db"))
 
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+DEFAULT_DEV_SALT = "MEIKURAL_DEV_SALT_DO_NOT_USE_IN_PROD_2026"
+DEFAULT_SALT_LEGACY = "meikural-secret-salt-2026"
+DEMO_MODE = os.getenv("DEMO_MODE", "0").lower() in ("1", "true", "yes")
 SALT = os.getenv("MEIKURAL_SALT", "")
 
-if not SALT:
-    if ENVIRONMENT == "production":
+# In production mode (ENVIRONMENT == "production" or DEMO_MODE not set/false):
+is_production = (ENVIRONMENT == "production") or (not DEMO_MODE)
+if is_production:
+    if not SALT or SALT in (DEFAULT_DEV_SALT, DEFAULT_SALT_LEGACY):
         raise RuntimeError("CRITICAL SECURITY ERROR: MEIKURAL_SALT must be configured in production environment.")
-    else:
-        SALT = "MEIKURAL_DEV_SALT_DO_NOT_USE_IN_PROD_2026"
+else:
+    if not SALT:
+        SALT = DEFAULT_DEV_SALT
+    if SALT in (DEFAULT_DEV_SALT, DEFAULT_SALT_LEGACY):
         logger.warning(
             "\n" + "=" * 78 + "\n"
             "[SECURITY NOTICE] MEIKURAL_SALT not configured. Using fallback development salt.\n"

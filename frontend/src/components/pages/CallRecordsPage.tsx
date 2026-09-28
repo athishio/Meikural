@@ -13,6 +13,7 @@ import {
   Hash,
   Code
 } from 'lucide-react';
+import { getClientApiKey } from '../../utils/auth';
 import type { RecentAnalysis } from '../../types/dashboard';
 import { ReferenceToken } from '../common/ReferenceToken';
 
@@ -177,7 +178,7 @@ export const CallRecordsPage: React.FC<CallRecordsPageProps> = ({
     try {
       await fetch(`/api/trunks/${sessionId}/isolate`, {
         method: 'POST',
-        headers: { 'X-API-Key': 'meikural-dev-key-2026' },
+        headers: { 'X-API-Key': getClientApiKey() },
       });
       if (onIsolateTrunk) onIsolateTrunk(sessionId);
     } catch (err) {

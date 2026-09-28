@@ -6,6 +6,19 @@ import { execSync } from 'child_process';
 const BASE_URL = 'http://127.0.0.1:8000/';
 const DB_PATH = 'E:\\Meikural\\meikural_audit.db';
 
+function getApiKey() {
+  if (process.env.MEIKURAL_API_KEY) return process.env.MEIKURAL_API_KEY;
+  try {
+    const envPath = path.resolve('E:/Meikural/.env');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      const match = content.match(/^MEIKURAL_API_KEY=(.+)$/m);
+      if (match) return match[1].trim();
+    }
+  } catch (e) {}
+  return 'meikural-dev-key-2026';
+}
+
 async function verifyCoreDemo() {
   console.log('================================================================');
   console.log(' MEIKURAL AUDIT: FRESH REGRESSION PASS ON CORE DEMO PATH');
@@ -153,7 +166,7 @@ async function verifyCoreDemo() {
     // Test direct policy update via backend API and verify score response
     const headers = {
       'Content-Type': 'application/json',
-      'X-API-Key': 'meikural-dev-key-2026',
+      'X-API-Key': getApiKey(),
     };
 
     // Step A: Set to default thresholds (35% safe / 65% step-up)
