@@ -34,3 +34,8 @@ Thumbs.db
 # Scratch
 frontend/scratch/
 scratch/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example

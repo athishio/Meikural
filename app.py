@@ -9,6 +9,9 @@ import os
 import time
 import uuid
 from typing import List, Optional, Set
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import numpy as np
 
@@ -150,6 +153,12 @@ def startup_event():
     logger.info(f" - Inference Pipeline: AASIST (PyTorch INT8 Quantized)")
     logger.info(f" - Automated Liveness ASR: faster-whisper (CPU INT8)")
     logger.info(f" - Demo Mode: {'ENABLED (Simulated scenarios allowed)' if DEMO_MODE else 'DISABLED (Pure AASIST neural inference path)'}")
+    from alerts import SMTP_USER, ALERT_EMAIL_TO, is_live_email_dispatch_enabled
+    if SMTP_USER:
+        logger.info(f" - SMTP Alert Dispatch: AUTHENTICATED LIVE ({SMTP_USER} -> {ALERT_EMAIL_TO})")
+        logger.info(f" - Automated Threat Email Mode: {'ENABLED (Live threats send real emails)' if is_live_email_dispatch_enabled() else 'REHEARSAL MODE (Emails suppressed during playback to prevent inbox spam)'}")
+    else:
+        logger.info(" - SMTP Alert Dispatch: SIMULATED (No SMTP credentials)")
     if MEIKURAL_API_KEY == "meikural-dev-key-2026":
         logger.warning(" - [SECURITY NOTICE] MEIKURAL_API_KEY using dev default ('meikural-dev-key-2026')")
     else:
@@ -209,10 +218,11 @@ def readyz_probe():
         is_ready = False
 
     # 4. Alert channels check
-    from alerts import TWILIO_ACCOUNT_SID, SMTP_HOST
+    from alerts import TWILIO_ACCOUNT_SID, SMTP_USER, SMTP_PASSWORD, is_live_email_dispatch_enabled
     checks["alert_channels"] = {
         "sms": "configured" if TWILIO_ACCOUNT_SID else "simulated",
-        "email": "configured" if SMTP_HOST else "simulated",
+        "email": "live_authenticated" if (SMTP_USER and SMTP_PASSWORD) else "simulated",
+        "email_automated_mode": "live" if is_live_email_dispatch_enabled() else "rehearsal_suppressed",
     }
 
     status_code = 200 if is_ready else 503
@@ -977,7 +987,8 @@ DEFAULT_RULES = {
     "bonafide_allow_threshold": 0.35,
     "step_up_challenge_threshold": 0.65,
     "critical_deepfake_threshold": 0.65,
-    "alert_recipients": ["soc-oncall@enterprise.meikural.internal", "+15550192834"],
+    "email_live_dispatch": False,
+    "alert_recipients": ["mahendran3626@gmail.com", "+15550192834"],
     "last_dispatch": {
         "sip": time.time() - 120,
         "twilio": time.time() - 3400,
@@ -1074,7 +1085,8 @@ def get_isolated_trunks():
 @limiter.limit("10/minute")
 def test_dispatch(request: Request, channel: str = Query("twilio"), _admin: str = Depends(verify_admin_auth)):
     test_session = f"test_dispatch_{int(time.time())}"
-    res = dispatch_step_up_alerts(session_id=test_session, risk_score=0.92)
+    force_email = channel.lower() in ("smtp", "email")
+    res = dispatch_step_up_alerts(session_id=test_session, risk_score=0.92, force_live_email=force_email)
     rules = load_rules()
     rules["last_dispatch"][channel.lower()] = time.time()
     save_rules(rules)

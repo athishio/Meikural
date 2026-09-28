@@ -2,14 +2,15 @@
   "bonafide_allow_threshold": 0.35,
   "step_up_challenge_threshold": 0.65,
   "critical_deepfake_threshold": 0.65,
+  "email_live_dispatch": false,
   "alert_recipients": [
-    "(+91) 9344100180",
-    "athishm2007@gmail.com"
+    "mahendran3626@gmail.com",
+    "(+91) 9344100180"
   ],
   "last_dispatch": {
-    "sip": 1790413045.720307,
-    "twilio": 1790413046.3765686,
-    "smtp": 1790413047.0397341
+    "sip": 1790528275.5894365,
+    "twilio": 1790528276.3003757,
+    "smtp": 1790528282.6191466
   },
   "warn_threshold": 35,
   "step_up_threshold": 65

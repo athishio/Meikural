@@ -646,6 +646,7 @@ export function useDashboardData() {
         headers: { 'X-API-Key': 'meikural-dev-key-2026' },
       });
       if (resp.ok) {
+        const data = await resp.json();
         setRules((prev) => ({
           ...prev,
           last_dispatch: {
@@ -653,6 +654,7 @@ export function useDashboardData() {
             [channel]: Date.now(),
           },
         }));
+        return data;
       } else {
         throw new Error(`Test dispatch failed (HTTP ${resp.status})`);
       }

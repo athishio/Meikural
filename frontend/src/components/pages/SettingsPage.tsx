@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Key, Bell, Cpu, Save, Radio, Check, Trash2, RefreshCw } from 'lucide-react';
+import { IntegrationsPage } from './IntegrationsPage';
+import type { RulesConfig } from '../../types/dashboard';
 
-export const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'neural' | 'telephony' | 'api' | 'alerts'>('neural');
+interface SettingsPageProps {
+  initialSubTab?: 'neural' | 'telephony' | 'api' | 'alerts' | 'integrations';
+  rules?: RulesConfig;
+  onTestDispatch?: (channel: 'sip' | 'twilio' | 'smtp') => Promise<any>;
+  onUpdateRecipients?: (recipients: string[]) => Promise<void>;
+  onToggleLiveEmail?: (enabled: boolean) => Promise<void>;
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({
+  initialSubTab = 'neural',
+  rules,
+  onTestDispatch,
+  onUpdateRecipients,
+  onToggleLiveEmail,
+}) => {
+  const [activeTab, setActiveTab] = useState<'neural' | 'telephony' | 'api' | 'alerts' | 'integrations'>(initialSubTab);
   const [threshold, setThreshold] = useState(65);
   const [autoQuarantine, setAutoQuarantine] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -12,6 +28,12 @@ export const SettingsPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [purging, setPurging] = useState(false);
   const [purgeResult, setPurgeResult] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   useEffect(() => {
     fetch('/api/rules')
@@ -139,6 +161,17 @@ export const SettingsPage: React.FC = () => {
           >
             <Bell className="w-4 h-4 text-text-muted" />
             Alert Routing & SOC SLA
+          </button>
+          <button
+            onClick={() => setActiveTab('integrations')}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-12 font-medium transition-all ${
+              activeTab === 'integrations'
+                ? 'bg-surface-elevated text-text-primary border border-card-border shadow-sm'
+                : 'text-text-muted hover:text-text-primary hover:bg-surface-ground'
+            }`}
+          >
+            <Radio className="w-4 h-4 text-accent-primary" />
+            Integrations & Dispatch
           </button>
         </div>
 
@@ -347,6 +380,17 @@ export const SettingsPage: React.FC = () => {
                   <span className="text-accent-success font-mono text-11">Active</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'integrations' && (
+            <div className="space-y-4">
+              <IntegrationsPage
+                rules={rules}
+                onTestDispatch={onTestDispatch || (async () => {})}
+                onUpdateRecipients={onUpdateRecipients || (async () => {})}
+                onToggleLiveEmail={onToggleLiveEmail}
+              />
             </div>
           )}
         </div>

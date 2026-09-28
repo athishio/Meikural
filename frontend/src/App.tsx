@@ -6,13 +6,10 @@ import { SiteBackgroundWave } from './components/layout/SiteBackgroundWave';
 
 // Views
 import { OverviewView } from './components/dashboard/OverviewView';
-import { ActiveCallsPage } from './components/pages/ActiveCallsPage';
-import { DetectionsPage } from './components/pages/DetectionsPage';
-import { IncidentsPage } from './components/pages/IncidentsPage';
+import { CallRecordsPage } from './components/pages/CallRecordsPage';
 import { AuditTrailPage } from './components/pages/AuditTrailPage';
 import { ReportsPage } from './components/pages/ReportsPage';
 import { RulesPage } from './components/pages/RulesPage';
-import { IntegrationsPage } from './components/pages/IntegrationsPage';
 import { PeoplePage } from './components/pages/PeoplePage';
 import { AudioLabPage } from './components/pages/AudioLabPage';
 import { PrivacyCompliancePage } from './components/pages/PrivacyCompliancePage';
@@ -220,8 +217,8 @@ export const App: React.FC = () => {
           />
         )}
 
-        {activeTab === 'active-calls' && (
-          <ActiveCallsPage
+        {(activeTab === 'call-records' || activeTab === 'active-calls' || activeTab === 'detections' || activeTab === 'incidents') && (
+          <CallRecordsPage
             isOffline={wsState === 'offline'}
             onSelectSession={(sess) => {
               setSessionId(sess);
@@ -233,17 +230,7 @@ export const App: React.FC = () => {
             onIsolateTrunk={(sess) => {
               showToast(`Trunk ${sess} isolated. Dispatched emergency alert.`);
             }}
-          />
-        )}
-
-        {activeTab === 'detections' && (
-          <DetectionsPage
             onSelectDetection={(item) => setSelectedDetection(item)}
-          />
-        )}
-
-        {activeTab === 'incidents' && (
-          <IncidentsPage
             onViewCert={(certData) => setSelectedCert(certData)}
           />
         )}
@@ -271,16 +258,34 @@ export const App: React.FC = () => {
           />
         )}
 
-        {activeTab === 'integrations' && (
-          <IntegrationsPage
+        {(activeTab === 'settings' || activeTab === 'integrations') && (
+          <SettingsPage
+            initialSubTab={activeTab === 'integrations' ? 'integrations' : 'neural'}
             rules={rules}
             onTestDispatch={async (ch) => {
-              await testDispatch(ch);
-              showToast(`[Sandbox Simulation] ${ch.toUpperCase()} gateway test logged. Live carrier delivery requires .env credentials.`);
+              const res = await testDispatch(ch);
+              if (ch === 'smtp') {
+                const emailStatus = res?.dispatch_result?.email?.status;
+                if (emailStatus === 'delivered') {
+                  showToast('Live SMTP security alert successfully delivered to mahendran3626@gmail.com.');
+                } else {
+                  showToast(`SMTP test result: ${emailStatus || 'dispatched'}.`);
+                }
+              } else {
+                showToast(`[Sandbox Simulation] ${ch.toUpperCase()} gateway test logged. Live carrier delivery requires .env credentials.`);
+              }
             }}
             onUpdateRecipients={async (rec) => {
               await updateRecipients(rec);
               showToast('Alert roster updated.');
+            }}
+            onToggleLiveEmail={async (enabled) => {
+              await saveRulesConfig({ ...rules, email_live_dispatch: enabled });
+              showToast(
+                enabled
+                  ? 'Live Threat Email Dispatch ENABLED: High-risk detections will send real emails.'
+                  : 'Rehearsal Mode ACTIVE: Threat emails suppressed during scoring to prevent inbox spam.'
+              );
             }}
           />
         )}
@@ -301,10 +306,6 @@ export const App: React.FC = () => {
               return res;
             }}
           />
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsPage />
         )}
       </main>
 

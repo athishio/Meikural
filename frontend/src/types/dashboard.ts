@@ -82,6 +82,7 @@ export interface RulesConfig {
   step_up_challenge_threshold: number; // e.g. 0.65
   critical_deepfake_threshold: number; // e.g. 0.65
   alert_recipients: string[];
+  email_live_dispatch?: boolean;
   last_dispatch: {
     sip: number;
     twilio: number;

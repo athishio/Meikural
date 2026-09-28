@@ -17,20 +17,24 @@ interface HeaderProps {
 
 const primaryNavTabs = [
   { id: 'overview', label: 'Overview' },
-  { id: 'active-calls', label: 'Active Calls' },
-  { id: 'detections', label: 'Detections' },
-  { id: 'incidents', label: 'Incidents' },
+  { id: 'rules', label: 'Rules & Policy' },
   { id: 'audit-trail', label: 'Audit Trail' },
   { id: 'reports', label: 'Reports' },
 ];
 
 const secondaryNavTabs = [
-  { id: 'rules', label: 'Rules & Policy' },
-  { id: 'integrations', label: 'Integrations' },
+  { id: 'call-records', label: 'Call Records' },
   { id: 'audio-lab', label: 'Audio Lab' },
-  { id: 'people', label: 'People (Preview)' },
   { id: 'settings', label: 'Settings' },
+  { id: 'people', label: 'People (Preview)' },
 ];
+
+const legacyAliases: Record<string, string> = {
+  'active-calls': 'Call Records',
+  'detections': 'Call Records',
+  'incidents': 'Call Records',
+  'integrations': 'Settings',
+};
 
 const allNavTabs = [...primaryNavTabs, ...secondaryNavTabs];
 
@@ -147,13 +151,13 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
             className={`relative flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 rounded-full select-none cursor-pointer ${
-              secondaryNavTabs.some((t) => t.id === activeTab)
+              secondaryNavTabs.some((t) => t.id === activeTab) || Boolean(legacyAliases[activeTab])
                 ? 'text-[#FF4713] bg-[#1E2225]'
                 : 'text-[#9BA3A8] hover:text-[#F2F4F5]'
             }`}
           >
             <span>
-              {secondaryNavTabs.find((t) => t.id === activeTab)?.label || 'More'}
+              {secondaryNavTabs.find((t) => t.id === activeTab)?.label || legacyAliases[activeTab] || 'More'}
             </span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>

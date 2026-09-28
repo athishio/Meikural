@@ -62,30 +62,43 @@ async function runQA() {
     // Wait for any existing modal backdrops to clear before navigation
     await page.waitForTimeout(300);
 
-    const primaryTab = page.locator(`header nav button:has-text("${label}")`).first();
+    // Map legacy aliases
+    const targetLabel = (label === 'Active Calls' || label === 'Detections' || label === 'Incidents')
+      ? 'Call Records'
+      : (label === 'Integrations' ? 'Settings' : label);
+
+    // 1. Direct primary tab in header nav
+    const primaryTab = page.locator(`header nav > button:not(:has(svg.lucide-chevron-down)):has-text("${targetLabel}")`).first();
     if (await primaryTab.count() > 0 && await primaryTab.isVisible()) {
       await primaryTab.click();
       await page.waitForTimeout(400);
       return true;
     }
 
-    // Try More dropdown
-    const moreBtn = page.locator('header nav button:has-text("More"), header nav button:has(svg.lucide-chevron-down)').first();
-    if (await moreBtn.count() > 0) {
+    // 2. Secondary tab in More dropdown
+    const dropdownMenu = page.locator('header nav div[class*="absolute top-full"]').first();
+    const isMenuOpen = await dropdownMenu.count() > 0 && await dropdownMenu.isVisible();
+    const moreBtn = page.locator('header nav button:has(svg.lucide-chevron-down)').first();
+
+    if (!isMenuOpen && await moreBtn.count() > 0) {
       await moreBtn.click();
-      await page.waitForTimeout(250);
-      const subItem = page.locator(`button:has-text("${label}")`).first();
-      if (await subItem.count() > 0 && await subItem.isVisible()) {
-        await subItem.click();
-        await page.waitForTimeout(400);
-        return true;
-      }
-      // Close dropdown if not found
+      await page.waitForSelector('header nav div[class*="absolute top-full"]', { state: 'visible', timeout: 3000 });
+      await page.waitForTimeout(200);
+    }
+
+    const subItem = page.locator(`header nav div[class*="absolute top-full"] button:has-text("${targetLabel}")`).first();
+    if (await subItem.count() > 0 && await subItem.isVisible()) {
+      await subItem.click();
+      await page.waitForTimeout(400);
+      return true;
+    }
+    // Close dropdown if still open
+    if (await moreBtn.count() > 0 && await dropdownMenu.isVisible()) {
       await moreBtn.click().catch(() => {});
     }
 
-    // Try footer or direct click
-    const footerLink = page.locator(`footer button:has-text("${label}")`).first();
+    // 3. Fallback: Footer or direct click
+    const footerLink = page.locator(`footer button:has-text("${targetLabel}")`).first();
     if (await footerLink.count() > 0 && await footerLink.isVisible()) {
       await footerLink.click();
       await page.waitForTimeout(400);
@@ -129,16 +142,16 @@ async function runQA() {
     console.log('\n--- 2. Testing View Navigation Across All Top Tabs ---');
     const tabsToTest = [
       { id: 'overview', label: 'Overview', checkSelector: 'text=Voice Trust Index' },
-      { id: 'active-calls', label: 'Active Calls', checkSelector: 'text=Active Telephony Trunks' },
-      { id: 'detections', label: 'Detections', checkSelector: 'text=Forensic Detection Registry' },
-      { id: 'incidents', label: 'Incidents', checkSelector: 'text=Security Incident Register' },
+      { id: 'rules', label: 'Rules & Policy', checkSelector: 'text=Security Rules & Decision Thresholds' },
       { id: 'audit-trail', label: 'Audit Trail', checkSelector: 'text=Cryptographic Hash-Chain' },
       { id: 'reports', label: 'Reports', checkSelector: 'text=Compliance & Forensic Reports' },
-      { id: 'rules', label: 'Rules & Policy', checkSelector: 'text=Security Rules & Decision Thresholds' },
-      { id: 'integrations', label: 'Integrations', checkSelector: 'text=Telephony & Alert Integrations' },
+      { id: 'call-records', label: 'Call Records', checkSelector: 'text=Call Records & Forensic Registry' },
       { id: 'audio-lab', label: 'Audio Lab', checkSelector: 'text=Acoustic Research & Signal Lab' },
-      { id: 'people', label: 'People (Preview)', checkSelector: 'text=Identity & Biometrics Directory' },
       { id: 'settings', label: 'Settings', checkSelector: 'text=Security & Engine Configuration' },
+      { id: 'people', label: 'People (Preview)', checkSelector: 'text=Identity & Biometrics Directory' },
+      { id: 'active-calls', label: 'Active Calls', checkSelector: 'text=Call Records & Forensic Registry' },
+      { id: 'detections', label: 'Detections', checkSelector: 'text=Call Records & Forensic Registry' },
+      { id: 'incidents', label: 'Incidents', checkSelector: 'text=Call Records & Forensic Registry' },
     ];
 
     for (const t of tabsToTest) {
@@ -243,6 +256,9 @@ async function runQA() {
       await page.waitForTimeout(500);
       const returnedToStart = await page.locator('button:has-text("Start Live Test")').count() > 0;
       record('Live Mic Mode: Stop Test', 'Click Stop Live Test', returnedToStart ? 'Stream cleanly halted, returned to Standby' : 'Failed to stop', returnedToStart ? 'PASS' : 'FAIL');
+      // Wait for socket to reconnect to Backend Live
+      await page.waitForSelector('header button:has-text("Backend Live")', { timeout: 8000 });
+      await page.waitForTimeout(400);
     }
 
     // --- MODE 3: TELEPHONY SIMULATION ---
@@ -361,10 +377,11 @@ async function runQA() {
     }
 
     // -------------------------------------------------------------------------
-    // 5. Active Calls Page
+    // 5. Call Records Page (Active Telephony Trunks)
     // -------------------------------------------------------------------------
-    console.log('\n--- 5. Testing Active Calls Page ---');
-    await navigateTo('active-calls', 'Active Calls');
+    console.log('\n--- 5. Testing Call Records: Active Telephony Trunks ---');
+    await navigateTo('call-records', 'Call Records');
+    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
     await page.waitForTimeout(500);
 
     const refreshTrunksBtn = page.locator('button:has-text("Refresh Trunks")').first();
@@ -412,27 +429,27 @@ async function runQA() {
     await page.waitForTimeout(500);
 
     // -------------------------------------------------------------------------
-    // 6. Detections Page
+    // 6. Call Records: Forensic Detection Registry
     // -------------------------------------------------------------------------
-    console.log('\n--- 6. Testing Forensic Detection Registry ---');
-    await navigateTo('detections', 'Detections');
-    await page.waitForSelector('text=Forensic Detection Registry', { timeout: 8000 });
+    console.log('\n--- 6. Testing Call Records: Forensic Detection Registry ---');
+    await navigateTo('call-records', 'Call Records');
+    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
     await page.waitForTimeout(400);
 
-    // Filter pills inside Detections filter bar
+    // Filter pills inside Call Records filter bar
     for (const filterName of ['All', 'Deepfake', 'Authentic', 'Uncertain']) {
-      const pill = page.locator('div.overflow-x-auto button', { hasText: filterName }).first();
+      const pill = page.locator('button', { hasText: filterName }).first();
       if (await pill.count() > 0) {
         await pill.click();
         await page.waitForTimeout(200);
         record(`Detections: Filter "${filterName}"`, 'Click filter tab', `Active filter set to ${filterName}`, 'PASS');
       }
     }
-    await page.locator('div.overflow-x-auto button', { hasText: 'All' }).first().click();
+    await page.locator('button', { hasText: 'All' }).first().click();
     await page.waitForTimeout(300);
 
     // Export CSV
-    const exportDetectionsCsv = page.locator('button', { hasText: 'Export Ledger' }).first();
+    const exportDetectionsCsv = page.locator('button:has-text("Export Ledger")').first();
     const hasExportBtn = await exportDetectionsCsv.count() > 0;
     record('Detections: "Export Ledger (CSV)"', 'Inspect export button', hasExportBtn ? 'Export button ready' : 'Missing', hasExportBtn ? 'PASS' : 'FAIL');
 
@@ -445,7 +462,7 @@ async function runQA() {
     if (await playBtn.count() > 0) {
       await playBtn.click();
       await page.waitForTimeout(300);
-      const zeroAudioNotice = await page.locator('text=Zero-Audio Stored').count() > 0;
+      const zeroAudioNotice = await page.locator('text=DPDP Act 2023 Zero-Trust').count() > 0;
       record('Detections: Play Button', 'Click playback trigger', zeroAudioNotice ? 'DPDP Act 2023 zero-trust notice rendered' : 'Notice missing', zeroAudioNotice ? 'PASS' : 'FAIL');
       const dismissNotice = page.locator('button:has-text("Dismiss")').first();
       if (await dismissNotice.count() > 0) {
@@ -472,44 +489,41 @@ async function runQA() {
     }
 
     // -------------------------------------------------------------------------
-    // 7. Incidents Page
+    // 7. Call Records: Security Incident Register & Forensic Certs
     // -------------------------------------------------------------------------
-    console.log('\n--- 7. Testing Security Incident Register ---');
-    await navigateTo('incidents', 'Incidents');
-    await page.waitForSelector('text=Security Incident Register', { timeout: 8000 });
+    console.log('\n--- 7. Testing Call Records: Security Incident Register ---');
+    await navigateTo('call-records', 'Call Records');
+    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
     await page.waitForTimeout(400);
 
     const exportJsonBtn = page.locator('button:has-text("Export JSON")').first();
     const exportTxtBtn = page.locator('button:has-text("Export TXT")').first();
     record('Incidents: Export Buttons', 'Inspect JSON/TXT export buttons', (await exportJsonBtn.count() > 0 && await exportTxtBtn.count() > 0) ? 'Both buttons present' : 'Missing', 'PASS');
 
-    // Filter pills
-    for (const incFilter of ['All', 'Critical Deepfake', 'Suspicious Jitter']) {
-      const incPill = page.locator(`button:has-text("${incFilter}")`).first();
-      if (await incPill.count() > 0) {
-        await incPill.click();
-        await page.waitForTimeout(200);
-        record(`Incidents: Filter "${incFilter}"`, 'Click filter tab', `Active filter set to ${incFilter}`, 'PASS');
-      }
+    // Filter pill Escalated
+    const incPill = page.locator('button:has-text("Escalated")').first();
+    if (await incPill.count() > 0) {
+      await incPill.click();
+      await page.waitForTimeout(200);
+      record('Incidents: Filter "All"', 'Click filter tab', 'Active filter set to Escalated', 'PASS');
     }
 
-    // Expand incident row & view certificate
-    const expandBtn = page.locator('table tbody tr button:has(svg.lucide-chevron-down)').first();
-    if (await expandBtn.count() > 0) {
-      await expandBtn.click();
-      await page.waitForTimeout(300);
-      const viewCertBtn = page.locator('button:has-text("View Forensic Certificate")').first();
-      if (await viewCertBtn.count() > 0) {
-        await viewCertBtn.click();
+    // Return to All
+    await page.locator('button:has-text("All")').first().click();
+    await page.waitForTimeout(300);
+
+    // View Forensic Certificate from Call Records table
+    const viewCertBtn = page.locator('button[title*="Forensic Certificate"], table tbody tr button:has(svg.lucide-shield-check)').first();
+    if (await viewCertBtn.count() > 0) {
+      await viewCertBtn.click();
+      await page.waitForTimeout(500);
+      const certModal = await page.locator('text=MEIKURAL SENTINEL NODE FORENSIC CERTIFICATE').count() > 0;
+      record('Incidents: Forensic Certificate Modal', 'Click View Forensic Certificate', certModal ? 'Certificate modal opened with SHA-256 seal' : 'Modal missing', certModal ? 'PASS' : 'FAIL');
+      if (certModal) {
+        const closeCertBtn = page.locator('div[class*="fixed inset-0 z-50"] button:has(svg.lucide-x)').first();
+        await closeCertBtn.click();
         await page.waitForTimeout(500);
-        const certModal = await page.locator('text=MEIKURAL SENTINEL NODE FORENSIC CERTIFICATE').count() > 0;
-        record('Incidents: Forensic Certificate Modal', 'Click View Forensic Certificate', certModal ? 'Certificate modal opened with SHA-256 seal' : 'Modal missing', certModal ? 'PASS' : 'FAIL');
-        if (certModal) {
-          const closeCertBtn = page.locator('div[class*="fixed inset-0 z-50"] button:has(svg.lucide-x)').first();
-          await closeCertBtn.click();
-          await page.waitForTimeout(500);
-          record('Incidents: Close Certificate Modal', 'Click X on certificate', 'Certificate closed cleanly', 'PASS');
-        }
+        record('Incidents: Close Certificate Modal', 'Click X on certificate', 'Certificate closed cleanly', 'PASS');
       }
     }
 
@@ -578,10 +592,18 @@ async function runQA() {
     }
 
     // -------------------------------------------------------------------------
-    // 11. Integrations Page
+    // 11. Integrations Page (Embedded in Settings)
     // -------------------------------------------------------------------------
     console.log('\n--- 11. Testing Integrations & Dispatch Handlers ---');
-    await navigateTo('integrations', 'Integrations');
+    await navigateTo('settings', 'Settings');
+    await page.waitForSelector('text=Security & Engine Configuration', { timeout: 8000 });
+    await page.waitForTimeout(400);
+
+    const intSubTabBtn = page.locator('button:has-text("Integrations & Dispatch")').first();
+    if (await intSubTabBtn.count() > 0) {
+      await intSubTabBtn.click();
+      await page.waitForTimeout(400);
+    }
     await page.waitForSelector('text=Telephony & Alert Integrations', { timeout: 8000 });
     await page.waitForTimeout(400);
 
@@ -776,7 +798,7 @@ async function runQA() {
     await uploadModeTab.click();
     await humanClipBtn.click(); // starts upload/scoring
     // Immediately navigate away
-    await navigateTo('incidents', 'Incidents');
+    await navigateTo('call-records', 'Call Records');
     await page.waitForTimeout(1000);
     await navigateTo('overview', 'Overview');
     await page.waitForTimeout(500);
