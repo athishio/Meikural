@@ -14,6 +14,7 @@ import { EscalateConfirmModal } from './components/modals/EscalateConfirmModal';
 import { ForensicCertificateModal } from './components/modals/ForensicCertificateModal';
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -109,75 +110,93 @@ export const App: React.FC = () => {
       )}
 
       {/* Floating Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#FFFFFF] dark:bg-[#181B1F] border border-[#9CD1B2] dark:border-[#1B5233] text-[#165A34] dark:text-[#34D399] text-[12px] font-mono px-4 py-2.5 rounded-sm shadow-lg flex items-center gap-2">
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.16 }}
+            className="fixed bottom-6 right-6 z-50 bg-[#FFFFFF] dark:bg-[#181B1F] border border-[#9CD1B2] dark:border-[#1B5233] text-[#165A34] dark:text-[#34D399] text-[12px] font-mono px-4 py-2.5 rounded-sm shadow-lg flex items-center gap-2"
+          >
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Main Container */}
+      {/* Main Container with Snappy Page Transitions */}
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
-        {activeTab === 'overview' && (
-          <OverviewView
-            voiceTrust={voiceTrust}
-            verdict={verdict}
-            sessionId={sessionId}
-            rawLogit={rawLogit}
-            confidence={confidence}
-            spoofProbability={spoofProbability}
-            uploadLoading={uploadLoading}
-            uploadError={uploadError}
-            lastUploadResult={lastUploadResult}
-            onFileUpload={handleFileUpload}
-            onTriggerChallenge={triggerChallenge}
-            onEscalate={() => setIsEscalateOpen(true)}
-            showChallengeModal={showChallengeModal}
-            onCloseChallengeModal={() => setShowChallengeModal(false)}
-            challengeDigits={challengeDigits}
-            onResolveChallenge={(passed) => {
-              resolveChallenge(passed);
-              showToast(
-                passed
-                  ? 'Caller passed voice challenge. Allow verdict recorded.'
-                  : 'Caller failed voice challenge. Alert quarantine enforced.'
-              );
-            }}
-            activeScenario={activeScenario}
-            diagnostics={diagnostics}
-            rules={rules}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {activeTab === 'overview' && (
+              <OverviewView
+                voiceTrust={voiceTrust}
+                verdict={verdict}
+                sessionId={sessionId}
+                rawLogit={rawLogit}
+                confidence={confidence}
+                spoofProbability={spoofProbability}
+                uploadLoading={uploadLoading}
+                uploadError={uploadError}
+                lastUploadResult={lastUploadResult}
+                onFileUpload={handleFileUpload}
+                onTriggerChallenge={triggerChallenge}
+                onEscalate={() => setIsEscalateOpen(true)}
+                showChallengeModal={showChallengeModal}
+                onCloseChallengeModal={() => setShowChallengeModal(false)}
+                challengeDigits={challengeDigits}
+                onResolveChallenge={(passed) => {
+                  resolveChallenge(passed);
+                  showToast(
+                    passed
+                      ? 'Caller passed voice challenge. Allow verdict recorded.'
+                      : 'Caller failed voice challenge. Alert quarantine enforced.'
+                  );
+                }}
+                activeScenario={activeScenario}
+                diagnostics={diagnostics}
+                rules={rules}
+              />
+            )}
 
-        {activeTab === 'rules' && (
-          <RulesPage
-            initialRules={rules}
-            onSaveRules={async (r) => {
-              await saveRulesConfig(r);
-              const allowPct = Math.round((r.bonafide_allow_threshold ?? 0.35) * 100);
-              const stepUpPct = Math.round((r.step_up_challenge_threshold ?? 0.65) * 100);
-              showToast(
-                `Decision rules updated: Allow ≤ ${allowPct}%, Warn = ${allowPct}-${stepUpPct}%, Step-Up ≥ ${stepUpPct}%. Live scoring synchronized.`
-              );
-            }}
-          />
-        )}
+            {activeTab === 'rules' && (
+              <RulesPage
+                initialRules={rules}
+                onSaveRules={async (r) => {
+                  await saveRulesConfig(r);
+                  const allowPct = Math.round((r.bonafide_allow_threshold ?? 0.35) * 100);
+                  const stepUpPct = Math.round((r.step_up_challenge_threshold ?? 0.65) * 100);
+                  showToast(
+                    `Decision rules updated: Allow ≤ ${allowPct}%, Warn = ${allowPct}-${stepUpPct}%, Step-Up ≥ ${stepUpPct}%. Live scoring synchronized.`
+                  );
+                }}
+              />
+            )}
 
-        {activeTab === 'audit-trail' && (
-          <AuditTrailPage
-            onViewCert={(certData) => setSelectedCert(certData)}
-            onSyncDb={syncDb}
-          />
-        )}
+            {activeTab === 'audit-trail' && (
+              <AuditTrailPage
+                onViewCert={(certData) => setSelectedCert(certData)}
+                onSyncDb={syncDb}
+              />
+            )}
 
-        {activeTab === 'privacy' && (
-          <PrivacyCompliancePage
-            onRunPurge={async () => {
-              const res = await runPurge();
-              showToast(`Regulatory purge completed: ${res.purged_count} records expunged.`);
-              return res;
-            }}
-          />
-        )}
+            {activeTab === 'privacy' && (
+              <PrivacyCompliancePage
+                onRunPurge={async () => {
+                  const res = await runPurge();
+                  showToast(`Regulatory purge completed: ${res.purged_count} records expunged.`);
+                  return res;
+                }}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Minimalist Utilitarian Footer */}

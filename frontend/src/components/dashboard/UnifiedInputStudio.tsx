@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { UploadCloud, AlertTriangle, FileAudio } from 'lucide-react';
 import type { ForensicUploadResult } from '../../types/dashboard';
 
@@ -71,7 +72,14 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
   };
 
   return (
-    <div id="unified-input-studio" className="bg-[#FFFFFF] dark:bg-[#181B1F] border border-[#D8D3C8] dark:border-[#2B3037] rounded-sm p-5 space-y-4 select-none shadow-xs transition-colors">
+    <div id="unified-input-studio" className="relative bg-[#FFFFFF] dark:bg-[#181B1F] border border-[#D8D3C8] dark:border-[#2B3037] rounded-sm p-5 space-y-4 select-none shadow-xs transition-colors overflow-hidden">
+      {/* Scanning Beam Indicator during uploadLoading */}
+      {uploadLoading && (
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#D8D3C8] dark:bg-[#2B3037] overflow-hidden rounded-t-sm z-10">
+          <div className="h-full bg-linear-to-r from-transparent via-[#165A34] dark:via-[#34D399] to-transparent animate-scanner-beam w-1/3" />
+        </div>
+      )}
+
       {/* Header Bar: Benchmark Buttons + Codec Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8D3C8] dark:border-[#2B3037] pb-3.5">
         <div>
@@ -92,7 +100,7 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           <button
             disabled={uploadLoading || loadingClip !== null}
             onClick={() => loadBenchmarkClip('bonafide_human_speech.wav', 'clean_pcm')}
-            className="px-2.5 py-1 rounded-sm bg-[#EAF5EE] hover:bg-[#D1E7D9] dark:bg-[#0E2316] dark:hover:bg-[#143320] text-[#165A34] dark:text-[#34D399] border border-[#9CD1B2] dark:border-[#1B5233] text-[11px] font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
+            className="px-2.5 py-1 rounded-sm bg-[#EAF5EE] hover:bg-[#D1E7D9] dark:bg-[#0E2316] dark:hover:bg-[#143320] text-[#165A34] dark:text-[#34D399] border border-[#9CD1B2] dark:border-[#1B5233] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
             title="Clean human speech (Yields ALLOW / Low Risk)"
           >
             {loadingClip === 'bonafide_human_speech.wav' ? 'Scoring...' : 'Human Speech'}
@@ -101,7 +109,7 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           <button
             disabled={uploadLoading || loadingClip !== null}
             onClick={() => loadBenchmarkClip('deepfake_voice_clone.wav', 'g711_ulaw')}
-            className="px-2.5 py-1 rounded-sm bg-[#FDEFEF] hover:bg-[#FBEAEA] dark:bg-[#2B0F0F] dark:hover:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border border-[#E79E9E] dark:border-[#5E1A1A] text-[11px] font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
+            className="px-2.5 py-1 rounded-sm bg-[#FDEFEF] hover:bg-[#FBEAEA] dark:bg-[#2B0F0F] dark:hover:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border border-[#E79E9E] dark:border-[#5E1A1A] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
             title="Synthetic voice clone (Yields STEP-UP / Deepfake)"
           >
             {loadingClip === 'deepfake_voice_clone.wav' ? 'Scoring...' : 'Voice Clone'}
@@ -110,7 +118,7 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           <button
             disabled={uploadLoading || loadingClip !== null}
             onClick={() => loadBenchmarkClip('caution_noisy_telecom.wav', 'pstn_narrowband')}
-            className="px-2.5 py-1 rounded-sm bg-[#FDF6E8] hover:bg-[#F8E5BF] dark:bg-[#291B06] dark:hover:bg-[#3B2609] text-[#924A00] dark:text-[#FBBF24] border border-[#E5BA78] dark:border-[#5C3E08] text-[11px] font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
+            className="px-2.5 py-1 rounded-sm bg-[#FDF6E8] hover:bg-[#F8E5BF] dark:bg-[#291B06] dark:hover:bg-[#3B2609] text-[#924A00] dark:text-[#FBBF24] border border-[#E5BA78] dark:border-[#5C3E08] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
             title="Degraded PSTN line (Yields WARN / Jitter)"
           >
             {loadingClip === 'caution_noisy_telecom.wav' ? 'Scoring...' : 'Noisy PSTN'}
@@ -147,7 +155,7 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border border-dashed rounded-sm p-7 text-center transition-colors cursor-pointer ${
+        className={`border border-dashed rounded-sm p-7 text-center transition-all cursor-pointer active:scale-[0.99] ${
           dragActive
             ? 'border-[#1A1D20] dark:border-[#F0EEE9] bg-[#EFECE6] dark:bg-[#1F2328]'
             : 'border-[#BCB6A8] dark:border-[#3F4752] hover:border-[#1A1D20] dark:hover:border-[#F0EEE9] bg-[#FAF9F5] dark:bg-[#15171A]'
@@ -192,7 +200,12 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
 
       {/* Scored Result Card */}
       {lastUploadResult && !uploadLoading && (
-        <div className="p-4 rounded-sm bg-[#F7F5F0] dark:bg-[#121417] border border-[#D8D3C8] dark:border-[#2B3037] space-y-3 font-mono">
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          className="p-4 rounded-sm bg-[#F7F5F0] dark:bg-[#121417] border border-[#D8D3C8] dark:border-[#2B3037] space-y-3 font-mono"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D8D3C8] dark:border-[#2B3037] pb-2.5">
             <div className="flex items-center gap-2 text-[12px] text-[#1A1D20] dark:text-[#F0EEE9] truncate max-w-md">
               <FileAudio className="w-4 h-4 text-[#525860] dark:text-[#A2A8B0] shrink-0" />
@@ -247,7 +260,7 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { VerdictType } from '../../types/dashboard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeroBandProps {
   verdict?: VerdictType;
@@ -55,9 +56,9 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
         </div>
       </div>
 
-      {/* Single State Banner - Forensic Evidence Dossier Stamp styling */}
+      {/* Single State Banner - Forensic Evidence Dossier Stamp with smooth state-change feedback */}
       <div
-        className={`w-full rounded-sm border p-6 sm:p-7 transition-colors shadow-xs ${
+        className={`w-full rounded-sm border p-6 sm:p-7 transition-colors duration-200 shadow-xs ${
           isAlert
             ? 'bg-[#FDEFEF] dark:bg-[#2B0F0F] border-[#E79E9E] dark:border-[#5E1A1A]'
             : isWarn
@@ -70,7 +71,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
             {/* Badge & Mode Tag */}
             <div className="flex items-center gap-2">
               <span
-                className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border ${
+                className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border transition-colors duration-150 ${
                   isAlert
                     ? 'bg-[#FBEAEA] dark:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border-[#E79E9E] dark:border-[#6B2020]'
                     : isWarn
@@ -85,8 +86,12 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
               </span>
             </div>
 
-            {/* Headline - Primary Focal Point */}
-            <h1
+            {/* Headline - Primary Focal Point with Crisp Stamp Imprint Transition */}
+            <motion.h1
+              key={verdict}
+              initial={{ opacity: 0.6, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.16 }}
               className={`text-[26px] sm:text-[32px] font-bold font-mono tracking-tight leading-tight ${
                 isAlert
                   ? 'text-[#941818] dark:text-[#F87171]'
@@ -100,7 +105,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
                 : isWarn
                 ? 'WARN (SUSPICIOUS JITTER)'
                 : 'ALLOW (AUTHENTIC HUMAN)'}
-            </h1>
+            </motion.h1>
 
             {/* Exactly One Line of Context */}
             <p className="text-[13px] text-[#525860] dark:text-[#A2A8B0] leading-relaxed max-w-4xl">
@@ -136,24 +141,36 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
             </div>
           </div>
 
-          {/* Action Button for Threat / Warn State */}
+          {/* Action Button for Threat / Warn State with Tactile Press Response */}
           <div className="shrink-0 flex items-center gap-2">
-            {isAlert && onEscalate && (
-              <button
-                onClick={onEscalate}
-                className="px-4 py-2.5 rounded-sm bg-[#941818] dark:bg-[#DC2626] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity cursor-pointer select-none shadow-xs"
-              >
-                Isolate Trunk Now
-              </button>
-            )}
-            {isWarn && onTriggerChallenge && (
-              <button
-                onClick={onTriggerChallenge}
-                className="px-4 py-2.5 rounded-sm bg-[#924A00] dark:bg-[#F59E0B] text-white dark:text-black text-[12px] font-semibold hover:opacity-90 transition-opacity cursor-pointer select-none shadow-xs"
-              >
-                Issue Dynamic Challenge
-              </button>
-            )}
+            <AnimatePresence mode="wait">
+              {isAlert && onEscalate && (
+                <motion.button
+                  key="isolate-btn"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.94 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={onEscalate}
+                  className="px-4 py-2.5 rounded-sm bg-[#941818] dark:bg-[#DC2626] text-white text-[12px] font-semibold hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer select-none shadow-xs"
+                >
+                  Isolate Trunk Now
+                </motion.button>
+              )}
+              {isWarn && onTriggerChallenge && (
+                <motion.button
+                  key="challenge-btn"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.94 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={onTriggerChallenge}
+                  className="px-4 py-2.5 rounded-sm bg-[#924A00] dark:bg-[#F59E0B] text-white dark:text-black text-[12px] font-semibold hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer select-none shadow-xs"
+                >
+                  Issue Dynamic Challenge
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

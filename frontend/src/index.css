@@ -99,6 +99,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
 }
 
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.25);
+}
+
 input[type="range"]::-moz-range-track {
   height: 6px;
   border-radius: 2px;
@@ -112,4 +116,30 @@ input[type="range"]::-moz-range-thumb {
   background-color: var(--text-primary);
   border: 1px solid var(--border-rule-strong);
   transition: transform 0.1s ease;
+}
+
+input[type="range"]::-moz-range-thumb:active {
+  transform: scale(1.25);
+}
+
+/* Hardware-accelerated forensic animations */
+@keyframes scanner-beam {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-scanner-beam {
+  animation: scanner-beam 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+@keyframes radar-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
+.animate-radar {
+  animation: radar-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transform-origin: center;
 }

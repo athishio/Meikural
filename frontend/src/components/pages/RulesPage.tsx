@@ -93,7 +93,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
 
           <button
             onClick={handleReset}
-            className="px-3 py-1.5 rounded-sm bg-[#FFFFFF] dark:bg-[#181B1F] hover:bg-[#F7F5F0] dark:hover:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037] text-[12px] font-mono text-[#525860] dark:text-[#A2A8B0] hover:text-[#1A1D20] dark:hover:text-[#F0EEE9] flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-sm bg-[#FFFFFF] dark:bg-[#181B1F] hover:bg-[#F7F5F0] dark:hover:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037] text-[12px] font-mono text-[#525860] dark:text-[#A2A8B0] hover:text-[#1A1D20] dark:hover:text-[#F0EEE9] flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset to Defaults</span>
@@ -102,13 +102,17 @@ export const RulesPage: React.FC<RulesPageProps> = ({
           <button
             onClick={handleSave}
             disabled={isSaving || (!hasUnsavedChanges && !savedSuccess)}
-            className="px-4 py-1.5 rounded-sm bg-[#1A1D20] hover:bg-[#33383F] dark:bg-[#F0EEE9] dark:hover:bg-[#FFFFFF] text-white dark:text-[#121417] text-[12px] font-mono font-semibold flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+            className="px-4 py-1.5 rounded-sm bg-[#1A1D20] hover:bg-[#33383F] dark:bg-[#F0EEE9] dark:hover:bg-[#FFFFFF] text-white dark:text-[#121417] text-[12px] font-mono font-semibold flex items-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-xs"
           >
             {savedSuccess ? (
-              <>
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex items-center gap-1.5"
+              >
                 <Check className="w-3.5 h-3.5 text-[#165A34] dark:text-[#165A34]" />
                 <span>Thresholds Persisted</span>
-              </>
+              </motion.div>
             ) : isSaving ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -142,7 +146,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Safe Band */}
             <div
               style={{ width: `${allowThreshold * 100}%` }}
-              className="bg-[#EAF5EE] dark:bg-[#0E2316] text-[#165A34] dark:text-[#34D399] border-r border-[#9CD1B2] dark:border-[#1B5233] flex items-center justify-center transition-all duration-150 cursor-default"
+              className="bg-[#EAF5EE] dark:bg-[#0E2316] text-[#165A34] dark:text-[#34D399] border-r border-[#9CD1B2] dark:border-[#1B5233] flex items-center justify-center transition-[width] duration-100 ease-out cursor-default"
             >
               <span className="truncate px-2">ALLOW (Safe)</span>
             </div>
@@ -150,7 +154,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Caution Band */}
             <div
               style={{ width: `${(criticalThreshold - allowThreshold) * 100}%` }}
-              className="bg-[#FDF6E8] dark:bg-[#291B06] text-[#924A00] dark:text-[#FBBF24] border-r border-[#E5BA78] dark:border-[#5C3E08] flex items-center justify-center transition-all duration-150 cursor-default"
+              className="bg-[#FDF6E8] dark:bg-[#291B06] text-[#924A00] dark:text-[#FBBF24] border-r border-[#E5BA78] dark:border-[#5C3E08] flex items-center justify-center transition-[width] duration-100 ease-out cursor-default"
             >
               <span className="truncate px-2">WARN (Challenge)</span>
             </div>
@@ -158,7 +162,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Alert Band */}
             <div
               style={{ width: `${(1.0 - criticalThreshold) * 100}%` }}
-              className="bg-[#FDEFEF] dark:bg-[#2B0F0F] text-[#941818] dark:text-[#F87171] flex items-center justify-center transition-all duration-150 cursor-default"
+              className="bg-[#FDEFEF] dark:bg-[#2B0F0F] text-[#941818] dark:text-[#F87171] flex items-center justify-center transition-[width] duration-100 ease-out cursor-default"
             >
               <span className="truncate px-2">ALERT (Quarantine)</span>
             </div>

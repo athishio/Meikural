@@ -34,7 +34,7 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
     }
 
     let startTime: number | null = null;
-    const duration = 350;
+    const duration = 320;
 
     const step = (ts: number) => {
       if (!startTime) startTime = ts;
@@ -59,6 +59,48 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [score]);
+
+  // Smooth rolling number transition for spoof probability
+  const [currentSpoof, setCurrentSpoof] = useState(rawLogit);
+  const currentSpoofRef = useRef(rawLogit);
+  const spoofRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const start = currentSpoofRef.current;
+    const target = Math.max(0, Math.min(1, rawLogit));
+
+    if (Math.abs(start - target) < 0.001) {
+      currentSpoofRef.current = target;
+      setCurrentSpoof(target);
+      return;
+    }
+
+    let startTime: number | null = null;
+    const duration = 300;
+
+    const step = (ts: number) => {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = start + (target - start) * ease;
+      currentSpoofRef.current = val;
+      setCurrentSpoof(val);
+
+      if (progress < 1) {
+        spoofRafRef.current = requestAnimationFrame(step);
+      } else {
+        currentSpoofRef.current = target;
+        setCurrentSpoof(target);
+      }
+    };
+
+    if (spoofRafRef.current) cancelAnimationFrame(spoofRafRef.current);
+    spoofRafRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (spoofRafRef.current) cancelAnimationFrame(spoofRafRef.current);
+    };
+  }, [rawLogit]);
 
   // Calibration geometry: Symmetrical 220° sweep centered at vertical
   const radius = 80;
@@ -113,7 +155,7 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
         </span>
       </div>
 
-      {/* Center Gauge */}
+      {/* Center Gauge with Smooth Spring Needle */}
       <div className="flex flex-col items-center justify-center py-4">
         <svg viewBox="0 0 220 170" className="w-56 h-44 overflow-visible">
           {/* Background Track */}
@@ -152,19 +194,19 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
             strokeOpacity="0.8"
           />
 
-          {/* Needle */}
+          {/* Needle with Mechanical Taper & Smooth RAF Interpolation */}
           <polygon
             points={`${needleTip.x},${needleTip.y} ${needleBase1.x},${needleBase1.y} ${needleBase2.x},${needleBase2.y}`}
-            className={isAlert ? 'fill-[#941818] dark:fill-[#F87171]' : isWarn ? 'fill-[#924A00] dark:fill-[#FBBF24]' : 'fill-[#165A34] dark:fill-[#34D399]'}
+            className={`transition-colors duration-200 ${isAlert ? 'fill-[#941818] dark:fill-[#F87171]' : isWarn ? 'fill-[#924A00] dark:fill-[#FBBF24]' : 'fill-[#165A34] dark:fill-[#34D399]'}`}
           />
           <circle cx="110" cy="110" r="5" className="fill-[#1A1D20] dark:fill-[#F0EEE9]" />
           <circle cx="110" cy="110" r="2.5" className="fill-[#FFFFFF] dark:fill-[#181B1F]" />
         </svg>
 
-        {/* Big Readout */}
+        {/* Big Readout with Fluid Rolling Interpolation */}
         <div className="text-center -mt-6">
           <div
-            className={`text-[36px] font-bold font-mono tracking-tight ${
+            className={`text-[36px] font-bold font-mono tracking-tight transition-colors duration-200 ${
               isAlert
                 ? 'text-[#941818] dark:text-[#F87171]'
                 : isWarn
@@ -184,14 +226,14 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
       <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#D8D3C8] dark:border-[#2B3037] text-center font-mono">
         <div className="p-2.5 rounded-sm bg-[#F7F5F0] dark:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037]">
           <div className="text-[10px] text-[#525860] dark:text-[#A2A8B0] uppercase">Spoof Probability</div>
-          <div className="text-[15px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] mt-0.5">
-            {(rawLogit * 100).toFixed(1)}%
+          <div className="text-[15px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] mt-0.5 tabular-nums">
+            {(currentSpoof * 100).toFixed(1)}%
           </div>
         </div>
 
         <div className="p-2.5 rounded-sm bg-[#F7F5F0] dark:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037]">
           <div className="text-[10px] text-[#525860] dark:text-[#A2A8B0] uppercase">Inference Latency</div>
-          <div className="text-[15px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] mt-0.5">
+          <div className="text-[15px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] mt-0.5 tabular-nums">
             {inferenceMs.toFixed(1)} ms
           </div>
         </div>
