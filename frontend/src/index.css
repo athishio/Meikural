@@ -1,21 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-root: #050607;
-  --bg-surface: #0D0F11;
-  --bg-surface-2: #141719;
-  --border-subtle: #1E2225;
-  --text-primary: #F2F4F5;
-  --text-secondary: #9BA3A8;
-  --text-muted: #5E666B;
-  --accent-green: #22C55E;
-  --accent-red: #EF4444;
-  --accent-amber: #F59E0B;
-  --accent-white: #FFFFFF;
+  --bg-canvas: #F7F5F0;
+  --bg-surface: #FFFFFF;
+  --bg-surface-sub: #EFECE6;
+  --border-rule: #D8D3C8;
+  --border-rule-strong: #BCB6A8;
+  --text-primary: #1A1D20;
+  --text-secondary: #525860;
+  --text-muted: #78808A;
+  --accent-allow-bg: #EAF5EE;
+  --accent-allow-border: #9CD1B2;
+  --accent-allow-text: #165A34;
+  --accent-warn-bg: #FDF6E8;
+  --accent-warn-border: #E5BA78;
+  --accent-warn-text: #924A00;
+  --accent-alert-bg: #FDEFEF;
+  --accent-alert-border: #E79E9E;
+  --accent-alert-text: #941818;
+}
+
+.dark {
+  --bg-canvas: #121417;
+  --bg-surface: #181B1F;
+  --bg-surface-sub: #1F2328;
+  --border-rule: #2B3037;
+  --border-rule-strong: #3F4752;
+  --text-primary: #F0EEE9;
+  --text-secondary: #A2A8B0;
+  --text-muted: #6E7681;
+  --accent-allow-bg: #0E2316;
+  --accent-allow-border: #1B5233;
+  --accent-allow-text: #34D399;
+  --accent-warn-bg: #291B06;
+  --accent-warn-border: #5C3E08;
+  --accent-warn-text: #FBBF24;
+  --accent-alert-bg: #2B0F0F;
+  --accent-alert-border: #5E1A1A;
+  --accent-alert-text: #F87171;
 }
 
 @layer base {
@@ -24,9 +48,9 @@
   }
   
   html, body {
-    background-color: var(--bg-root);
+    background-color: var(--bg-canvas);
     color: var(--text-primary);
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     overflow-x: hidden;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -34,44 +58,58 @@
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
   }
+
+  ::selection {
+    background-color: #D8D3C8;
+    color: #1A1D20;
+  }
+  .dark ::selection {
+    background-color: #3F4752;
+    color: #F0EEE9;
+  }
 }
 
-/* Reusable glow chips per spec */
-.chip-glow-green {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.20);
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.10);
+/* Custom forensic range sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
 }
 
-.chip-glow-red {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.20);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.10);
-}
-
-.chip-glow-amber {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.20);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.10);
-}
-
-.chip-glow-neutral {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-}
-
-/* Custom sleek scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+input[type="range"]::-webkit-slider-runnable-track {
   height: 6px;
+  border-radius: 2px;
+  background-color: var(--border-rule);
 }
-::-webkit-scrollbar-track {
-  background: #050607;
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: var(--text-primary);
+  border: 1px solid var(--border-rule-strong);
+  margin-top: -5px;
+  transition: transform 0.1s ease;
 }
-::-webkit-scrollbar-thumb {
-  background: #1E2225;
-  border-radius: 3px;
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #2A2F33;
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 2px;
+  background-color: var(--border-rule);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: var(--text-primary);
+  border: 1px solid var(--border-rule-strong);
+  transition: transform 0.1s ease;
 }

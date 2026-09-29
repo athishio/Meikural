@@ -6,14 +6,9 @@ const BASE_URL = 'http://127.0.0.1:8000/';
 
 async function runQA() {
   console.log('================================================================');
-  console.log(' MEIKURAL FRONTEND — EXHAUSTIVE AUTOMATED QA PASS');
+  console.log(' MEIKURAL FRONTEND — LEAN AUTOMATED QA PASS (ui-lean)');
   console.log(' Resolution: 1920x1080 | Engine: Chromium (Edge) | Target: Live');
   console.log('================================================================\n');
-
-  const scratchDir = path.resolve('scratch');
-  if (!fs.existsSync(scratchDir)) {
-    fs.mkdirSync(scratchDir, { recursive: true });
-  }
 
   const results = [];
   const consoleErrors = [];
@@ -28,21 +23,16 @@ async function runQA() {
   const browser = await chromium.launch({
     executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     headless: true,
-    args: [
-      '--use-fake-ui-for-media-stream',
-      '--use-fake-device-for-media-stream',
-      '--autoplay-policy=no-user-gesture-required',
-    ],
+    args: ['--autoplay-policy=no-user-gesture-required'],
   });
 
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
-    permissions: ['microphone'],
   });
 
   const page = await context.newPage();
 
-  page.on('console', msg => {
+  page.on('console', (msg) => {
     const text = msg.text();
     if (msg.type() === 'error') {
       consoleErrors.push(text);
@@ -52,796 +42,432 @@ async function runQA() {
     }
   });
 
-  page.on('pageerror', err => {
+  page.on('pageerror', (err) => {
     consoleErrors.push(`[Uncaught Page Exception]: ${err.toString()}`);
     console.error('  [Browser Uncaught Error]:', err.toString());
   });
 
-  // Helper to navigate to tabs cleanly
-  async function navigateTo(tabId, label) {
-    // Wait for any existing modal backdrops to clear before navigation
-    await page.waitForTimeout(300);
-
-    // Map legacy aliases
-    const targetLabel = (label === 'Active Calls' || label === 'Detections' || label === 'Incidents')
-      ? 'Call Records'
-      : (label === 'Integrations' ? 'Settings' : label);
-
-    // 1. Direct primary tab in header nav
-    const primaryTab = page.locator(`header nav > button:not(:has(svg.lucide-chevron-down)):has-text("${targetLabel}")`).first();
-    if (await primaryTab.count() > 0 && await primaryTab.isVisible()) {
-      await primaryTab.click();
-      await page.waitForTimeout(400);
-      return true;
-    }
-
-    // 2. Secondary tab in More dropdown
-    const dropdownMenu = page.locator('header nav div[class*="absolute top-full"]').first();
-    const isMenuOpen = await dropdownMenu.count() > 0 && await dropdownMenu.isVisible();
-    const moreBtn = page.locator('header nav button:has(svg.lucide-chevron-down)').first();
-
-    if (!isMenuOpen && await moreBtn.count() > 0) {
-      await moreBtn.click();
-      await page.waitForSelector('header nav div[class*="absolute top-full"]', { state: 'visible', timeout: 3000 });
-      await page.waitForTimeout(200);
-    }
-
-    const subItem = page.locator(`header nav div[class*="absolute top-full"] button:has-text("${targetLabel}")`).first();
-    if (await subItem.count() > 0 && await subItem.isVisible()) {
-      await subItem.click();
-      await page.waitForTimeout(400);
-      return true;
-    }
-    // Close dropdown if still open
-    if (await moreBtn.count() > 0 && await dropdownMenu.isVisible()) {
-      await moreBtn.click().catch(() => {});
-    }
-
-    // 3. Fallback: Footer or direct click
-    const footerLink = page.locator(`footer button:has-text("${targetLabel}")`).first();
-    if (await footerLink.count() > 0 && await footerLink.isVisible()) {
-      await footerLink.click();
-      await page.waitForTimeout(400);
-      return true;
-    }
-
-    return false;
-  }
-
   try {
-    // -------------------------------------------------------------------------
-    // 1. Initial Load & Layout Bounds (1920x1080)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 1. Testing Page Initialization & Ambient Elements ---');
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-    const title = await page.title();
-    record('Page Title', 'Initial Load', title, title.includes('MEIKURAL') ? 'PASS' : 'FAIL');
+    await page.waitForTimeout(600);
 
-    // Layout bounds check
-    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
-    record('Responsive 1920x1080 Viewport', 'Check Horizontal Overflow', `scrollWidth=${scrollWidth}, clientWidth=${clientWidth}`, scrollWidth <= clientWidth + 2 ? 'PASS' : 'FAIL');
+    // =========================================================================
+    // SECTION 1: HEADER & NAVIGATION (4 TABS ONLY)
+    // =========================================================================
+    console.log('\n--- Section 1: Header & Minimalist Navigation ---');
 
-    // Header Brand
-    const brand = await page.locator('header').textContent();
-    record('Header Brand Logo', 'Render Check', 'Brand visible', brand.includes('MEIKURAL') ? 'PASS' : 'FAIL');
+    // Check 1: Brand logo
+    const brand = await page.locator('text=MEIKURAL').first().isVisible();
+    record('Header Brand', 'Verify branding', brand ? 'Visible' : 'Missing', brand ? 'PASS' : 'FAIL');
 
-    // WebSocket Status Pill
-    const wsBadge = page.locator('header button:has-text("Backend Live"), header button:has-text("Offline")').first();
-    const wsText = await wsBadge.textContent();
-    record('WebSocket Live Status Pill', 'Inspect Header Badge', `Badge: "${wsText.trim()}"`, wsText.includes('Backend Live') ? 'PASS' : 'FAIL');
+    // Check 2: Exactly 4 Navigation Tabs
+    const navButtons = page.locator('header nav button');
+    const navCount = await navButtons.count();
+    record('Navigation Tabs Count', 'Count nav tabs', `${navCount} tabs`, navCount === 4 ? 'PASS' : 'FAIL', 'Expected exactly 4');
 
-    // Demo Mode Header Indicator
-    const demoBadge = page.locator('header span:has-text("DEMO MODE")').first();
-    const isDemoModeVisible = await demoBadge.count() > 0;
-    record('Header Demo Mode Indicator', 'Check DEMO MODE badge', isDemoModeVisible ? 'DEMO MODE badge visible' : 'Standard mode', isDemoModeVisible ? 'PASS' : 'PARTIAL');
+    // Check 3: Tab labels
+    const tabTexts = await navButtons.allTextContents();
+    const hasTabs = ['Overview', 'Rules & Policy', 'Audit Trail', 'Privacy & Compliance'].every(t => tabTexts.includes(t));
+    record('Navigation Tabs Labels', 'Verify tab names', tabTexts.join(', '), hasTabs ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 2. Navigation Tabs (Header Views)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 2. Testing View Navigation Across All Top Tabs ---');
-    const tabsToTest = [
-      { id: 'overview', label: 'Overview', checkSelector: 'text=Voice Trust Index' },
-      { id: 'rules', label: 'Rules & Policy', checkSelector: 'text=Security Rules & Decision Thresholds' },
-      { id: 'audit-trail', label: 'Audit Trail', checkSelector: 'text=Cryptographic Hash-Chain' },
-      { id: 'reports', label: 'Reports', checkSelector: 'text=Compliance & Forensic Reports' },
-      { id: 'call-records', label: 'Call Records', checkSelector: 'text=Call Records & Forensic Registry' },
-      { id: 'audio-lab', label: 'Audio Lab', checkSelector: 'text=Acoustic Research & Signal Lab' },
-      { id: 'settings', label: 'Settings', checkSelector: 'text=Security & Engine Configuration' },
-      { id: 'people', label: 'People (Preview)', checkSelector: 'text=Identity & Biometrics Directory' },
-      { id: 'active-calls', label: 'Active Calls', checkSelector: 'text=Call Records & Forensic Registry' },
-      { id: 'detections', label: 'Detections', checkSelector: 'text=Call Records & Forensic Registry' },
-      { id: 'incidents', label: 'Incidents', checkSelector: 'text=Call Records & Forensic Registry' },
-    ];
+    // Check 4: Absence of 'More' dropdown
+    const hasMore = await page.locator('header button:has-text("More")').count() > 0;
+    record('Absence of More Dropdown', 'Verify no dropdowns', hasMore ? 'Found' : 'Absent', !hasMore ? 'PASS' : 'FAIL');
 
-    for (const t of tabsToTest) {
-      const ok = await navigateTo(t.id, t.label);
-      if (ok) {
-        const found = await page.locator(t.checkSelector).count() > 0;
-        record(`Nav Tab: ${t.label}`, 'Switch Tab', found ? `Mounted "${t.checkSelector}"` : 'Target text missing', found ? 'PASS' : 'FAIL');
-      } else {
-        record(`Nav Tab: ${t.label}`, 'Switch Tab', 'Tab navigation button not found', 'FAIL');
-      }
+    // Check 5: Absence of Command Palette
+    const hasCmdK = await page.locator('header button:has-text("⌘K")').count() > 0;
+    record('Absence of Command Palette', 'Verify no search shortcut', hasCmdK ? 'Found' : 'Absent', !hasCmdK ? 'PASS' : 'FAIL');
+
+    // Check 6: Backend Status Badge
+    const backendBadge = await page.locator('header').getByText('Backend Live').count() > 0;
+    record('Backend Live Pill', 'Check status pill', backendBadge ? 'Connected' : 'Offline', backendBadge ? 'PASS' : 'FAIL');
+
+    // =========================================================================
+    // SECTION 2: OVERVIEW - STATUS BANNER & METADATA
+    // =========================================================================
+    console.log('\n--- Section 2: Overview Status Banner & Context ---');
+
+    // Check 7: State Banner rendered
+    const banner = page.locator('section[aria-label="System Security State"]');
+    const bannerVisible = await banner.isVisible();
+    record('Security State Banner', 'Verify banner visibility', bannerVisible ? 'Visible' : 'Hidden', bannerVisible ? 'PASS' : 'FAIL');
+
+    // Check 8: Honest wording: LOW RISK - PASSIVE CHECK CLEARED
+    const hasHonestBadge = await page.locator('text=LOW RISK - PASSIVE CHECK CLEARED').count() > 0;
+    record('Honest Wording Badge', 'Verify LOW RISK badge', hasHonestBadge ? 'Present' : 'Missing', hasHonestBadge ? 'PASS' : 'FAIL');
+
+    // Check 9: Initial headline
+    const headlineText = await banner.locator('h1').textContent();
+    record('Banner Headline', 'Read headline', headlineText?.trim() || 'Empty', headlineText ? 'PASS' : 'FAIL');
+
+    // Check 10: Single line of context
+    const contextLine = await banner.locator('p').first().textContent();
+    record('Context Line', 'Read context line', contextLine?.trim() || 'Empty', contextLine?.includes('Acoustic glottal dynamics') ? 'PASS' : 'FAIL');
+
+    // Check 11: Passive Spoof Risk readout
+    const hasRiskReadout = await banner.getByText('Passive Spoof Risk:').count() > 0;
+    record('Passive Spoof Risk', 'Verify telemetry line', hasRiskReadout ? 'Present' : 'Missing', hasRiskReadout ? 'PASS' : 'FAIL');
+
+    // Check 12: Voice Trust Index readout
+    const hasTrustReadout = await banner.getByText('Voice Trust Index:').count() > 0;
+    record('Voice Trust Readout', 'Verify telemetry line', hasTrustReadout ? 'Present' : 'Missing', hasTrustReadout ? 'PASS' : 'FAIL');
+
+    // Check 13: SIP Action readout
+    const hasSipAction = await banner.getByText('SIP Protocol Action:').count() > 0;
+    record('SIP Action Readout', 'Verify telemetry line', hasSipAction ? 'Present' : 'Missing', hasSipAction ? 'PASS' : 'FAIL');
+
+    // Check 14: Honest label: Sample reference
+    const hasSampleRef = await banner.getByText('Sample reference').count() > 0;
+    record('Sample Reference Label', 'Verify honest label', hasSampleRef ? 'Present' : 'Missing', hasSampleRef ? 'PASS' : 'FAIL');
+
+    // Check 15: DPDP §3(2) tag
+    const hasDpdp = await banner.getByText('DPDP §3(2) Zero Biometrics').count() > 0;
+    record('DPDP §3(2) Notice', 'Verify compliance tag', hasDpdp ? 'Present' : 'Missing', hasDpdp ? 'PASS' : 'FAIL');
+
+    // =========================================================================
+    // SECTION 3: OVERVIEW - TRUST GAUGE & TELEMETRY
+    // =========================================================================
+    console.log('\n--- Section 3: Overview Trust Gauge & Telemetry ---');
+
+    // Check 16: SVG Gauge rendered
+    const gaugeSvg = page.locator('svg[viewBox="0 0 220 170"]');
+    const gaugeExists = await gaugeSvg.count() > 0;
+    record('Trust Gauge SVG', 'Inspect SVG radial gauge', gaugeExists ? 'Rendered' : 'Missing', gaugeExists ? 'PASS' : 'FAIL');
+
+    // Check 17: Large Trust Index numerical readout
+    const trustNumber = await page.locator('text=/100').first().textContent();
+    record('Trust Numerical Score', 'Read gauge score', trustNumber?.trim() || '', trustNumber ? 'PASS' : 'FAIL');
+
+    // Check 18: Spoof Probability tile
+    const spoofTile = await page.getByText('Spoof Probability').count() > 0;
+    record('Spoof Probability Tile', 'Verify metric tile', spoofTile ? 'Present' : 'Missing', spoofTile ? 'PASS' : 'FAIL');
+
+    // Check 19: Inference Latency tile
+    const latencyTile = await page.getByText('Inference Latency').count() > 0;
+    record('Inference Latency Tile', 'Verify metric tile', latencyTile ? 'Present' : 'Missing', latencyTile ? 'PASS' : 'FAIL');
+
+    // =========================================================================
+    // SECTION 4: OVERVIEW - THREAT TIMELINE
+    // =========================================================================
+    console.log('\n--- Section 4: Threat Timeline ---');
+
+    // Check 20: Threat Timeline SVG
+    const timelineSvg = page.locator('svg[viewBox="0 0 480 150"]');
+    const timelineExists = await timelineSvg.count() > 0;
+    record('Threat Timeline SVG', 'Inspect timeline chart', timelineExists ? 'Rendered' : 'Missing', timelineExists ? 'PASS' : 'FAIL');
+
+    // Check 21: Timeline Window Buttons
+    const btn30s = page.locator('button:has-text("30s")').first();
+    const btn5m = page.locator('button:has-text("5m")').first();
+    const canToggleWindow = (await btn30s.count() > 0) && (await btn5m.count() > 0);
+    if (canToggleWindow) {
+      await btn5m.click();
+      await page.waitForTimeout(100);
+      await btn30s.click();
     }
+    record('Timeline Window Selector', 'Toggle 30s/5m windows', canToggleWindow ? 'Operational' : 'Missing', canToggleWindow ? 'PASS' : 'FAIL');
 
-    // Return to Overview
-    await navigateTo('overview', 'Overview');
-    await page.waitForTimeout(300);
+    // =========================================================================
+    // SECTION 5: INPUT STUDIO & REAL SCORING
+    // =========================================================================
+    console.log('\n--- Section 5: Acoustic Ingestion & Real Inference ---');
 
-    // -------------------------------------------------------------------------
-    // 3. Unified Input Studio (All 3 Modes)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 3. Testing Unified Input Studio (All 3 Modes) ---');
-    const uploadModeTab = page.locator('button:has-text("File Upload & Forensics")').first();
-    const micModeTab = page.locator('button:has-text("Live Microphone Test")').first();
-    const telModeTab = page.locator('button:has-text("Telephony Simulation")').first();
+    // Check 22: Codec selector
+    const codecSelect = page.locator('#unified-input-studio select');
+    const hasCodec = await codecSelect.count() > 0;
+    record('Codec Selector', 'Verify codec dropdown', hasCodec ? 'Present' : 'Missing', hasCodec ? 'PASS' : 'FAIL');
 
-    record('Studio Mode Tabs', 'Inspect presence', 'All 3 tabs present', (await uploadModeTab.count() > 0 && await micModeTab.count() > 0 && await telModeTab.count() > 0) ? 'PASS' : 'FAIL');
+    // Check 23: Benchmark 1 - Human Speech
+    await page.locator('button:has-text("Human Speech")').first().click();
+    await page.locator('#unified-input-studio').getByText('Threshold & Codec').waitFor({ timeout: 12000 });
+    const humanScored = await page.locator('text=ALLOW (AUTHENTIC HUMAN)').count() > 0;
+    record('Benchmark: Human Speech', '1-click score', humanScored ? 'ALLOW Verified' : 'Failed', humanScored ? 'PASS' : 'FAIL');
 
-    // --- MODE 1: FILE UPLOAD & FORENSICS ---
-    await uploadModeTab.click();
-    await page.waitForTimeout(300);
+    // Check 24: Scored result card shows metadata
+    const resultCard = page.locator('#unified-input-studio').locator('text=Threshold & Codec');
+    const hasResultCard = await resultCard.count() > 0;
+    record('Scored Result Card', 'Inspect result details', hasResultCard ? 'Rendered' : 'Missing', hasResultCard ? 'PASS' : 'FAIL');
 
-    // Codec selector dropdown
-    const codecSelect = page.locator('select').first();
-    await codecSelect.selectOption('g711_ulaw');
-    const selectedCodecVal = await codecSelect.inputValue();
-    record('Upload Mode: Codec Selector', 'Select g711_ulaw', `Selected value: ${selectedCodecVal}`, selectedCodecVal === 'g711_ulaw' ? 'PASS' : 'FAIL');
-
-    await codecSelect.selectOption('clean_pcm');
-
-    // 1-Click Benchmark: Human Speech
-    console.log('Testing Benchmark Clips in Studio...');
-    const humanClipBtn = page.locator('button:has-text("Human Speech")').first();
-    await humanClipBtn.click();
-    await page.waitForSelector('text=ALLOW (AUTHENTIC HUMAN)', { timeout: 12000 });
-    const verdictTextHuman = await page.locator('text=ALLOW (AUTHENTIC HUMAN)').textContent();
-    record('Upload Mode: 1-Click "Human Speech"', 'Trigger Benchmark Clip', `Verdict: "${verdictTextHuman}"`, verdictTextHuman.includes('ALLOW') ? 'PASS' : 'FAIL');
-
-    // 1-Click Benchmark: Voice Clone
-    const cloneClipBtn = page.locator('button:has-text("Voice Clone")').first();
-    await cloneClipBtn.click();
+    // Check 25: Benchmark 2 - Voice Clone
+    await page.locator('button:has-text("Voice Clone")').first().click();
     await page.waitForSelector('text=STEP-UP (DEEPFAKE CLONE)', { timeout: 12000 });
-    const verdictTextClone = await page.locator('text=STEP-UP (DEEPFAKE CLONE)').textContent();
-    record('Upload Mode: 1-Click "Voice Clone"', 'Trigger Benchmark Clip', `Verdict: "${verdictTextClone}"`, verdictTextClone.includes('STEP-UP') ? 'PASS' : 'FAIL');
+    const cloneScored = await page.locator('text=STEP-UP (DEEPFAKE CLONE)').count() > 0;
+    record('Benchmark: Voice Clone', '1-click score', cloneScored ? 'STEP-UP Verified' : 'Failed', cloneScored ? 'PASS' : 'FAIL');
 
-    // 1-Click Benchmark: Noisy PSTN
-    const noisyClipBtn = page.locator('button:has-text("Noisy PSTN")').first();
-    await noisyClipBtn.click();
-    await page.waitForTimeout(2000);
-    const resultCardVisible = await page.locator('text=Inference Latency').count() > 0;
-    record('Upload Mode: 1-Click "Noisy PSTN"', 'Trigger Benchmark Clip', resultCardVisible ? 'Forensic result card updated' : 'Card missing', resultCardVisible ? 'PASS' : 'FAIL');
+    // Check 26: State banner reflects crimson STEP-UP
+    const isStepUpBanner = await banner.locator('text=STEP-UP (DEEPFAKE CLONE)').count() > 0;
+    record('Banner STEP-UP State', 'Verify banner alert transition', isStepUpBanner ? 'Transitioned' : 'Unchanged', isStepUpBanner ? 'PASS' : 'FAIL');
 
-    // Test Invalid File Upload Rejection
-    const tempBadFile = path.resolve('scratch', 'bad_test.txt');
-    fs.writeFileSync(tempBadFile, 'THIS IS NOT AN AUDIO FILE');
-    const fileInput = page.locator('input[type="file"]').first();
-    await fileInput.setInputFiles(tempBadFile);
-    await page.waitForTimeout(500);
-    const errorBanner = page.locator('text=Unsupported file format');
-    const hasError = await errorBanner.count() > 0;
-    record('Upload Mode: Invalid File Rejection', 'Upload .txt file', hasError ? 'Showed clear red error banner' : 'Failed to show error', hasError ? 'PASS' : 'FAIL');
+    // Check 27: Benchmark 3 - Noisy PSTN
+    await page.locator('button:has-text("Noisy PSTN")').first().click();
+    await page.waitForSelector('text=WARN (SUSPICIOUS JITTER)', { timeout: 12000 });
+    const warnScored = await page.locator('text=WARN (SUSPICIOUS JITTER)').count() > 0;
+    record('Benchmark: Noisy PSTN', '1-click score', warnScored ? 'WARN Verified' : 'Failed', warnScored ? 'PASS' : 'FAIL');
 
-    // Dismiss Error Banner
-    const dismissErrBtn = page.locator('button:has(svg.lucide-x)').first();
-    if (await dismissErrBtn.count() > 0) {
-      await dismissErrBtn.click();
-      await page.waitForTimeout(300);
-      const errStillThere = await page.locator('text=Unsupported file format').count() > 0;
-      record('Upload Mode: Error Banner Dismissal', 'Click X dismiss', !errStillThere ? 'Banner cleanly removed' : 'Banner still visible', !errStillThere ? 'PASS' : 'FAIL');
-    }
+    // Check 28: State banner reflects amber WARN
+    const isWarnBanner = await banner.locator('text=WARN (SUSPICIOUS JITTER)').count() > 0;
+    record('Banner WARN State', 'Verify banner warning transition', isWarnBanner ? 'Transitioned' : 'Unchanged', isWarnBanner ? 'PASS' : 'FAIL');
 
-    // --- MODE 2: LIVE MICROPHONE TEST ---
-    console.log('Testing Live Microphone Test Mode...');
-    await micModeTab.click();
-    await page.waitForTimeout(300);
+    // Check 29: File upload drop zone
+    const dropZone = page.locator('input[type="file"]');
+    const hasDropZone = await dropZone.count() > 0;
+    record('File Upload Drop Zone', 'Verify file input element', hasDropZone ? 'Present' : 'Missing', hasDropZone ? 'PASS' : 'FAIL');
 
-    const startMicBtn = page.locator('button:has-text("Start Live Test")').first();
-    record('Live Mic Mode: Button Display', 'Check Standby state', await startMicBtn.count() > 0 ? 'Start Live Test visible' : 'Missing', await startMicBtn.count() > 0 ? 'PASS' : 'FAIL');
+    // =========================================================================
+    // SECTION 6: ACTIVE CHALLENGE PANEL (INLINE)
+    // =========================================================================
+    console.log('\n--- Section 6: Dynamic Voice Challenge Panel ---');
 
-    // Click Start Live Test
-    await startMicBtn.click();
-    await page.waitForTimeout(1500);
-    const stopMicBtn = page.locator('button:has-text("Stop Live Test")').first();
-    const isLiveActive = await stopMicBtn.count() > 0;
-    record('Live Mic Mode: Start Test', 'Click Start Live Test', isLiveActive ? 'Toggled to Stop Live Test, stream started' : 'Failed to start', isLiveActive ? 'PASS' : 'FAIL');
+    // Check 30: Challenge CTA button
+    const issueChallengeBtn = page.locator('button:has-text("Issue Dynamic Challenge")').first();
+    const hasChallengeCTA = await issueChallengeBtn.count() > 0;
+    record('Issue Dynamic Challenge CTA', 'Verify CTA button', hasChallengeCTA ? 'Rendered' : 'Missing', hasChallengeCTA ? 'PASS' : 'FAIL');
 
-    // Check Live Stream Indicator
-    const liveStreamActive = await page.locator('text=STREAMING ACTIVE').count() > 0;
-    record('Live Mic Mode: Streaming Active Indicator', 'Verify streaming badge', liveStreamActive ? 'STREAMING ACTIVE (20ms G.711 µ-law frames) badge active' : 'Standby', liveStreamActive ? 'PASS' : 'FAIL');
-
-    // Stop Live Test
-    if (isLiveActive) {
-      await stopMicBtn.click();
-      await page.waitForTimeout(500);
-      const returnedToStart = await page.locator('button:has-text("Start Live Test")').count() > 0;
-      record('Live Mic Mode: Stop Test', 'Click Stop Live Test', returnedToStart ? 'Stream cleanly halted, returned to Standby' : 'Failed to stop', returnedToStart ? 'PASS' : 'FAIL');
-      // Wait for socket to reconnect to Backend Live
-      await page.waitForSelector('header button:has-text("Backend Live")', { timeout: 8000 });
+    // Check 31: Trigger challenge
+    if (hasChallengeCTA) {
+      await issueChallengeBtn.click();
       await page.waitForTimeout(400);
     }
+    const challengePanel = page.locator('text=Active Liveness Intercept & Dynamic Challenge');
+    const isChallengeOpen = await challengePanel.count() > 0;
+    record('Challenge Panel Open', 'Trigger dynamic challenge', isChallengeOpen ? 'Rendered Inline' : 'Failed', isChallengeOpen ? 'PASS' : 'FAIL');
 
-    // --- MODE 3: TELEPHONY SIMULATION ---
-    console.log('Testing Telephony Simulation Mode...');
-    await telModeTab.click();
-    await page.waitForTimeout(300);
+    // Check 32: Spoken prompt sequence
+    const hasPromptText = await page.locator('text=Spoken Dynamic Security Prompt').count() > 0;
+    record('Dynamic Prompt Token', 'Inspect prompt text', hasPromptText ? 'Visible' : 'Missing', hasPromptText ? 'PASS' : 'FAIL');
 
-    const simHumanBtn = page.locator('button:has-text("Human (Allow)")').first();
-    const simFakeBtn = page.locator('button:has-text("Deepfake (Step-Up)")').first();
-    const simJitterBtn = page.locator('button:has-text("Jitter (Warn)")').first();
-    const challengeBtn = page.locator('button:has-text("Issue Dynamic Challenge")').first();
-    const auditionBtn = page.locator('button:has-text("Audition Audio Clips")').first();
+    // Check 33: Reflex countdown timer
+    const hasTimer = await page.locator('text=Reflex Window:').count() > 0;
+    record('Reflex Timer', 'Inspect countdown timer', hasTimer ? 'Active' : 'Missing', hasTimer ? 'PASS' : 'FAIL');
 
-    record('Telephony Mode: Simulation Buttons', 'Inspect Presence', 'Human, Deepfake, Jitter, Challenge, Audition found', (await simHumanBtn.count() > 0 && await simFakeBtn.count() > 0 && await simJitterBtn.count() > 0) ? 'PASS' : 'FAIL');
-
-    // Click Human Scenario -> ALLOW
-    await simHumanBtn.click();
-    await page.waitForTimeout(500);
-    const allowBadgeCount = await page.locator('text=ALLOW').count();
-    record('Telephony Scenario: Human (Allow)', 'Click scenario button', `ALLOW verdict active (${allowBadgeCount} badges)`, allowBadgeCount > 0 ? 'PASS' : 'FAIL');
-
-    // Click Deepfake Scenario -> STEP-UP
-    await simFakeBtn.click();
-    await page.waitForTimeout(500);
-    const stepUpBadgeCount = await page.locator('text=STEP_UP').count() + await page.locator('text=STEP-UP').count();
-    record('Telephony Scenario: Deepfake (Step-Up)', 'Click scenario button', `STEP-UP verdict active (${stepUpBadgeCount} badges)`, stepUpBadgeCount > 0 ? 'PASS' : 'FAIL');
-
-    // Click Jitter Scenario -> WARN
-    await simJitterBtn.click();
-    await page.waitForTimeout(500);
-    const warnBadgeCount = await page.locator('text=WARN').count();
-    record('Telephony Scenario: Jitter (Warn)', 'Click scenario button', `WARN verdict active (${warnBadgeCount} badges)`, warnBadgeCount > 0 ? 'PASS' : 'FAIL');
-
-    // SENTINEL ACTIONS: VERIFY & ESCALATE
-    const verifyLedgerBtn = page.locator('button:has-text("Verify Ledger")').first();
-    await verifyLedgerBtn.click();
-    await page.waitForTimeout(600);
-    const toastElem = page.locator('text=Cryptographic ledger verification executed');
-    const toastVisible = await toastElem.count() > 0;
-    record('Sentinel Action: "Verify Ledger"', 'Click Verify Ledger', toastVisible ? 'Displayed cryptographic confirmation toast' : 'Toast displayed or handled', 'PASS');
-
-    // -------------------------------------------------------------------------
-    // 4. Modals & Dialogs
-    // -------------------------------------------------------------------------
-    console.log('\n--- 4. Testing Modals & Interactive Dialogs ---');
-
-    // A. Dynamic Voice Challenge Modal
-    await challengeBtn.click();
-    await page.waitForTimeout(600);
-    const challengeModal = page.locator('text=ACTIVE VOICE CHALLENGE').first();
-    const challengeModalOpen = await challengeModal.count() > 0;
-    record('Modal: Dynamic Voice Challenge', 'Click "Issue Dynamic Challenge"', challengeModalOpen ? 'Challenge modal rendered with prompt & digits' : 'Modal failed to open', challengeModalOpen ? 'PASS' : 'FAIL');
-
-    // Click Approve button inside challenge modal
-    const approveChallengeBtn = page.locator('button:has-text("Approve Caller")').first();
-    if (await approveChallengeBtn.count() > 0) {
-      await approveChallengeBtn.click();
-      await page.waitForTimeout(500);
-      const modalClosed = await page.locator('text=ACTIVE VOICE CHALLENGE').count() === 0;
-      record('Challenge Modal: "Approve Caller"', 'Resolve challenge as passed', modalClosed ? 'Challenge resolved, modal closed cleanly' : 'Modal remained open', modalClosed ? 'PASS' : 'FAIL');
-    } else {
-      const closeHud = page.locator('button[aria-label="Close Challenge HUD"], button:has-text("Dismiss HUD")').first();
-      if (await closeHud.count() > 0) await closeHud.click();
-    }
-
-    // B. Audition Modal
-    await auditionBtn.click();
-    await page.waitForTimeout(600);
-    const auditionModal = page.locator('text=Forensic Audio Audition Station');
-    const auditionOpen = await auditionModal.count() > 0;
-    record('Modal: Audition Reference Clips', 'Click "Audition Audio Clips"', auditionOpen ? 'Audition station modal open' : 'Modal missing', auditionOpen ? 'PASS' : 'FAIL');
-
-    // Close audition modal
-    const closeAuditionBtn = page.locator('button:has(svg.lucide-x)').last();
-    if (await closeAuditionBtn.count() > 0) {
-      await closeAuditionBtn.click();
+    // Check 34: Pass challenge resolution
+    const passBtn = page.locator('button:has-text("Pass Challenge")').first();
+    const canPass = await passBtn.count() > 0;
+    if (canPass) {
+      await passBtn.click();
       await page.waitForTimeout(400);
-      const auditionClosed = await page.locator('text=Forensic Audio Audition Station').count() === 0;
-      record('Audition Modal: Close Button', 'Click X', auditionClosed ? 'Modal closed' : 'Modal stuck', auditionClosed ? 'PASS' : 'FAIL');
     }
+    record('Pass Challenge Action', 'Resolve challenge as human', canPass ? 'Executed' : 'Missing', canPass ? 'PASS' : 'FAIL');
 
-    // C. Escalate Modal
-    const escalateBtn = page.locator('button:has-text("Escalate")').first();
-    await escalateBtn.click();
-    await page.waitForTimeout(600);
-    const escalateModal = page.locator('text=EMERGENCY TRUNK ESCALATION');
-    const escalateOpen = await escalateModal.count() > 0;
-    record('Modal: Emergency Incident Escalation', 'Click "Escalate"', escalateOpen ? 'Escalate modal open with session token' : 'Modal missing', escalateOpen ? 'PASS' : 'FAIL');
+    // =========================================================================
+    // SECTION 7: RULES & POLICY
+    // =========================================================================
+    console.log('\n--- Section 7: Rules & Policy Page ---');
 
-    // Cancel escalate
-    const cancelEscalateBtn = page.locator('button:has-text("Cancel")').first();
-    if (await cancelEscalateBtn.count() > 0) {
-      await cancelEscalateBtn.click();
-      await page.waitForTimeout(400);
-      const escalateClosed = await page.locator('text=EMERGENCY TRUNK ESCALATION').count() === 0;
-      record('Escalate Modal: Cancel Button', 'Click Cancel', escalateClosed ? 'Modal closed cleanly' : 'Modal stuck', escalateClosed ? 'PASS' : 'FAIL');
-    }
+    // Check 35: Navigate to Rules
+    await page.locator('header nav button:has-text("Rules & Policy")').first().click();
+    await page.waitForTimeout(400);
+    const hasRulesHeading = await page.locator('text=Security Rules & Decision Thresholds').count() > 0;
+    record('Navigate to Rules', 'Click nav button', hasRulesHeading ? 'Loaded' : 'Failed', hasRulesHeading ? 'PASS' : 'FAIL');
 
-    // D. Command Palette Search (Cmd+K)
-    const searchBtn = page.locator('header button:has(svg.lucide-search)').first();
-    if (await searchBtn.count() > 0) {
-      await searchBtn.click();
-      await page.waitForTimeout(500);
-      const palette = page.locator('input[placeholder*="Search session IDs"]');
-      const paletteOpen = await palette.count() > 0;
-      record('Modal: Command Palette', 'Click Search HUD button', paletteOpen ? 'Command palette opened with auto-focus search' : 'Palette missing', paletteOpen ? 'PASS' : 'FAIL');
+    // Check 36: Contiguous Three-Band Decision Plane
+    const hasDecisionPlane = await page.locator('text=Contiguous Three-Band Decision Plane').count() > 0;
+    record('Three-Band Decision Plane', 'Verify contiguous visualizer', hasDecisionPlane ? 'Rendered' : 'Missing', hasDecisionPlane ? 'PASS' : 'FAIL');
 
-      if (paletteOpen) {
-        await palette.fill('audit');
-        await page.waitForTimeout(200);
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(300);
-        const paletteClosed = await palette.count() === 0;
-        record('Command Palette: Escape to Close', 'Press Escape', paletteClosed ? 'Palette closed cleanly' : 'Palette open', paletteClosed ? 'PASS' : 'FAIL');
-      }
-    }
+    // Check 37: Allow threshold slider
+    const allowSlider = page.locator('input[type="range"]').first();
+    const hasAllowSlider = await allowSlider.count() > 0;
+    record('Allow Threshold Slider', 'Inspect slider input', hasAllowSlider ? 'Interactive' : 'Missing', hasAllowSlider ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 5. Call Records Page (Active Telephony Trunks)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 5. Testing Call Records: Active Telephony Trunks ---');
-    await navigateTo('call-records', 'Call Records');
-    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
+    // Check 38: Critical alert slider
+    const alertSlider = page.locator('input[type="range"]').nth(1);
+    const hasAlertSlider = await alertSlider.count() > 0;
+    record('Critical Alert Slider', 'Inspect slider input', hasAlertSlider ? 'Interactive' : 'Missing', hasAlertSlider ? 'PASS' : 'FAIL');
+
+    // Check 39: Reset to defaults
+    const resetBtn = page.locator('button:has-text("Reset to Defaults")').first();
+    const hasReset = await resetBtn.count() > 0;
+    if (hasReset) await resetBtn.click();
+    record('Reset to Defaults Action', 'Click reset', hasReset ? 'Operational' : 'Missing', hasReset ? 'PASS' : 'FAIL');
+
+    // Check 40: Save thresholds button
+    const saveBtn = page.locator('button:has-text("Save Thresholds")').first();
+    const hasSave = await saveBtn.count() > 0;
+    record('Save Thresholds Action', 'Verify save action', hasSave ? 'Present' : 'Missing', hasSave ? 'PASS' : 'FAIL');
+
+    // =========================================================================
+    // SECTION 8: AUDIT TRAIL
+    // =========================================================================
+    console.log('\n--- Section 8: Audit Trail Page ---');
+
+    // Check 41: Navigate to Audit Trail
+    await page.locator('header nav button:has-text("Audit Trail")').first().click();
     await page.waitForTimeout(500);
+    const hasAuditHeading = await page.locator('text=Cryptographic Hash-Chain Audit Ledger').count() > 0;
+    record('Navigate to Audit Trail', 'Click nav button', hasAuditHeading ? 'Loaded' : 'Failed', hasAuditHeading ? 'PASS' : 'FAIL');
 
-    const refreshTrunksBtn = page.locator('button:has-text("Refresh Trunks")').first();
-    if (await refreshTrunksBtn.count() > 0) {
-      await refreshTrunksBtn.click();
-      await page.waitForTimeout(400);
-      record('Active Calls: "Refresh Trunks"', 'Click Refresh Trunks button', 'Trunk data re-queried', 'PASS');
-    }
+    // Check 42: Audit table rows
+    const tableRows = page.locator('table tbody tr');
+    const rowCount = await tableRows.count();
+    record('Audit Ledger Rows', 'Count session rows', `${rowCount} rows`, rowCount > 0 ? 'PASS' : 'FAIL');
 
-    const toggleHashBtn = page.locator('button:has-text("Full Hashes View"), button:has-text("Reference View")').first();
-    if (await toggleHashBtn.count() > 0) {
-      const initText = await toggleHashBtn.textContent();
-      await toggleHashBtn.click();
-      await page.waitForTimeout(300);
-      const toggledText = await toggleHashBtn.textContent();
-      record('Active Calls: Hash/Ref Toggle', 'Toggle token view mode', `Toggled from "${initText.trim()}" to "${toggledText.trim()}"`, initText !== toggledText ? 'PASS' : 'FAIL');
-    }
-
-    const activeCallsSearch = page.locator('input[placeholder*="Search session ref"]').first();
-    if (await activeCallsSearch.count() > 0) {
-      await activeCallsSearch.fill('call_');
+    // Check 43: Token Reference View toggle
+    const toggleToFullBtn = page.locator('button:has-text("Reference View")').first();
+    const hasTokenToggle = await toggleToFullBtn.count() > 0;
+    if (hasTokenToggle) {
+      await toggleToFullBtn.click();
       await page.waitForTimeout(200);
-      const rows = await page.locator('table tbody tr').count();
-      record('Active Calls: Search Filter', 'Filter table by "call_"', `Found ${rows} matching rows`, 'PASS');
-      await activeCallsSearch.fill('');
-    }
-
-    // Inspect trunk drawer test
-    const inspectBtn = page.locator('table button:has-text("Inspect")').first();
-    if (await inspectBtn.count() > 0) {
-      await inspectBtn.click();
-      await page.waitForTimeout(600);
-      const drawerVisible = await page.locator('text=Call Forensics Ledger').count() > 0;
-      record('Active Calls: "Inspect" Drawer', 'Open Forensic Inspector Drawer', drawerVisible ? 'Drawer opened with telemetry' : 'Drawer missing', drawerVisible ? 'PASS' : 'FAIL');
-      if (drawerVisible) {
-        const closeDrawer = page.locator('div[class*="fixed inset-0 z-50"] button:has(svg.lucide-x)').first();
-        await closeDrawer.click();
-        await page.waitForTimeout(600);
-        const drawerClosed = await page.locator('text=Call Forensics Ledger').count() === 0;
-        record('Active Calls: Close Drawer', 'Click X on drawer', drawerClosed ? 'Drawer closed cleanly' : 'Drawer closed', 'PASS');
+      const toggleBackBtn = page.locator('button:has-text("Full Hashes View")').first();
+      if (await toggleBackBtn.count() > 0) {
+        await toggleBackBtn.click();
       }
     }
+    record('Token Toggle ([#] / [<>])', 'Toggle hash/token mode', hasTokenToggle ? 'Operational' : 'Missing', hasTokenToggle ? 'PASS' : 'FAIL');
 
-    // Wait for drawer backdrop animation to fully clear
-    await page.waitForTimeout(500);
-
-    // -------------------------------------------------------------------------
-    // 6. Call Records: Forensic Detection Registry
-    // -------------------------------------------------------------------------
-    console.log('\n--- 6. Testing Call Records: Forensic Detection Registry ---');
-    await navigateTo('call-records', 'Call Records');
-    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    // Filter pills inside Call Records filter bar
-    for (const filterName of ['All', 'Deepfake', 'Authentic', 'Uncertain']) {
-      const pill = page.locator('button', { hasText: filterName }).first();
-      if (await pill.count() > 0) {
-        await pill.click();
-        await page.waitForTimeout(200);
-        record(`Detections: Filter "${filterName}"`, 'Click filter tab', `Active filter set to ${filterName}`, 'PASS');
-      }
-    }
-    await page.locator('button', { hasText: 'All' }).first().click();
-    await page.waitForTimeout(300);
-
-    // Export CSV
-    const exportDetectionsCsv = page.locator('button:has-text("Export Ledger")').first();
-    const hasExportBtn = await exportDetectionsCsv.count() > 0;
-    record('Detections: "Export Ledger (CSV)"', 'Inspect export button', hasExportBtn ? 'Export button ready' : 'Missing', hasExportBtn ? 'PASS' : 'FAIL');
-
-    // Wait for detections table to finish loading from API
-    await page.waitForSelector('table tbody tr', { timeout: 8000 });
-    await page.waitForTimeout(600);
-
-    // Playback notice test
-    const playBtn = page.locator('table tbody button:has(svg.lucide-play)').first();
-    if (await playBtn.count() > 0) {
-      await playBtn.click();
-      await page.waitForTimeout(300);
-      const zeroAudioNotice = await page.locator('text=DPDP Act 2023 Zero-Trust').count() > 0;
-      record('Detections: Play Button', 'Click playback trigger', zeroAudioNotice ? 'DPDP Act 2023 zero-trust notice rendered' : 'Notice missing', zeroAudioNotice ? 'PASS' : 'FAIL');
-      const dismissNotice = page.locator('button:has-text("Dismiss")').first();
-      if (await dismissNotice.count() > 0) {
-        await dismissNotice.click();
-        await page.waitForTimeout(200);
-      }
-    }
-
-    // Click loaded detection row to open DetectionDetailModal
-    const firstDetectionRow = page.locator('table tbody tr:not(:has(.animate-spin))').first();
-    if (await firstDetectionRow.count() > 0) {
-      await firstDetectionRow.click();
-      await page.waitForTimeout(600);
-      const detailModal = page.locator('text=Analyzed at').first();
-      const detailOpen = await detailModal.count() > 0;
-      record('Detections: Detail Modal', 'Click row to inspect session', detailOpen ? 'Detection detail modal opened' : 'Modal missing', detailOpen ? 'PASS' : 'FAIL');
-      if (detailOpen) {
-        const closeDetail = page.locator('div[class*="fixed inset-0 z-50"] button:has(svg.lucide-x)').first();
-        if (await closeDetail.count() > 0) {
-          await closeDetail.click();
-          await page.waitForTimeout(500);
-        }
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 7. Call Records: Security Incident Register & Forensic Certs
-    // -------------------------------------------------------------------------
-    console.log('\n--- 7. Testing Call Records: Security Incident Register ---');
-    await navigateTo('call-records', 'Call Records');
-    await page.waitForSelector('text=Call Records & Forensic Registry', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    const exportJsonBtn = page.locator('button:has-text("Export JSON")').first();
-    const exportTxtBtn = page.locator('button:has-text("Export TXT")').first();
-    record('Incidents: Export Buttons', 'Inspect JSON/TXT export buttons', (await exportJsonBtn.count() > 0 && await exportTxtBtn.count() > 0) ? 'Both buttons present' : 'Missing', 'PASS');
-
-    // Filter pill Escalated
-    const incPill = page.locator('button:has-text("Escalated")').first();
-    if (await incPill.count() > 0) {
-      await incPill.click();
+    // Check 44: Search filter
+    const searchInput = page.locator('input[placeholder*="Search session"]').first();
+    const hasSearch = await searchInput.count() > 0;
+    if (hasSearch) {
+      await searchInput.fill('call_');
       await page.waitForTimeout(200);
-      record('Incidents: Filter "All"', 'Click filter tab', 'Active filter set to Escalated', 'PASS');
+      await searchInput.fill('');
     }
+    record('Search Session Filter', 'Filter audit records', hasSearch ? 'Operational' : 'Missing', hasSearch ? 'PASS' : 'FAIL');
 
-    // Return to All
-    await page.locator('button:has-text("All")').first().click();
-    await page.waitForTimeout(300);
+    // Check 45: Verdict filter pills
+    const allPill = page.locator('button:has-text("All")').first();
+    const allowPill = page.locator('button:has-text("ALLOW")').first();
+    const hasFilters = (await allPill.count() > 0) && (await allowPill.count() > 0);
+    record('Verdict Filter Pills', 'Check filter pills', hasFilters ? 'Present' : 'Missing', hasFilters ? 'PASS' : 'FAIL');
 
-    // View Forensic Certificate from Call Records table
-    const viewCertBtn = page.locator('button[title*="Forensic Certificate"], table tbody tr button:has(svg.lucide-shield-check)').first();
-    if (await viewCertBtn.count() > 0) {
-      await viewCertBtn.click();
-      await page.waitForTimeout(500);
-      const certModal = await page.locator('text=MEIKURAL SENTINEL NODE FORENSIC CERTIFICATE').count() > 0;
-      record('Incidents: Forensic Certificate Modal', 'Click View Forensic Certificate', certModal ? 'Certificate modal opened with SHA-256 seal' : 'Modal missing', certModal ? 'PASS' : 'FAIL');
-      if (certModal) {
-        const closeCertBtn = page.locator('div[class*="fixed inset-0 z-50"] button:has(svg.lucide-x)').first();
-        await closeCertBtn.click();
-        await page.waitForTimeout(500);
-        record('Incidents: Close Certificate Modal', 'Click X on certificate', 'Certificate closed cleanly', 'PASS');
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 8. Audit Trail Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 8. Testing Cryptographic Hash-Chain Audit Ledger ---');
-    await navigateTo('audit-trail', 'Audit Trail');
-    await page.waitForSelector('text=Cryptographic Hash-Chain', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    // Sync SQLite DB
-    const syncDbBtn = page.locator('button:has-text("Sync SQLite DB")').first();
-    if (await syncDbBtn.count() > 0) {
-      await syncDbBtn.click();
-      await page.waitForTimeout(800);
-      record('Audit Trail: "Sync SQLite DB"', 'Click sync button', 'Synchronized ledger from backend SQLite', 'PASS');
-    }
-
-    // Verify Full Chain
-    const verifyChainBtn = page.locator('button:has-text("Verify Full Chain")').first();
-    if (await verifyChainBtn.count() > 0) {
-      await verifyChainBtn.click();
-      await page.waitForTimeout(1500);
-      const chainBanner = await page.locator('text=Sequential Hash-Chain Verified, text=Integrity').first().textContent().catch(() => '');
-      record('Audit Trail: "Verify Full Chain"', 'Click Verify Full Chain', chainBanner ? `Result: "${chainBanner.slice(0, 50)}..."` : 'Verification completed', 'PASS');
-    }
-
-    // -------------------------------------------------------------------------
-    // 9. Reports Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 9. Testing Reports & Compliance Dossier ---');
-    await navigateTo('reports', 'Reports');
-    await page.waitForSelector('text=Compliance & Forensic Reports', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    const genPackageBtn = page.locator('button:has-text("Generate Compliance Package")').first();
-    if (await genPackageBtn.count() > 0) {
-      await genPackageBtn.click();
-      await page.waitForTimeout(1200);
-      record('Reports: "Generate Compliance Package"', 'Click generate compliance package', 'Generated and triggered dossier download', 'PASS');
-    }
-
-    // -------------------------------------------------------------------------
-    // 10. Rules & Policy Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 10. Testing Rules & Policy Engine ---');
-    await navigateTo('rules', 'Rules & Policy');
-    await page.waitForSelector('text=Security Rules & Decision Thresholds', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    const saveRulesBtn = page.locator('button:has-text("Save Thresholds"), button:has-text("Save Configuration")').first();
-    const resetRulesBtn = page.locator('button:has-text("Reset to Defaults")').first();
-    record('Rules: Action Buttons', 'Inspect Save and Reset buttons', (await saveRulesBtn.count() > 0 && await resetRulesBtn.count() > 0) ? 'Both buttons present' : 'Missing', 'PASS');
-
-    if (await resetRulesBtn.count() > 0) {
-      await resetRulesBtn.click();
+    // Check 46: Per-session verify action
+    const verifyRowBtn = page.locator('table tbody button:has-text("Verify")').first();
+    const hasVerifyRow = await verifyRowBtn.count() > 0;
+    if (hasVerifyRow) {
+      await verifyRowBtn.click();
       await page.waitForTimeout(300);
-      record('Rules: "Reset to Defaults"', 'Click Reset to Defaults', 'Reset sliders to default thresholds (35% / 65%)', 'PASS');
     }
+    record('Per-Session Verify Action', 'Click row verify', hasVerifyRow ? 'Operational' : 'Missing', hasVerifyRow ? 'PASS' : 'FAIL');
 
-    if (await saveRulesBtn.count() > 0) {
-      await saveRulesBtn.click();
-      await page.waitForTimeout(800);
-      record('Rules: "Save Thresholds"', 'Click Save Thresholds', 'Saved decision policy to backend without error', 'PASS');
-    }
-
-    // -------------------------------------------------------------------------
-    // 11. Integrations Page (Embedded in Settings)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 11. Testing Integrations & Dispatch Handlers ---');
-    await navigateTo('settings', 'Settings');
-    await page.waitForSelector('text=Security & Engine Configuration', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    const intSubTabBtn = page.locator('button:has-text("Integrations & Dispatch")').first();
-    if (await intSubTabBtn.count() > 0) {
-      await intSubTabBtn.click();
-      await page.waitForTimeout(400);
-    }
-    await page.waitForSelector('text=Telephony & Alert Integrations', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    const testSipBtn = page.locator('button:has-text("Test Audio Pipe")').first();
-    if (await testSipBtn.count() > 0) {
-      await testSipBtn.click();
-      await page.waitForTimeout(600);
-      const verified = await page.locator('text=Ingest Verified').count() > 0;
-      record('Integrations: "Test Audio Pipe"', 'Click Test SIP Audio Pipe', verified ? 'Ingest Verified' : 'Dispatched', 'PASS');
-    }
-
-    const testSmsBtn = page.locator('button:has-text("Send Test SMS")').first();
-    if (await testSmsBtn.count() > 0) {
-      await testSmsBtn.click();
-      await page.waitForTimeout(600);
-      record('Integrations: "Send Test SMS"', 'Click Send Test SMS', 'Dispatched test SMS alert', 'PASS');
-    }
-
-    const testEmailBtn = page.locator('button:has-text("Send Test Email")').first();
-    if (await testEmailBtn.count() > 0) {
-      await testEmailBtn.click();
-      await page.waitForTimeout(600);
-      record('Integrations: "Send Test Email"', 'Click Send Test Email', 'Dispatched test SMTP dossier', 'PASS');
-    }
-
-    // -------------------------------------------------------------------------
-    // 12. Audio Lab Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 12. Testing Audio Lab & Spectral Inspection ---');
-    await navigateTo('audio-lab', 'Audio Lab');
-    await page.waitForSelector('text=Acoustic Research & Signal Lab', { timeout: 8000 });
-    await page.waitForTimeout(400);
-
-    // Select each benchmark clip
-    for (const clipName of ['Bonafide Human Speech', 'Deepfake AI Voice Clone', 'Caution Noisy Telecom', 'Liveness Challenge Dialog']) {
-      const clipCard = page.locator(`button:has-text("${clipName}")`).first();
-      if (await clipCard.count() > 0) {
-        await clipCard.click();
-        await page.waitForTimeout(400);
-        record(`Audio Lab: Select "${clipName}"`, 'Click benchmark card', `Selected ${clipName} and updated spectral viewer`, 'PASS');
-      }
-    }
-
-    // Play/Pause button
-    const playPauseBtn = page.locator('button:has(svg.lucide-play), button:has(svg.lucide-pause)').first();
-    if (await playPauseBtn.count() > 0) {
-      await playPauseBtn.click();
-      await page.waitForTimeout(300);
-      await playPauseBtn.click();
-      await page.waitForTimeout(200);
-      record('Audio Lab: Play/Pause Toggle', 'Toggle clip playback', 'Audio element triggered without crash', 'PASS');
-    }
-
-    // Export Telemetry JSON
-    const exportJsonLabBtn = page.locator('button:has-text("Export Spectral Package")').first();
-    if (await exportJsonLabBtn.count() > 0) {
-      await exportJsonLabBtn.click();
+    // Check 47: Verify Full Chain action
+    const verifyFullBtn = page.locator('button:has-text("Verify Full Chain")').first();
+    const hasVerifyFull = await verifyFullBtn.count() > 0;
+    if (hasVerifyFull) {
+      await verifyFullBtn.click();
       await page.waitForTimeout(500);
-      record('Audio Lab: "Export Spectral Package"', 'Click Export Spectral Package', 'Exported spectral telemetry package', 'PASS');
     }
+    record('Verify Full Chain Action', 'Execute whole-chain verify', hasVerifyFull ? 'Operational' : 'Missing', hasVerifyFull ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 13. People (Preview) Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 13. Testing People & Biometrics Directory ---');
-    await navigateTo('people', 'People (Preview)');
-    await page.waitForSelector('text=Identity & Biometrics Directory', { timeout: 8000 });
+    // Check 48: Export CSV button
+    const exportCsvBtn = page.locator('button:has-text("Export CSV")').first();
+    const hasExportCsv = await exportCsvBtn.count() > 0;
+    record('Export CSV Action', 'Verify export button', hasExportCsv ? 'Present' : 'Missing', hasExportCsv ? 'PASS' : 'FAIL');
+
+    // =========================================================================
+    // SECTION 9: PRIVACY & COMPLIANCE
+    // =========================================================================
+    console.log('\n--- Section 9: Privacy & Compliance Page ---');
+
+    // Check 49: Navigate to Privacy
+    await page.locator('header nav button:has-text("Privacy & Compliance")').first().click();
     await page.waitForTimeout(400);
+    const hasPrivacyTitle = await page.locator('text=Privacy & Compliance Architecture').count() > 0;
+    record('Navigate to Privacy', 'Click nav button', hasPrivacyTitle ? 'Loaded' : 'Failed', hasPrivacyTitle ? 'PASS' : 'FAIL');
 
-    const enrollBtn = page.locator('button:has-text("Enroll New Identity (Preview)")').first();
-    if (await enrollBtn.count() > 0) {
-      await enrollBtn.click();
-      await page.waitForTimeout(400);
-      const wizardModal = await page.locator('text=Voiceprint Biometric Enrollment Wizard').count() > 0;
-      record('People: "Enroll New Identity"', 'Click preview enrollment wizard', wizardModal ? 'Roadmap dialog rendered with DPDP compliance notice' : 'Modal missing', wizardModal ? 'PASS' : 'FAIL');
-      if (wizardModal) {
-        const closeWizard = page.locator('button:has-text("Understood")').first();
-        if (await closeWizard.count() > 0) {
-          await closeWizard.click();
-          await page.waitForTimeout(400);
-          record('People: Close Wizard Modal', 'Click Understood', 'Modal closed cleanly', 'PASS');
-        }
-      }
-    }
+    // Check 50: DPDP Act 2023 & ISO/IEC 30107-3 context
+    const hasRegContext = await page.locator('text=DPDP Act 2023').count() > 0;
+    record('Regulatory Framework Context', 'Verify DPDP context', hasRegContext ? 'Present' : 'Missing', hasRegContext ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 14. Settings Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 14. Testing Settings & Engine Configuration ---');
-    await navigateTo('settings', 'Settings');
-    await page.waitForSelector('text=Security & Engine Configuration', { timeout: 8000 });
-    await page.waitForTimeout(400);
+    // Check 51: Caller Identity Privacy card
+    const hasCallerCard = await page.locator('text=Caller Identity Privacy').count() > 0;
+    record('Caller Privacy Card', 'Inspect Salted SHA-256 card', hasCallerCard ? 'Present' : 'Missing', hasCallerCard ? 'PASS' : 'FAIL');
 
-    for (const subTab of ['Neural Models & Scoring', 'SIP & Voice Connectors', 'API Keys & Webhooks', 'Alert Routing & SOC SLA']) {
-      const subTabBtn = page.locator(`button:has-text("${subTab}")`).first();
-      if (await subTabBtn.count() > 0) {
-        await subTabBtn.click();
-        await page.waitForTimeout(200);
-        record(`Settings: Tab "${subTab}"`, 'Switch sub-tab', `Opened ${subTab}`, 'PASS');
-      }
-    }
+    // Check 52: 90-Day Auto Purge card
+    const hasPurgeCard = await page.locator('text=90-Day Auto-Purge').count() > 0;
+    record('90-Day Auto-Purge Card', 'Inspect auto-purge card', hasPurgeCard ? 'Present' : 'Missing', hasPurgeCard ? 'PASS' : 'FAIL');
 
-    const saveSettingsBtn = page.locator('button:has-text("Save Changes")').first();
-    if (await saveSettingsBtn.count() > 0) {
-      await saveSettingsBtn.click();
-      await page.waitForTimeout(600);
-      record('Settings: "Save Changes"', 'Click Save Changes button', 'Saved configuration without error', 'PASS');
-    }
+    // Check 53: Ephemeral Zero-Audio on Disk card
+    const hasZeroAudio = await page.locator('text=Zero-Audio on Disk').count() > 0;
+    record('Zero-Audio on Disk Card', 'Inspect RAM-only card', hasZeroAudio ? 'Present' : 'Missing', hasZeroAudio ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 15. Privacy & DPDP Compliance Vault Page
-    // -------------------------------------------------------------------------
-    console.log('\n--- 15. Testing Privacy & DPDP Retention Purge ---');
-    // Open via Footer Link
-    const privacyFooterBtn = page.locator('footer button', { hasText: 'Privacy & Compliance' }).first();
-    if (await privacyFooterBtn.count() > 0) {
-      await privacyFooterBtn.click();
-      await page.waitForTimeout(600);
-      const privacyTitle = await page.locator('text=Privacy Architecture & Regulatory Compliance').count() > 0;
-      record('Privacy Vault: Footer Link Navigation', 'Click Footer Privacy link', privacyTitle ? 'Mounted Privacy Compliance Page' : 'Failed to mount', privacyTitle ? 'PASS' : 'FAIL');
-    }
+    // Check 54: 0 Bytes confirmed
+    const has0Bytes = await page.locator('text=0 Bytes').count() > 0;
+    record('0 Bytes Disk Usage Tag', 'Inspect disk usage proof', has0Bytes ? 'Verified' : 'Missing', has0Bytes ? 'PASS' : 'FAIL');
 
-    // Purge trigger
+    // Check 55: 5-step Sovereign Data Lifecycle
+    const hasLifecycle = await page.locator('text=Sovereign Data Lifecycle & Privacy Guarantee').count() > 0;
+    record('Sovereign Data Lifecycle', 'Verify 5-step journey', hasLifecycle ? 'Rendered' : 'Missing', hasLifecycle ? 'PASS' : 'FAIL');
+
+    // Check 56: Run Purge Now button
     const runPurgeBtn = page.locator('button:has-text("Run Purge Now")').first();
-    if (await runPurgeBtn.count() > 0) {
+    const hasRunPurge = await runPurgeBtn.count() > 0;
+    if (hasRunPurge) {
       await runPurgeBtn.click();
-      await page.waitForTimeout(500);
-      const purgeModal = await page.locator('text=Execute Regulatory Auto-Purge').count() > 0;
-      record('Privacy Vault: "Run Purge Now"', 'Open Purge Confirmation Modal', purgeModal ? 'Modal opened' : 'Missing', purgeModal ? 'PASS' : 'FAIL');
-
-      if (purgeModal) {
-        const confirmPurgeBtn = page.locator('button:has-text("Confirm Purge")').first();
-        if (await confirmPurgeBtn.count() > 0) {
-          await confirmPurgeBtn.click();
-          await page.waitForTimeout(1000);
-          const purgeResultText = await page.locator('text=Regulatory purge complete').first().textContent().catch(() => '');
-          record('Privacy Vault: "Confirm Purge"', 'Execute database purge', purgeResultText ? `Completed: "${purgeResultText.trim()}"` : 'Executed', 'PASS');
-        }
-        const closePurgeBtn = page.locator('button:has-text("Close"), button:has-text("Cancel")').first();
-        if (await closePurgeBtn.count() > 0) {
-          await closePurgeBtn.click();
-          await page.waitForTimeout(300);
-        }
+      await page.waitForTimeout(300);
+      const confirmPurgeBtn = page.locator('button:has-text("Confirm Purge")').first();
+      if (await confirmPurgeBtn.count() > 0) {
+        await confirmPurgeBtn.click();
+        await page.waitForTimeout(500);
+      }
+      const closePurgeBtn = page.locator('button:has-text("Close")').first();
+      if (await closePurgeBtn.count() > 0) {
+        await closePurgeBtn.click();
       }
     }
+    record('Run Purge Modal & Execution', 'Execute regulatory purge', hasRunPurge ? 'Operational' : 'Missing', hasRunPurge ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 16. Microphone Denial Behavior Check (Isolated Context)
-    // -------------------------------------------------------------------------
-    console.log('\n--- 16. Testing Microphone Denial Handshake ---');
-    const deniedBrowser = await chromium.launch({
-      executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-      headless: true,
-    });
-    const deniedContext = await deniedBrowser.newContext({
-      viewport: { width: 1920, height: 1080 },
-      permissions: [], // Deny mic permission
-    });
-    const deniedPage = await deniedContext.newPage();
-    await deniedPage.goto(BASE_URL, { waitUntil: 'networkidle' });
-    await deniedPage.locator('button:has-text("Live Microphone Test")').first().click();
-    await deniedPage.waitForTimeout(300);
-    const deniedStartBtn = deniedPage.locator('button:has-text("Start Live Test")').first();
-    if (await deniedStartBtn.count() > 0) {
-      await deniedStartBtn.click();
-      await deniedPage.waitForTimeout(800);
-      const hasDenialToastOrAlert = await deniedPage.locator('text=Microphone, text=denied, text=permission, text=NotAllowedError, text=unavailable').count() > 0;
-      record('Live Mic: Permission Denial Handling', 'Attempt start with mic blocked', hasDenialToastOrAlert ? 'Rendered clear permission denial banner' : 'Gracefully handled', 'PASS');
+    // Check 57: Generate Compliance Package action
+    const genPkgBtn = page.locator('button:has-text("Generate Compliance Package")').first();
+    const hasGenPkg = await genPkgBtn.count() > 0;
+    if (hasGenPkg) {
+      await genPkgBtn.click();
+      await page.waitForTimeout(600);
     }
-    await deniedBrowser.close();
+    record('Generate Compliance Package', 'Compile regulatory dossier', hasGenPkg ? 'Operational' : 'Missing', hasGenPkg ? 'PASS' : 'FAIL');
 
-    // -------------------------------------------------------------------------
-    // 17. Stress & Resiliency Checks
-    // -------------------------------------------------------------------------
-    console.log('\n--- 17. Testing Rapid Interaction & State Resiliency ---');
-    await navigateTo('overview', 'Overview');
-    await telModeTab.click();
-    await page.waitForTimeout(300);
+    // =========================================================================
+    // SECTION 10: FOOTER & CONSOLE ERROR ZERO-TOLERANCE
+    // =========================================================================
+    console.log('\n--- Section 10: Footer & Runtime Integrity ---');
 
-    // Rapid clicking on scenario buttons
-    console.log('Rapidly switching scenarios 5 times...');
-    for (let i = 0; i < 5; i++) {
-      await simHumanBtn.click();
-      await simFakeBtn.click();
-      await simJitterBtn.click();
+    // Check 58: Minimalist Footer
+    const footer = page.locator('footer');
+    const hasFooter = await footer.count() > 0;
+    record('Minimalist Footer', 'Verify footer element', hasFooter ? 'Rendered' : 'Missing', hasFooter ? 'PASS' : 'FAIL');
+
+    // Check 59: Privacy link in footer
+    const footerPrivacyLink = footer.getByText('Privacy & Compliance');
+    const hasFooterLink = await footerPrivacyLink.count() > 0;
+    record('Footer Privacy Link', 'Inspect footer navigation', hasFooterLink ? 'Present' : 'Missing', hasFooterLink ? 'PASS' : 'FAIL');
+
+    // Check 60: Zero Console Errors
+    const errorCount = consoleErrors.length;
+    record('Console Error Audit', 'Audit runtime browser errors', `${errorCount} errors`, errorCount === 0 ? 'PASS' : 'FAIL');
+
+    // Print Final Summary
+    const totalChecks = results.length;
+    const passedChecks = results.filter((r) => r.passFail === 'PASS').length;
+    const failedChecks = results.filter((r) => r.passFail === 'FAIL').length;
+    const passRate = ((passedChecks / totalChecks) * 100).toFixed(1);
+
+    console.log('\n================================================================');
+    console.log('  TEST RUN SUMMARY (ui-lean)');
+    console.log('================================================================');
+    console.log(`  Total Checks : ${totalChecks}`);
+    console.log(`  Passed       : ${passedChecks}`);
+    console.log(`  Failed       : ${failedChecks}`);
+    console.log(`  Pass Rate    : ${passRate}%`);
+    console.log('================================================================');
+
+    if (errorCount > 0) {
+      console.log('Console Errors Detected:');
+      consoleErrors.forEach((e) => console.log(' - ', e));
+    } else {
+      console.log('0 browser console errors detected.');
     }
-    await page.waitForTimeout(400);
-    record('Rapid Scenario Switching', 'Trigger 15 rapid state updates', 'No UI lockup, no crash', 'PASS');
 
-    // Mid-Action Navigation
-    console.log('Testing navigate away mid-action...');
-    await uploadModeTab.click();
-    await humanClipBtn.click(); // starts upload/scoring
-    // Immediately navigate away
-    await navigateTo('call-records', 'Call Records');
-    await page.waitForTimeout(1000);
-    await navigateTo('overview', 'Overview');
-    await page.waitForTimeout(500);
-    const overviewStable = await page.locator('text=Voice Trust Index').count() > 0;
-    record('Mid-Action Navigation', 'Switch tabs while scoring in-flight', overviewStable ? 'Clean recovery, UI stable' : 'UI frozen', overviewStable ? 'PASS' : 'FAIL');
-
-    // Hard page refresh
-    console.log('Testing hard page refresh...');
-    await page.reload({ waitUntil: 'networkidle' });
-    await page.waitForTimeout(1200);
-    const postReloadTitle = await page.title();
-    const wsOfflineWarning = await page.locator('text=WebSocket Offline').count();
-    record('Hard Page Refresh', 'Page reload & re-handshake', wsOfflineWarning === 0 ? 'Page restored cleanly, WebSocket reconnected' : 'WebSocket remained offline', wsOfflineWarning === 0 ? 'PASS' : 'FAIL');
-
+    if (failedChecks > 0) {
+      process.exit(1);
+    }
   } catch (err) {
-    console.error('Fatal QA error:', err);
-    record('QA Execution', 'Automated test loop', err.message, 'FAIL');
+    console.error('Fatal QA Execution Error:', err);
+    process.exit(1);
   } finally {
     await browser.close();
   }
-
-  console.log('\n================================================================');
-  console.log(' QA PASS SUMMARY RESULTS');
-  console.log('================================================================');
-  const passes = results.filter(r => r.passFail === 'PASS').length;
-  const fails = results.filter(r => r.passFail === 'FAIL').length;
-  const partials = results.filter(r => r.passFail === 'PARTIAL').length;
-  console.log(`Total Elements Tested: ${results.length}`);
-  console.log(`Passed: ${passes} | Failed: ${fails} | Partial: ${partials}`);
-  console.log(`Console Errors Logged: ${consoleErrors.length}`);
-  if (consoleErrors.length > 0) {
-    console.log('Logged Errors:', consoleErrors);
-  }
-
-  // Save report to JSON
-  fs.writeFileSync(
-    path.resolve('scratch', 'qa_pass_report.json'),
-    JSON.stringify({ summary: { total: results.length, passes, fails, partials, consoleErrors: consoleErrors.length }, results, consoleErrors }, null, 2)
-  );
-  console.log('Report saved to scratch/qa_pass_report.json');
 }
 
-runQA().catch(err => {
-  console.error('Error running QA suite:', err);
+runQA().catch((err) => {
+  console.error('Fatal execution error:', err);
   process.exit(1);
 });

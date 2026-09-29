@@ -67,25 +67,25 @@ export const RulesPage: React.FC<RulesPageProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
+      exit={{ opacity: 0, y: -6 }}
       className="space-y-6 select-none"
     >
       {/* Title & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[20px] font-bold text-[#F2F4F5] tracking-tight">
+          <h1 className="text-[20px] font-bold font-mono text-[#1A1D20] dark:text-[#F0EEE9] tracking-tight">
             Security Rules & Decision Thresholds
           </h1>
-          <p className="text-[12px] text-[#9BA3A8] mt-1">
+          <p className="text-[12px] text-[#525860] dark:text-[#A2A8B0] mt-1">
             Contiguous risk bands governing autonomous call allow, dynamic challenge, and quarantine alert actions
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {hasUnsavedChanges && (
-            <span className="text-[11px] font-mono text-[#F59E0B] flex items-center gap-1.5 animate-pulse">
+            <span className="text-[11px] font-mono text-[#924A00] dark:text-[#FBBF24] flex items-center gap-1.5 animate-pulse">
               <AlertTriangle className="w-3.5 h-3.5" />
               Unsaved changes
             </span>
@@ -93,7 +93,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
 
           <button
             onClick={handleReset}
-            className="px-3 py-1.5 rounded-lg bg-[#141719] hover:bg-[#1E2225] border border-[#1E2225] text-[12px] text-[#9BA3A8] hover:text-[#F2F4F5] flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-sm bg-[#FFFFFF] dark:bg-[#181B1F] hover:bg-[#F7F5F0] dark:hover:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037] text-[12px] font-mono text-[#525860] dark:text-[#A2A8B0] hover:text-[#1A1D20] dark:hover:text-[#F0EEE9] flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset to Defaults</span>
@@ -102,16 +102,16 @@ export const RulesPage: React.FC<RulesPageProps> = ({
           <button
             onClick={handleSave}
             disabled={isSaving || (!hasUnsavedChanges && !savedSuccess)}
-            className="px-4 py-1.5 rounded-lg bg-[#FF4713] hover:bg-[#FF4713]/90 text-white text-[12px] font-semibold shadow-[0_0_15px_rgba(255,71,19,0.25)] flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+            className="px-4 py-1.5 rounded-sm bg-[#1A1D20] hover:bg-[#33383F] dark:bg-[#F0EEE9] dark:hover:bg-[#FFFFFF] text-white dark:text-[#121417] text-[12px] font-mono font-semibold flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
           >
             {savedSuccess ? (
               <>
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-3.5 h-3.5 text-[#165A34] dark:text-[#165A34]" />
                 <span>Thresholds Persisted</span>
               </>
             ) : isSaving ? (
               <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 <span>Saving...</span>
               </>
             ) : (
@@ -125,28 +125,24 @@ export const RulesPage: React.FC<RulesPageProps> = ({
       </div>
 
       {/* Contiguous Spectrum Visualizer */}
-      <div className="bg-[#0D0F11] border border-[#1E2225] rounded-xl p-6 shadow-card space-y-6">
+      <div className="bg-[#FFFFFF] dark:bg-[#181B1F] border border-[#D8D3C8] dark:border-[#2B3037] rounded-sm p-6 shadow-xs space-y-6 transition-colors">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] font-semibold text-[#F2F4F5] flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-[#FF4713]" />
+            <span className="text-[13px] font-bold font-mono uppercase tracking-wider text-[#1A1D20] dark:text-[#F0EEE9] flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-[#1A1D20] dark:text-[#F0EEE9]" />
               Contiguous Three-Band Decision Plane
             </span>
-            <span className="text-[11px] font-mono text-[#5E666B]">
+            <span className="text-[11px] font-mono text-[#78808A] dark:text-[#6E7681]">
               Continuous range [0.00 – 1.00] · Zero overlap / Zero gaps
             </span>
           </div>
 
-          {/* Color-segmented track with save confirmation pulse */}
-          <motion.div
-            animate={savedSuccess ? { scale: [1, 1.015, 1], boxShadow: ['0 0 0 rgba(34,197,94,0)', '0 0 20px rgba(34,197,94,0.35)', '0 0 0 rgba(34,197,94,0)'] } : {}}
-            transition={{ duration: 0.6 }}
-            className="relative h-10 w-full rounded-xl overflow-hidden flex border border-[#1E2225] font-mono text-[11.5px] font-bold text-white select-none transition-shadow"
-          >
+          {/* Color-segmented track */}
+          <div className="relative h-10 w-full rounded-sm overflow-hidden flex border border-[#D8D3C8] dark:border-[#2B3037] font-mono text-[11.5px] font-bold select-none">
             {/* Safe Band */}
             <div
               style={{ width: `${allowThreshold * 100}%` }}
-              className="bg-[#22C55E]/80 hover:bg-[#22C55E] flex items-center justify-center transition-all duration-150 cursor-default"
+              className="bg-[#EAF5EE] dark:bg-[#0E2316] text-[#165A34] dark:text-[#34D399] border-r border-[#9CD1B2] dark:border-[#1B5233] flex items-center justify-center transition-all duration-150 cursor-default"
             >
               <span className="truncate px-2">ALLOW (Safe)</span>
             </div>
@@ -154,7 +150,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Caution Band */}
             <div
               style={{ width: `${(criticalThreshold - allowThreshold) * 100}%` }}
-              className="bg-[#F59E0B]/80 hover:bg-[#F59E0B] flex items-center justify-center transition-all duration-150 cursor-default text-[#050607]"
+              className="bg-[#FDF6E8] dark:bg-[#291B06] text-[#924A00] dark:text-[#FBBF24] border-r border-[#E5BA78] dark:border-[#5C3E08] flex items-center justify-center transition-all duration-150 cursor-default"
             >
               <span className="truncate px-2">WARN (Challenge)</span>
             </div>
@@ -162,31 +158,31 @@ export const RulesPage: React.FC<RulesPageProps> = ({
             {/* Alert Band */}
             <div
               style={{ width: `${(1.0 - criticalThreshold) * 100}%` }}
-              className="bg-[#EF4444]/80 hover:bg-[#EF4444] flex items-center justify-center transition-all duration-150 cursor-default"
+              className="bg-[#FDEFEF] dark:bg-[#2B0F0F] text-[#941818] dark:text-[#F87171] flex items-center justify-center transition-all duration-150 cursor-default"
             >
               <span className="truncate px-2">ALERT (Quarantine)</span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* 3 Interactive Cards with Contiguous Sliders & Live Numeric Readout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Band 1: Allow */}
-          <div className="p-4 rounded-xl bg-[#050607] border border-[#22C55E]/30 space-y-3">
+          <div className="p-4 rounded-sm bg-[#FAF9F5] dark:bg-[#15171A] border border-[#9CD1B2] dark:border-[#1B5233] space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#22C55E]">
+              <div className="flex items-center gap-2 text-[#165A34] dark:text-[#34D399]">
                 <ShieldCheck className="w-4 h-4" />
-                <span className="text-[13px] font-bold">1. Bonafide Allow</span>
+                <span className="text-[13px] font-bold font-mono">1. Bonafide Allow</span>
               </div>
-              <span className="text-[13px] font-mono font-bold text-[#22C55E]">
+              <span className="text-[13px] font-mono font-bold text-[#165A34] dark:text-[#34D399]">
                 &le; {allowThreshold.toFixed(2)}
               </span>
             </div>
-            <p className="text-[11.5px] text-[#9BA3A8]">
+            <p className="text-[11.5px] text-[#525860] dark:text-[#A2A8B0]">
               Verified natural glottal harmonic dynamics. Automated call pass through with zero operator latency.
             </p>
             <div className="space-y-1">
-              <div className="flex justify-between text-[10.5px] font-mono text-[#5E666B]">
+              <div className="flex justify-between text-[10.5px] font-mono text-[#78808A] dark:text-[#6E7681]">
                 <span>Allow Threshold Cutoff</span>
                 <span>{allowThreshold.toFixed(2)} P(Spoof)</span>
               </div>
@@ -197,50 +193,50 @@ export const RulesPage: React.FC<RulesPageProps> = ({
                 step="0.01"
                 value={allowThreshold}
                 onChange={(e) => handleAllowChange(parseFloat(e.target.value))}
-                className="w-full accent-[#22C55E] bg-[#141719] h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#22C55E]/50 focus:shadow-[0_0_12px_rgba(34,197,94,0.4)] transition-all"
+                className="w-full h-2 rounded-sm cursor-pointer"
               />
             </div>
           </div>
 
           {/* Band 2: Challenge */}
-          <div className="p-4 rounded-xl bg-[#050607] border border-[#F59E0B]/30 space-y-3">
+          <div className="p-4 rounded-sm bg-[#FAF9F5] dark:bg-[#15171A] border border-[#E5BA78] dark:border-[#5C3E08] space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#F59E0B]">
+              <div className="flex items-center gap-2 text-[#924A00] dark:text-[#FBBF24]">
                 <Zap className="w-4 h-4" />
-                <span className="text-[13px] font-bold">2. Dynamic Challenge</span>
+                <span className="text-[13px] font-bold font-mono">2. Dynamic Challenge</span>
               </div>
-              <span className="text-[13px] font-mono font-bold text-[#F59E0B]">
+              <span className="text-[13px] font-mono font-bold text-[#924A00] dark:text-[#FBBF24]">
                 {allowThreshold.toFixed(2)} &lt; P &lt; {criticalThreshold.toFixed(2)}
               </span>
             </div>
-            <p className="text-[11.5px] text-[#9BA3A8]">
+            <p className="text-[11.5px] text-[#525860] dark:text-[#A2A8B0]">
               Ambiguous conversational jitter or codec compression. Immediately pops 15s security digits prompt.
             </p>
             <div className="space-y-1">
-              <div className="flex justify-between text-[10.5px] font-mono text-[#5E666B]">
+              <div className="flex justify-between text-[10.5px] font-mono text-[#78808A] dark:text-[#6E7681]">
                 <span>Contiguous Width</span>
                 <span>{(criticalThreshold - allowThreshold).toFixed(2)} band</span>
               </div>
-              <div className="h-1.5 w-full bg-[#F59E0B]/30 rounded-full" />
+              <div className="h-1.5 w-full bg-[#E5BA78]/40 dark:bg-[#5C3E08]/40 rounded-sm" />
             </div>
           </div>
 
           {/* Band 3: Alert */}
-          <div className="p-4 rounded-xl bg-[#050607] border border-[#EF4444]/30 space-y-3">
+          <div className="p-4 rounded-sm bg-[#FAF9F5] dark:bg-[#15171A] border border-[#E79E9E] dark:border-[#5E1A1A] space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#EF4444]">
+              <div className="flex items-center gap-2 text-[#941818] dark:text-[#F87171]">
                 <ShieldAlert className="w-4 h-4" />
-                <span className="text-[13px] font-bold">3. Critical Alert</span>
+                <span className="text-[13px] font-bold font-mono">3. Critical Alert</span>
               </div>
-              <span className="text-[13px] font-mono font-bold text-[#EF4444]">
+              <span className="text-[13px] font-mono font-bold text-[#941818] dark:text-[#F87171]">
                 &ge; {criticalThreshold.toFixed(2)}
               </span>
             </div>
-            <p className="text-[11.5px] text-[#9BA3A8]">
+            <p className="text-[11.5px] text-[#525860] dark:text-[#A2A8B0]">
               Definite synthetic voice cloning or neural TTS signature. Automatically isolates trunk and dispatches SMS/SMTP.
             </p>
             <div className="space-y-1">
-              <div className="flex justify-between text-[10.5px] font-mono text-[#5E666B]">
+              <div className="flex justify-between text-[10.5px] font-mono text-[#78808A] dark:text-[#6E7681]">
                 <span>Alert Threshold Cutoff</span>
                 <span>{criticalThreshold.toFixed(2)} P(Spoof)</span>
               </div>
@@ -251,7 +247,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({
                 step="0.01"
                 value={criticalThreshold}
                 onChange={(e) => handleCriticalChange(parseFloat(e.target.value))}
-                className="w-full accent-[#EF4444] bg-[#141719] h-2 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#EF4444]/50 focus:shadow-[0_0_12px_rgba(239,68,68,0.4)] transition-all"
+                className="w-full h-2 rounded-sm cursor-pointer"
               />
             </div>
           </div>
