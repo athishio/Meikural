@@ -3,7 +3,6 @@
 > *Next-Generation AI Voice Biometrics & Deepfake Detection SOC Gateway with Provocative Liveness Challenges and Tamper-Evident SHA-256 Hash Chains.*
 
 [![Live Demo on Render](https://img.shields.io/badge/Render-Live%20SOC%20Gateway-46E3B7.svg?logo=render&logoColor=white)](https://meikural-soc.onrender.com/dashboard)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/athishio/Meikural)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B%20(CPU%20INT8)-EE4C2C.svg)](https://pytorch.org/)
 [![Model](https://img.shields.io/badge/AASIST-INT8%20Quantized%20(~440ms)-success.svg)](https://github.com/clovaai/aasist)
@@ -16,13 +15,13 @@
 
 ---
 
-## 🚀 Live Demo & 1-Click Cloud Deployment
+## 🚀 Live Cloud Deployment
 
 | Service | Link / Action | Details |
 | :--- | :--- | :--- |
-| **🌐 Public SOC Gateway** | **[Launch Live Dashboard](https://meikural-soc.onrender.com/dashboard)** | Deployed live on Render with automatic SSL & WebSockets |
-| **⚡ 1-Click Cloud Deploy** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/athishio/Meikural) | Instantly spin up your own instance via [`render.yaml`](./render.yaml) |
+| **🌐 Public SOC Gateway** | **[Launch Live Dashboard](https://meikural-soc.onrender.com/dashboard)** | Production SOC with real-time biometrics & WebSockets |
 | **📖 Interactive API Docs** | **[Swagger OpenAPI](https://meikural-soc.onrender.com/docs)** | Interactive REST documentation & schema explorer |
+| **🩺 Health & Liveness Probe** | **[Gateway Health Status](https://meikural-soc.onrender.com/healthz)** | Production cloud liveness probe |
 
 ---
 
