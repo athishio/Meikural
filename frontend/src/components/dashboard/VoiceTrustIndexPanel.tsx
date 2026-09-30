@@ -193,12 +193,39 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
             strokeWidth="8"
             strokeOpacity="0.8"
           />
+          {/* Subtle concentric calibration tick ring */}
+          <circle
+            cx="110"
+            cy="110"
+            r={radius + 10}
+            fill="none"
+            stroke="currentColor"
+            strokeDasharray="2 6"
+            className="text-[#D8D3C8] dark:text-[#2B3037] opacity-60"
+            strokeWidth="1"
+          />
 
           {/* Needle with Mechanical Taper & Smooth RAF Interpolation */}
           <polygon
             points={`${needleTip.x},${needleTip.y} ${needleBase1.x},${needleBase1.y} ${needleBase2.x},${needleBase2.y}`}
             className={`transition-colors duration-200 ${isAlert ? 'fill-[#941818] dark:fill-[#F87171]' : isWarn ? 'fill-[#924A00] dark:fill-[#FBBF24]' : 'fill-[#165A34] dark:fill-[#34D399]'}`}
           />
+          {/* Animated Needle Tip Glowing Indicator */}
+          <circle
+            cx={needleTip.x}
+            cy={needleTip.y}
+            r="3.5"
+            className={`${isAlert ? 'fill-[#941818] dark:fill-[#F87171]' : isWarn ? 'fill-[#924A00] dark:fill-[#FBBF24]' : 'fill-[#165A34] dark:fill-[#34D399]'} animate-ping opacity-75`}
+          />
+          <circle
+            cx={needleTip.x}
+            cy={needleTip.y}
+            r="2.5"
+            className={isAlert ? 'fill-[#941818] dark:fill-[#F87171]' : isWarn ? 'fill-[#924A00] dark:fill-[#FBBF24]' : 'fill-[#165A34] dark:fill-[#34D399]'}
+          />
+
+          {/* Center Hub with Concentric Radar Pulse */}
+          <circle cx="110" cy="110" r="14" fill="none" stroke="currentColor" strokeWidth="1" className="text-[#1A1D20] dark:text-[#F0EEE9] opacity-20 animate-radar" />
           <circle cx="110" cy="110" r="5" className="fill-[#1A1D20] dark:fill-[#F0EEE9]" />
           <circle cx="110" cy="110" r="2.5" className="fill-[#FFFFFF] dark:fill-[#181B1F]" />
         </svg>

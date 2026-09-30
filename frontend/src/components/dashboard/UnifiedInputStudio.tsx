@@ -1,13 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, AlertTriangle, FileAudio } from 'lucide-react';
+import { UploadCloud, AlertTriangle, FileAudio, Mic, MicOff } from 'lucide-react';
 import type { ForensicUploadResult } from '../../types/dashboard';
+import { LiveAudioVisualizer } from './LiveAudioVisualizer';
 
 interface UnifiedInputStudioProps {
   uploadLoading?: boolean;
   uploadError?: string | null;
   lastUploadResult?: ForensicUploadResult | null;
   onFileUpload: (file: File, codec?: string) => Promise<any>;
+  isMonitoring?: boolean;
+  onToggleMonitoring?: () => void;
+  analyserNode?: AnalyserNode | null;
+  micError?: string | null;
+  onClearMicError?: () => void;
 }
 
 export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
@@ -15,12 +21,59 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
   uploadError = null,
   lastUploadResult = null,
   onFileUpload,
+  isMonitoring = false,
+  onToggleMonitoring,
+  analyserNode,
+  micError = null,
+  onClearMicError,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedCodec, setSelectedCodec] = useState('clean_pcm');
   const [loadingClip, setLoadingClip] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const handleCaptureSample = async () => {
+    if (isCapturing) return;
+    try {
+      setIsCapturing(true);
+      setLocalError(null);
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Microphone access is not supported by your browser.');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordedChunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'audio/wav' });
+        const file = new File([blob], 'live_mic_sample.wav', { type: 'audio/wav' });
+        stream.getTracks().forEach((t) => t.stop());
+        setIsCapturing(false);
+        await onFileUpload(file, 'live_mic');
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          recorder.stop();
+        }
+      }, 4000);
+    } catch (err: any) {
+      setIsCapturing(false);
+      setLocalError(err.message || 'Microphone recording error. Please check permissions.');
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -80,18 +133,18 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
         </div>
       )}
 
-      {/* Header Bar: Benchmark Buttons + Codec Selector */}
+      {/* Header Bar: Benchmark Buttons + Live Mic Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8D3C8] dark:border-[#2B3037] pb-3.5">
         <div>
           <h2 className="text-[13px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] uppercase tracking-wider font-mono">
             Acoustic Ingestion & Forensic Benchmark
           </h2>
           <p className="text-[11px] text-[#525860] dark:text-[#A2A8B0] mt-0.5">
-            Test calibrated AASIST neural pipeline via 1-click clips or custom audio upload
+            Test calibrated AASIST neural pipeline via live mic stream, 1-click clips, or file upload
           </p>
         </div>
 
-        {/* 1-Click Forensic Benchmark Buttons */}
+        {/* 1-Click Forensic Benchmark Buttons & Live Mic Control */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-mono text-[#78808A] dark:text-[#6E7681] uppercase tracking-wider font-semibold">
             Benchmarks:
@@ -123,8 +176,46 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           >
             {loadingClip === 'caution_noisy_telecom.wav' ? 'Scoring...' : 'Noisy PSTN'}
           </button>
+
+          {/* Primary Live Microphone Toggle Button */}
+          {onToggleMonitoring && (
+            <button
+              disabled={uploadLoading}
+              onClick={onToggleMonitoring}
+              className={`px-2.5 py-1 rounded-sm border text-[11px] font-mono font-semibold transition-all active:scale-[0.97] cursor-pointer shadow-xs flex items-center gap-1.5 ${
+                isMonitoring
+                  ? 'bg-[#FDEFEF] dark:bg-[#2B0F0F] text-[#941818] dark:text-[#F87171] border-[#E79E9E] dark:border-[#5E1A1A] animate-pulse'
+                  : 'bg-[#1A1D20] dark:bg-[#F0EEE9] text-white dark:text-[#121417] border-[#1A1D20] dark:border-[#F0EEE9] hover:bg-[#33383F] dark:hover:bg-[#FFFFFF]'
+              }`}
+              title={isMonitoring ? 'Click to stop live microphone stream' : 'Capture and stream live voice via microphone'}
+            >
+              {isMonitoring ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[#941818] dark:bg-[#F87171] animate-ping" />
+                  <MicOff className="w-3.5 h-3.5" />
+                  <span>Stop Live Mic</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-3.5 h-3.5 text-[#34D399]" />
+                  <span>Live Mic</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Live Acoustic Oscilloscope & Spectrum Visualizer Component */}
+      {onToggleMonitoring && (
+        <LiveAudioVisualizer
+          isMonitoring={isMonitoring}
+          analyserNode={analyserNode}
+          onToggleMonitoring={onToggleMonitoring}
+          onCaptureSample={handleCaptureSample}
+          isCapturing={isCapturing}
+        />
+      )}
 
       {/* Codec Selection Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F7F5F0] dark:bg-[#121417] p-3 rounded-sm border border-[#D8D3C8] dark:border-[#2B3037]">
@@ -140,11 +231,12 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
             <option value="clean_pcm">Clean PCM (16kHz Uncompressed) [Thresh -10.45]</option>
             <option value="g711_ulaw">G.711 &mu;-law Telephony (8kHz) [Thresh -8.64]</option>
             <option value="pstn_narrowband">PSTN Narrowband (300-3400Hz) [Thresh -1.13]</option>
+            <option value="live_mic">Live Microphone Capture (16kHz) [Thresh -8.94]</option>
           </select>
         </div>
 
         <span className="text-[10px] font-mono text-[#78808A] dark:text-[#6E7681]">
-          Supports WAV, MP3, M4A, FLAC, OGG, WEBM
+          Supports WAV, MP3, M4A, FLAC, OGG, WEBM & Live Mic
         </span>
       </div>
 
@@ -155,12 +247,18 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border border-dashed rounded-sm p-7 text-center transition-all cursor-pointer active:scale-[0.99] ${
+        className={`relative border border-dashed rounded-sm p-7 text-center transition-all cursor-pointer active:scale-[0.99] ${
           dragActive
             ? 'border-[#1A1D20] dark:border-[#F0EEE9] bg-[#EFECE6] dark:bg-[#1F2328]'
             : 'border-[#BCB6A8] dark:border-[#3F4752] hover:border-[#1A1D20] dark:hover:border-[#F0EEE9] bg-[#FAF9F5] dark:bg-[#15171A]'
         }`}
       >
+        {/* Tactical Forensic Corner Brackets */}
+        <div className="absolute top-2 left-2 w-2.5 h-2.5 border-t-2 border-l-2 border-[#BCB6A8] dark:border-[#3F4752] animate-corner-bracket" />
+        <div className="absolute top-2 right-2 w-2.5 h-2.5 border-t-2 border-r-2 border-[#BCB6A8] dark:border-[#3F4752] animate-corner-bracket" />
+        <div className="absolute bottom-2 left-2 w-2.5 h-2.5 border-b-2 border-l-2 border-[#BCB6A8] dark:border-[#3F4752] animate-corner-bracket" />
+        <div className="absolute bottom-2 right-2 w-2.5 h-2.5 border-b-2 border-r-2 border-[#BCB6A8] dark:border-[#3F4752] animate-corner-bracket" />
+
         <input
           ref={fileInputRef}
           type="file"
@@ -182,6 +280,21 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Live Mic Permission Error Alert */}
+      {micError && (
+        <div className="p-3 rounded-sm bg-[#FDEFEF] dark:bg-[#2B0F0F] border border-[#E79E9E] dark:border-[#5E1A1A] text-[#941818] dark:text-[#F87171] text-[12px] font-mono flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{micError}</span>
+          </div>
+          {onClearMicError && (
+            <button onClick={onClearMicError} className="underline text-[11px] hover:opacity-80 cursor-pointer">
+              Dismiss
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Upload/Scoring State / Errors */}
       {uploadLoading && (

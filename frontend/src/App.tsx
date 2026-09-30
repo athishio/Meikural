@@ -45,6 +45,11 @@ export const App: React.FC = () => {
     uploadError,
     lastUploadResult,
     handleFileUpload,
+    isMonitoring,
+    toggleMonitoring,
+    analyserNode,
+    micError,
+    clearMicError,
   } = useDashboardData();
 
   const [isEscalateOpen, setIsEscalateOpen] = useState(false);
@@ -162,6 +167,11 @@ export const App: React.FC = () => {
                 activeScenario={activeScenario}
                 diagnostics={diagnostics}
                 rules={rules}
+                isMonitoring={isMonitoring}
+                onToggleMonitoring={toggleMonitoring}
+                analyserNode={analyserNode}
+                micError={micError}
+                onClearMicError={clearMicError}
               />
             )}
 

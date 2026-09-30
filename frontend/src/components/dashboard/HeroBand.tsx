@@ -58,20 +58,23 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
 
       {/* Single State Banner - Forensic Evidence Dossier Stamp with smooth state-change feedback */}
       <div
-        className={`w-full rounded-sm border p-6 sm:p-7 transition-colors duration-200 shadow-xs ${
+        className={`relative w-full rounded-sm border p-6 sm:p-7 transition-all duration-300 shadow-xs overflow-hidden ${
           isAlert
-            ? 'bg-[#FDEFEF] dark:bg-[#2B0F0F] border-[#E79E9E] dark:border-[#5E1A1A]'
+            ? 'bg-[#FDEFEF] dark:bg-[#2B0F0F] border-[#E79E9E] dark:border-[#5E1A1A] animate-aura-alert'
             : isWarn
-            ? 'bg-[#FDF6E8] dark:bg-[#291B06] border-[#E5BA78] dark:border-[#5C3E08]'
-            : 'bg-[#EAF5EE] dark:bg-[#0E2316] border-[#9CD1B2] dark:border-[#1B5233]'
+            ? 'bg-[#FDF6E8] dark:bg-[#291B06] border-[#E5BA78] dark:border-[#5C3E08] animate-aura-warn'
+            : 'bg-[#EAF5EE] dark:bg-[#0E2316] border-[#9CD1B2] dark:border-[#1B5233] animate-aura-allow'
         }`}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+        {/* Soft forensic scanline overlay */}
+        <div className="absolute inset-0 forensic-scanlines opacity-70 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-2.5">
             {/* Badge & Mode Tag */}
             <div className="flex items-center gap-2">
               <span
-                className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border transition-colors duration-150 ${
+                className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm border flex items-center gap-1.5 transition-colors duration-150 ${
                   isAlert
                     ? 'bg-[#FBEAEA] dark:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border-[#E79E9E] dark:border-[#6B2020]'
                     : isWarn
@@ -79,7 +82,10 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
                     : 'bg-[#D1E7D9] dark:bg-[#0E2918] text-[#165A34] dark:text-[#34D399] border-[#9CD1B2] dark:border-[#194D2B]'
                 }`}
               >
-                {isAlert ? 'CRITICAL THREAT' : isWarn ? 'SUSPICIOUS' : 'LOW RISK - PASSIVE CHECK CLEARED'}
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  isAlert ? 'bg-[#941818] dark:bg-[#F87171] animate-ping' : isWarn ? 'bg-[#924A00] dark:bg-[#FBBF24] animate-pulse' : 'bg-[#165A34] dark:text-[#34D399]'
+                }`} />
+                <span>{isAlert ? 'CRITICAL THREAT' : isWarn ? 'SUSPICIOUS' : 'LOW RISK - PASSIVE CHECK CLEARED'}</span>
               </span>
               <span className="text-[11px] font-mono text-[#525860] dark:text-[#A2A8B0]">
                 [AASIST INT8 v2.4.1]

@@ -111,6 +111,8 @@ export const ThreatTimeline: React.FC<ThreatTimelineProps> = React.memo(({ score
 
       {/* SVG Chart Frame with Hover Tooltip */}
       <div className="relative h-44 w-full rounded-sm overflow-hidden bg-[#F7F5F0] dark:bg-[#121417] border border-[#D8D3C8] dark:border-[#2B3037] flex items-center justify-center">
+        {/* Animated Forensic Oscilloscope Scanner Sweep */}
+        <div className="absolute inset-y-0 w-[2px] bg-linear-to-b from-transparent via-[#165A34]/50 dark:via-[#34D399]/50 to-transparent animate-oscilloscope pointer-events-none z-0" />
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-full overflow-visible"

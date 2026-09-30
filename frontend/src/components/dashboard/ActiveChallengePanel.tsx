@@ -58,7 +58,11 @@ export const ActiveChallengePanel: React.FC<ActiveChallengePanelProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-[11px] font-mono text-[#924A00] dark:text-[#FBBF24] bg-[#F8E5BF] dark:bg-[#3B2609] border border-[#E5BA78] dark:border-[#5C3E08] px-2 py-0.5 rounded-sm font-semibold">
+                <span className={`text-[11px] font-mono px-2 py-0.5 rounded-sm font-semibold border transition-colors ${
+                  timeLeft <= 5
+                    ? 'text-[#941818] dark:text-[#F87171] bg-[#FDEFEF] dark:bg-[#2B0F0F] border-[#E79E9E] dark:border-[#5E1A1A] animate-pulse'
+                    : 'text-[#924A00] dark:text-[#FBBF24] bg-[#F8E5BF] dark:bg-[#3B2609] border-[#E5BA78] dark:border-[#5C3E08]'
+                }`}>
                   Reflex Window: {timeLeft}s remaining
                 </span>
                 <button
@@ -77,7 +81,9 @@ export const ActiveChallengePanel: React.FC<ActiveChallengePanelProps> = ({
                 initial={{ width: '100%' }}
                 animate={{ width: `${(timeLeft / 15) * 100}%` }}
                 transition={{ duration: 0.95, ease: 'linear' }}
-                className="h-full bg-[#924A00] dark:bg-[#FBBF24]"
+                className={`h-full transition-colors duration-300 ${
+                  timeLeft <= 5 ? 'bg-[#941818] dark:bg-[#F87171]' : 'bg-[#924A00] dark:bg-[#FBBF24]'
+                }`}
               />
             </div>
 
@@ -93,9 +99,10 @@ export const ActiveChallengePanel: React.FC<ActiveChallengePanelProps> = ({
                     initial={{ opacity: 0, x: -4 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="text-[18px] sm:text-[22px] font-mono font-bold text-[#1A1D20] dark:text-[#F0EEE9] tracking-widest bg-[#FAF9F5] dark:bg-[#121417] px-3 py-1 border border-[#D8D3C8] dark:border-[#2B3037] rounded-sm inline-block"
+                    className="text-[18px] sm:text-[22px] font-mono font-bold text-[#1A1D20] dark:text-[#F0EEE9] tracking-widest bg-[#FAF9F5] dark:bg-[#121417] px-3 py-1 border border-[#D8D3C8] dark:border-[#2B3037] rounded-sm inline-flex items-center gap-1 shadow-2xs"
                   >
-                    {challengeDigits || 'Awaiting challenge token...'}
+                    <span>{challengeDigits || 'Awaiting challenge token...'}</span>
+                    <span className="w-2 h-4 bg-[#1A1D20] dark:bg-[#F0EEE9] inline-block animate-pulse opacity-75" />
                   </motion.div>
                 </div>
                 <p className="text-[11px] text-[#525860] dark:text-[#A2A8B0]">

@@ -31,6 +31,11 @@ interface OverviewViewProps {
   activeScenario?: string | null;
   diagnostics?: TelemetryDiagnostics;
   rules?: RulesConfig;
+  isMonitoring?: boolean;
+  onToggleMonitoring?: () => void;
+  analyserNode?: AnalyserNode | null;
+  micError?: string | null;
+  onClearMicError?: () => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -52,6 +57,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   activeScenario,
   diagnostics,
   rules,
+  isMonitoring,
+  onToggleMonitoring,
+  analyserNode,
+  micError,
+  onClearMicError,
 }) => {
   return (
     <div className="space-y-6">
@@ -90,12 +100,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <ThreatTimeline score={spoofProbability} />
       </div>
 
-      {/* 4. Bottom: Input Area (3 Benchmark Buttons + File Upload Drop Zone + Codec Selector) */}
+      {/* 4. Bottom: Input Area (Live Mic + 3 Benchmark Buttons + Drop Zone + Visualizer) */}
       <UnifiedInputStudio
         uploadLoading={uploadLoading}
         uploadError={uploadError}
         lastUploadResult={lastUploadResult}
         onFileUpload={onFileUpload}
+        isMonitoring={isMonitoring}
+        onToggleMonitoring={onToggleMonitoring}
+        analyserNode={analyserNode}
+        micError={micError}
+        onClearMicError={onClearMicError}
       />
     </div>
   );
