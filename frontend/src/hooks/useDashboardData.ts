@@ -319,7 +319,13 @@ export function useDashboardData() {
         throw new Error('Your browser does not support microphone capture via navigator.mediaDevices.getUserMedia');
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
       mediaStreamRef.current = stream;
 
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({

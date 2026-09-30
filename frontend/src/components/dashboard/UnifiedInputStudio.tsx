@@ -44,7 +44,13 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Microphone access is not supported by your browser.');
       }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
       recordedChunksRef.current = [];
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
