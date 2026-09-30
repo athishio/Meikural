@@ -77,7 +77,7 @@ export function useDashboardData() {
   const [lastUploadResult, setLastUploadResult] = useState<ForensicUploadResult | null>(null);
 
   // Simulation State
-  const [activeScenario, setActiveScenario] = useState<string | null>('safe');
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Rules Configuration
@@ -101,8 +101,8 @@ export function useDashboardData() {
   const [diagnostics, setDiagnostics] = useState<TelemetryDiagnostics>({
     speechVad: 'ACTIVE',
     rmsEnergy: '-28.4 dB',
-    inferenceMs: 436,
-    turnaroundMs: 420,
+    inferenceMs: 0.0,
+    turnaroundMs: 24,
     turnaroundLabel: 'Bio',
     codec: 'PCM / G.711',
     sampleRate: '16,000 Hz',

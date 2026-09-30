@@ -72,7 +72,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         voiceTrust={voiceTrust}
         sessionId={sessionId}
         codec={lastUploadResult?.codecProfile || diagnostics?.codec || 'Clean PCM (16kHz)'}
-        inferenceMs={lastUploadResult?.inferenceLatencyMs ?? diagnostics?.inferenceMs ?? 564.9}
+        inferenceMs={lastUploadResult?.inferenceLatencyMs ?? diagnostics?.inferenceMs ?? 0.0}
         activeScenario={activeScenario}
         onTriggerChallenge={onTriggerChallenge}
         onEscalate={onEscalate}
@@ -93,7 +93,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           verdict={verdict}
           sessionId={sessionId}
           rawLogit={rawLogit}
-          inferenceMs={lastUploadResult?.inferenceLatencyMs ?? diagnostics?.inferenceMs ?? 564.9}
+          inferenceMs={lastUploadResult?.inferenceLatencyMs ?? diagnostics?.inferenceMs ?? 0.0}
           rules={rules}
         />
 

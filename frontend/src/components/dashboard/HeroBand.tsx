@@ -20,7 +20,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
   voiceTrust = 92,
   sessionId = 'call_trunk_01',
   codec = 'Clean PCM (16kHz)',
-  inferenceMs = 564.9,
+  inferenceMs = 0.0,
   activeScenario = null,
   onTriggerChallenge,
   onEscalate,
@@ -49,7 +49,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
           <span>·</span>
           <span>Codec: {codec}</span>
           <span>·</span>
-          <span>Latency: {inferenceMs}ms</span>
+          <span>Latency: {inferenceMs > 0 ? `${inferenceMs.toFixed(1)}ms` : '0.0ms (Live)'}</span>
           <span className="px-1.5 py-0.2 rounded-sm bg-[#EFECE6] dark:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037] text-[9.5px] text-[#78808A] dark:text-[#6E7681]">
             Sample reference
           </span>
@@ -149,7 +149,7 @@ export const HeroBand: React.FC<HeroBandProps> = React.memo(({
 
           {/* Action Button for Threat / Warn State with Tactile Press Response */}
           <div className="shrink-0 flex items-center gap-2">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {isAlert && onEscalate && (
                 <motion.button
                   key="isolate-btn"

@@ -15,7 +15,7 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
   score = 88,
   verdict = 'ALLOW',
   rawLogit = 0.0841,
-  inferenceMs = 564.9,
+  inferenceMs = 0.0,
   rules,
 }) => {
   // Smooth transition for the gauge needle & readout
@@ -150,8 +150,9 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
             Calibrated neural confidence scale (0–100)
           </p>
         </div>
-        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono text-[#78808A] dark:text-[#6E7681] bg-[#EFECE6] dark:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037]">
-          Sample reference
+        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono flex items-center gap-1.5 bg-[#EAF5EE] dark:bg-[#0E2316] text-[#165A34] dark:text-[#34D399] border border-[#9CD1B2] dark:border-[#1B5233]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#165A34] dark:bg-[#34D399] animate-pulse" />
+          LIVE TELEMETRY
         </span>
       </div>
 
@@ -261,7 +262,7 @@ export const VoiceTrustIndexPanel: React.FC<VoiceTrustIndexPanelProps> = React.m
         <div className="p-2.5 rounded-sm bg-[#F7F5F0] dark:bg-[#1F2328] border border-[#D8D3C8] dark:border-[#2B3037]">
           <div className="text-[10px] text-[#525860] dark:text-[#A2A8B0] uppercase">Inference Latency</div>
           <div className="text-[15px] font-bold text-[#1A1D20] dark:text-[#F0EEE9] mt-0.5 tabular-nums">
-            {inferenceMs.toFixed(1)} ms
+            {inferenceMs > 0 ? `${inferenceMs.toFixed(1)} ms` : '0.0 ms (Live)'}
           </div>
         </div>
       </div>
