@@ -147,14 +147,12 @@ if os.path.exists(os.path.join(BASE_DIR, "demo_clips")):
 
 @app.on_event("startup")
 def startup_event():
-    logger.info("Initializing AASIST model singleton, ASR engine & SQLite database...")
+    logger.info("Initializing AASIST model singleton & SQLite database...")
     database.init_db()
     AASISTWrapper.get_instance()
-    try:
-        ASREngine.get_instance()
-    except Exception as e:
-        logger.warning(f"ASREngine pre-warming deferred: {e}")
-    logger.info("AASIST model, ASR engine, and Meikural privacy database ready.")
+    import gc
+    gc.collect()
+    logger.info("AASIST model and Meikural privacy database ready (ASR lazy-loaded on demand).")
 
     # Startup diagnostics banner (Logged once cleanly at startup)
     logger.info("\n" + "=" * 78)

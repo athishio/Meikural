@@ -11,8 +11,6 @@ services:
         value: production
       - key: DEMO_MODE
         value: "1"
-      - key: PORT
-        value: "8000"
       - key: MEIKURAL_API_KEY
         generateValue: true
       - key: MEIKURAL_SALT

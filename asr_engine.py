@@ -44,11 +44,13 @@ class ASREngine:
 
         self.model_name = model_size or os.getenv("ASR_MODEL", "tiny.en")
         logger.info(f"Initializing ASREngine with model '{self.model_name}' (CPU INT8)...")
+        download_root = os.getenv("HF_HOME", None)
         self.model = WhisperModel(
             self.model_name,
             device="cpu",
             compute_type="int8",
-            cpu_threads=int(os.getenv("ASR_THREADS", "2")),
+            download_root=download_root,
+            cpu_threads=int(os.getenv("ASR_THREADS", "1")),
         )
         logger.info(f"ASREngine model '{self.model_name}' loaded successfully.")
 
