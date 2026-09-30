@@ -353,6 +353,10 @@ class AASISTWrapper:
         # Calibrate LLR against empirical telephony threshold
         codec_key = (simulate_codec or "clean_pcm").lower().strip()
         calibrated_tau = CODEC_LLR_CALIBRATION_THRESHOLDS.get(codec_key, CODEC_LLR_CALIBRATION_THRESHOLDS["default"])
+        # For short waveforms (< 3.0s), AASIST LLR shifts downward due to loop tiling.
+        # Apply duration adjustment so short authentic human speech is not falsely flagged as AI:
+        if duration_ms < 3000.0:
+            calibrated_tau -= 1.65
         centered_llr = llr - calibrated_tau
         try:
             calibrated_spoof_prob = 1.0 / (1.0 + math.exp(centered_llr))

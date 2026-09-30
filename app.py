@@ -1551,8 +1551,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         pcm_8k = np.where(sign != 0, -sample, sample).astype(np.int16)
                         pcm_16k = np.repeat(pcm_8k, 2).tobytes()
                         audio_ring_buffer.extend(pcm_16k)
-                        # Score when rolling buffer reaches at least 2.5s (80,000 bytes) and at least 0.5s has elapsed since last score
-                        if len(audio_ring_buffer) >= 80000 and (len(audio_ring_buffer) - last_scored_len >= 16000):
+                        # Score when rolling buffer reaches at least 1.5s (48,000 bytes) and at least 0.5s has elapsed since last score
+                        if len(audio_ring_buffer) >= 48000 and (len(audio_ring_buffer) - last_scored_len >= 16000):
                             last_scored_len = len(audio_ring_buffer)
                             chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
                             try:
@@ -1627,6 +1627,53 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         continue
                     elif data.get("event") == "stop":
                         logger.info(f"Telephony stream stopped for {session_id}.", extra={"session_id": session_id})
+                        if len(audio_ring_buffer) >= 32000 and (len(audio_ring_buffer) - last_scored_len >= 8000):
+                            chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
+                            try:
+                                detailed = score_audio_chunk_detailed(chunk_to_score, simulate_codec=codec_override or "live_mic")
+                                chunk_counter += 1
+                                score = detailed["passive_score"]
+                                fusion_res = fusion_engine.process_chunk(
+                                    session_id=session_id,
+                                    passive_score=score,
+                                    is_speech=detailed["audio_health"]["is_speech"],
+                                    rms_db=detailed["audio_health"]["rms_db"],
+                                    timestamp=ts,
+                                )
+                                fused_risk = fusion_res["fused_risk_score"]
+                                final_verdict = fusion_res["verdict"]
+                                broadcast = ScoreBroadcast(
+                                    timestamp=round(ts, 3),
+                                    score=fused_risk,
+                                    event=fusion_res["challenge_state"].event,
+                                    metadata=MetadataInfo(
+                                        session_id=session_id,
+                                        chunk_id=chunk_counter,
+                                        timestamp=round(ts, 3),
+                                        inference_latency_ms=detailed["inference_latency_ms"],
+                                    ),
+                                    audio_health=AudioHealth(
+                                        is_speech=detailed["audio_health"]["is_speech"],
+                                        rms_db=detailed["audio_health"]["rms_db"],
+                                        duration_ms=detailed["audio_health"]["duration_ms"],
+                                    ),
+                                    anti_spoofing=AntiSpoofingResult(
+                                        passive_score=score,
+                                        verdict=VerdictType(detailed["verdict"]),
+                                        confidence=ConfidenceLevel(detailed["confidence"]),
+                                        threshold_used=detailed["threshold_used"],
+                                        raw_logits=detailed["raw_logits"],
+                                    ),
+                                    challenge_state=fusion_res["challenge_state"],
+                                    risk_verdict=RiskVerdict(final_verdict),
+                                    demo_mode=DEMO_MODE,
+                                    timing_profile=fusion_res.get("timing_profile"),
+                                    codec_profile="g711_ulaw",
+                                )
+                                await websocket.send_text(broadcast.model_dump_json())
+                                await broadcast_telemetry(broadcast.model_dump_json())
+                            except Exception as stop_err:
+                                logger.warning(f"Failed to score final telephony buffer on stop: {stop_err}")
                         break
 
                     if "mode" in data:
