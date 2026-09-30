@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: meikural-soc
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEMO_MODE
+        value: "1"
+      - key: PORT
+        value: "8000"
+      - key: MEIKURAL_API_KEY
+        generateValue: true
+      - key: MEIKURAL_SALT
+        generateValue: true
+      - key: EMAIL_LIVE_DISPATCH
+        value: "false"
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ALERT_EMAIL_FROM
+        sync: false
+      - key: ALERT_EMAIL_TO
+        sync: false

@@ -8,6 +8,7 @@
 [![Model](https://img.shields.io/badge/AASIST-INT8%20Quantized%20(~440ms)-success.svg)](https://github.com/clovaai/aasist)
 [![Privacy](https://img.shields.io/badge/Privacy--by--Design-90--Day%20Purge-indigo.svg)](https://github.com/athishio/Meikural)
 [![Audit](https://img.shields.io/badge/Audit-SHA--256%20Hash--Chain-critical.svg)](https://github.com/athishio/Meikural)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/athishio/Meikural)
 
 **Problem Statement ID:** SIH26104 | **Organization:** AICTE | **Category:** Software (Blockchain & Cybersecurity)  
 **Team:** Athish (Lead) · Kamalesh · Sunandha · Bavi · Swetha · Rohinth  
@@ -374,7 +375,18 @@ Clients stream 16kHz 16-bit mono PCM binary chunks (or WAV data). The server res
 
 ---
 
-## 🚀 Quick Start & 1-Click Evaluation
+## 🚀 1-Click Cloud Deployment (Live Link)
+
+Deploy MEIKURAL directly to the cloud with automatic HTTPS, persistent WebSockets, and zero local setup:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/athishio/Meikural)
+
+- **Direct Deployment URL**: [https://render.com/deploy?repo=https://github.com/athishio/Meikural](https://render.com/deploy?repo=https://github.com/athishio/Meikural)
+- Render automatically detects [`render.yaml`](./render.yaml), builds the Docker container, provisions environment variables, and spins up a public live URL: `https://meikural-soc.onrender.com`.
+
+---
+
+## ⚡ Quick Start & 1-Click Local Evaluation
 
 ### 1. Environment Setup
 ```bash
