@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, AlertTriangle, FileAudio, Mic, MicOff } from 'lucide-react';
+import { UploadCloud, AlertTriangle, FileAudio, Mic, MicOff, Play, Pause, Volume2 } from 'lucide-react';
 import type { ForensicUploadResult } from '../../types/dashboard';
 import { LiveAudioVisualizer } from './LiveAudioVisualizer';
 
@@ -32,9 +32,45 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
   const [loadingClip, setLoadingClip] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [playingClip, setPlayingClip] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePlayAudio = (filename: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (playingClip === filename) {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+      setPlayingClip(null);
+      return;
+    }
+
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+
+    const audio = new Audio(`/demo_clips/${filename}`);
+    audioPlayerRef.current = audio;
+    setPlayingClip(filename);
+
+    audio.onended = () => {
+      setPlayingClip(null);
+      audioPlayerRef.current = null;
+    };
+    audio.onerror = () => {
+      setPlayingClip(null);
+      audioPlayerRef.current = null;
+    };
+    audio.play().catch((err) => {
+      console.warn('Audio play failed:', err);
+      setPlayingClip(null);
+    });
+  };
 
   const handleCaptureSample = async () => {
     if (isCapturing) return;
@@ -156,32 +192,80 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
             Benchmarks:
           </span>
 
-          <button
-            disabled={uploadLoading || loadingClip !== null}
-            onClick={() => loadBenchmarkClip('bonafide_human_speech.wav', 'clean_pcm')}
-            className="px-2.5 py-1 rounded-sm bg-[#EAF5EE] hover:bg-[#D1E7D9] dark:bg-[#0E2316] dark:hover:bg-[#143320] text-[#165A34] dark:text-[#34D399] border border-[#9CD1B2] dark:border-[#1B5233] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
-            title="Clean human speech (Yields ALLOW / Low Risk)"
-          >
-            {loadingClip === 'bonafide_human_speech.wav' ? 'Scoring...' : 'Human Speech'}
-          </button>
+          {/* 1. Human Speech */}
+          <div className="inline-flex items-center rounded-sm border border-[#9CD1B2] dark:border-[#1B5233] bg-[#EAF5EE] dark:bg-[#0E2316] overflow-hidden shadow-2xs">
+            <button
+              disabled={uploadLoading || loadingClip !== null}
+              onClick={() => loadBenchmarkClip('bonafide_human_speech.wav', 'clean_pcm')}
+              className="px-2.5 py-1 hover:bg-[#D1E7D9] dark:hover:bg-[#143320] text-[#165A34] dark:text-[#34D399] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
+              title="Score Clean human speech (Yields ALLOW / Low Risk)"
+            >
+              {loadingClip === 'bonafide_human_speech.wav' ? 'Scoring...' : 'Human Speech'}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => togglePlayAudio('bonafide_human_speech.wav', e)}
+              className="px-1.5 py-1 bg-[#D1E7D9]/60 hover:bg-[#D1E7D9] dark:bg-[#143320]/60 dark:hover:bg-[#143320] text-[#165A34] dark:text-[#34D399] border-l border-[#9CD1B2] dark:border-[#1B5233] transition-all cursor-pointer flex items-center justify-center"
+              title={playingClip === 'bonafide_human_speech.wav' ? 'Pause playback' : 'Listen to Human Speech sample'}
+              aria-label="Play Human Speech audio"
+            >
+              {playingClip === 'bonafide_human_speech.wav' ? (
+                <Pause className="w-3 h-3 fill-current animate-pulse" />
+              ) : (
+                <Play className="w-3 h-3 fill-current ml-0.5" />
+              )}
+            </button>
+          </div>
 
-          <button
-            disabled={uploadLoading || loadingClip !== null}
-            onClick={() => loadBenchmarkClip('deepfake_voice_clone.wav', 'g711_ulaw')}
-            className="px-2.5 py-1 rounded-sm bg-[#FDEFEF] hover:bg-[#FBEAEA] dark:bg-[#2B0F0F] dark:hover:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border border-[#E79E9E] dark:border-[#5E1A1A] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
-            title="Synthetic voice clone (Yields STEP-UP / Deepfake)"
-          >
-            {loadingClip === 'deepfake_voice_clone.wav' ? 'Scoring...' : 'Voice Clone'}
-          </button>
+          {/* 2. Voice Clone */}
+          <div className="inline-flex items-center rounded-sm border border-[#E79E9E] dark:border-[#5E1A1A] bg-[#FDEFEF] dark:bg-[#2B0F0F] overflow-hidden shadow-2xs">
+            <button
+              disabled={uploadLoading || loadingClip !== null}
+              onClick={() => loadBenchmarkClip('deepfake_voice_clone.wav', 'g711_ulaw')}
+              className="px-2.5 py-1 hover:bg-[#FBEAEA] dark:hover:bg-[#3D1414] text-[#941818] dark:text-[#F87171] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
+              title="Score Synthetic voice clone (Yields STEP-UP / Deepfake)"
+            >
+              {loadingClip === 'deepfake_voice_clone.wav' ? 'Scoring...' : 'Voice Clone'}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => togglePlayAudio('deepfake_voice_clone.wav', e)}
+              className="px-1.5 py-1 bg-[#FBEAEA]/60 hover:bg-[#FBEAEA] dark:bg-[#3D1414]/60 dark:hover:bg-[#3D1414] text-[#941818] dark:text-[#F87171] border-l border-[#E79E9E] dark:border-[#5E1A1A] transition-all cursor-pointer flex items-center justify-center"
+              title={playingClip === 'deepfake_voice_clone.wav' ? 'Pause playback' : 'Listen to Voice Clone audio'}
+              aria-label="Play Voice Clone audio"
+            >
+              {playingClip === 'deepfake_voice_clone.wav' ? (
+                <Pause className="w-3 h-3 fill-current animate-pulse" />
+              ) : (
+                <Play className="w-3 h-3 fill-current ml-0.5" />
+              )}
+            </button>
+          </div>
 
-          <button
-            disabled={uploadLoading || loadingClip !== null}
-            onClick={() => loadBenchmarkClip('caution_noisy_telecom.wav', 'pstn_narrowband')}
-            className="px-2.5 py-1 rounded-sm bg-[#FDF6E8] hover:bg-[#F8E5BF] dark:bg-[#291B06] dark:hover:bg-[#3B2609] text-[#924A00] dark:text-[#FBBF24] border border-[#E5BA78] dark:border-[#5C3E08] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
-            title="Degraded PSTN line (Yields WARN / Jitter)"
-          >
-            {loadingClip === 'caution_noisy_telecom.wav' ? 'Scoring...' : 'Noisy PSTN'}
-          </button>
+          {/* 3. Noisy PSTN */}
+          <div className="inline-flex items-center rounded-sm border border-[#E5BA78] dark:border-[#5C3E08] bg-[#FDF6E8] dark:bg-[#291B06] overflow-hidden shadow-2xs">
+            <button
+              disabled={uploadLoading || loadingClip !== null}
+              onClick={() => loadBenchmarkClip('caution_noisy_telecom.wav', 'pstn_narrowband')}
+              className="px-2.5 py-1 hover:bg-[#F8E5BF] dark:hover:bg-[#3B2609] text-[#924A00] dark:text-[#FBBF24] text-[11px] font-mono font-medium transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
+              title="Score Degraded PSTN line (Yields WARN / Jitter)"
+            >
+              {loadingClip === 'caution_noisy_telecom.wav' ? 'Scoring...' : 'Noisy PSTN'}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => togglePlayAudio('caution_noisy_telecom.wav', e)}
+              className="px-1.5 py-1 bg-[#F8E5BF]/60 hover:bg-[#F8E5BF] dark:bg-[#3B2609]/60 dark:hover:bg-[#3B2609] text-[#924A00] dark:text-[#FBBF24] border-l border-[#E5BA78] dark:border-[#5C3E08] transition-all cursor-pointer flex items-center justify-center"
+              title={playingClip === 'caution_noisy_telecom.wav' ? 'Pause playback' : 'Listen to Noisy PSTN audio'}
+              aria-label="Play Noisy PSTN audio"
+            >
+              {playingClip === 'caution_noisy_telecom.wav' ? (
+                <Pause className="w-3 h-3 fill-current animate-pulse" />
+              ) : (
+                <Play className="w-3 h-3 fill-current ml-0.5" />
+              )}
+            </button>
+          </div>
 
           {/* Primary Live Microphone Toggle Button */}
           {onToggleMonitoring && (
@@ -211,6 +295,29 @@ export const UnifiedInputStudio: React.FC<UnifiedInputStudioProps> = ({
           )}
         </div>
       </div>
+
+      {/* Audition Playback Indicator Banner */}
+      {playingClip && (
+        <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-sm bg-[#FAF9F5] dark:bg-[#121417] border border-[#9CD1B2] dark:border-[#1B5233] text-[11px] font-mono text-[#1A1D20] dark:text-[#F0EEE9]">
+          <div className="flex items-center gap-2">
+            <Volume2 className="w-4 h-4 text-[#165A34] dark:text-[#34D399] animate-pulse" />
+            <span>Auditioning Reference Clip: <strong className="text-[#165A34] dark:text-[#34D399]">{playingClip.replace('.wav', '').replace(/_/g, ' ').toUpperCase()}</strong></span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (audioPlayerRef.current) {
+                audioPlayerRef.current.pause();
+                audioPlayerRef.current = null;
+              }
+              setPlayingClip(null);
+            }}
+            className="text-[10px] uppercase font-bold text-[#941818] dark:text-[#F87171] hover:underline cursor-pointer"
+          >
+            Stop Audio [×]
+          </button>
+        </div>
+      )}
 
       {/* Live Acoustic Oscilloscope & Spectrum Visualizer Component */}
       {onToggleMonitoring && (

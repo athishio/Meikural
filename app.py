@@ -1551,8 +1551,8 @@ async def websocket_audio_endpoint(websocket: WebSocket):
                         pcm_8k = np.where(sign != 0, -sample, sample).astype(np.int16)
                         pcm_16k = np.repeat(pcm_8k, 2).tobytes()
                         audio_ring_buffer.extend(pcm_16k)
-                        # Score when rolling buffer reaches at least 1.0s (32,000 bytes) and at least 0.5s has elapsed since last score
-                        if len(audio_ring_buffer) >= 32000 and (len(audio_ring_buffer) - last_scored_len >= 16000):
+                        # Score when rolling buffer reaches at least 2.5s (80,000 bytes) and at least 0.5s has elapsed since last score
+                        if len(audio_ring_buffer) >= 80000 and (len(audio_ring_buffer) - last_scored_len >= 16000):
                             last_scored_len = len(audio_ring_buffer)
                             chunk_to_score = bytes(audio_ring_buffer[-64600*2:])
                             try:
