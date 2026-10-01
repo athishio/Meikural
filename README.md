@@ -123,4 +123,4 @@ Meikural/
 - **Sunandha** – Dynamic micro-challenges & response latency fusion
 - **Bavi** – Frontend SOC dashboard & audio visualizer
 - **Swetha** – Multilingual testing (English, Tamil, Hindi) & compliance
-- **Rohinth** – Evaluation benchmarks & demonstration
+- **Rohinth** – Evaluation benchmarks & demonstration.
